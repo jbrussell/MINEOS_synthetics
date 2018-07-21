@@ -1,0 +1,1381 @@
+  input model file : 
+  output ascii file : 
+  eigenfunction file name : 
+  mode file name : 
+ COUNT BETWEEN   0.314159E-03 AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+    1    4.7167087D-01    -1    9.9943737D-01
+    2    5.1095059D-01     0   -8.5939956D-01
+    3    5.1095059D-01     0   -8.5939956D-01
+    4    5.1586056D-01     1    9.6997404D-01
+  0.491310729852      0.998705895446    
+  0.504893991841     -0.993888466334    
+  0.498294333963      0.997653019431    
+  0.501939945902     -0.996461024456    
+  0.500194441800     -0.997519318906    
+  0.499239661924      0.997297478570    
+  0.499689195380      0.996726386470    
+  0.499941620285     -0.998834442828    
+  0.499799305055      0.995787404436    
+  0.499867240158      0.985240203035    
+  0.499904350198     -0.999993524370    
+  0.499883343382     -0.443436424783    
+  0.499878048195      0.925224602365    
+  0.499881723734      0.485340232818    
+  0.499882640398     -0.188713251459E-01
+  0.499882609179      0.150924588292E-02
+  0.499882611495     -0.954639313013E-06
+  0.499882611493     -0.201312883472E-09
+  0.499882611493      0.385570220342E-10
+    0 T    703   0.4998826        79.55879        12.56932        4.455775        304.7384      -0.1282875E-10
+ !!!!!!!!!!!!!!! nvec =         1202
+ CG  0.65047433217405781     
+ WN   1.0751906452994629E-003
+  0.513405575528      0.965510656841    
+  0.511825801936     -0.197018608405    
+  0.512071056391      0.256414902063    
+  0.511930211819     -0.597921238943E-02
+  0.511933364519     -0.141171985442E-04
+  0.511933371975     -0.256818478773E-08
+  0.511933371977      0.118487920096E-13
+  0.511933371976     -0.128399523428E-08
+  0.511933371976     -0.642033904190E-09
+    1 T    703   0.5119334        81.47673        12.27344        4.389613        308.8282      -0.2840877E-09
+ !!!!!!!!!!!!!!! nvec =         1202
+ CG  0.64081573268513536     
+ WN   1.0751906452994629E-003
+ COUNT BETWEEN   0.474888     AND  0.511933     =       3 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+ COUNT BETWEEN   0.474888     AND   1.25727     =     112 : MAX =   2
+  max radial order of modes is set to        2000
+  icount =              1
+  icount =              2
+  icount =              3
+  icount =              4
+  icount =              5
+  icount =              6
+  icount =              7
+  icount =              8
+  icount =              9
+  icount =             10
+  icount =             11
+  icount =             12
+  icount =             13
+  icount =             14
+  icount =             15
+  icount =             16
+  icount =             17
+  icount =             18
+  icount =             19
+  icount =             20
+  icount =             21
+  possible infinite loop
+  reinitializing arrays
+  icount, nmode:             21           2
+  i quit
