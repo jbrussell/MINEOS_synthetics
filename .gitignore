@@ -1,0 +1,6 @@
+MODE
+IDAGRN
+*.lst
+*.m~
+*.mat
+.DS_Store
