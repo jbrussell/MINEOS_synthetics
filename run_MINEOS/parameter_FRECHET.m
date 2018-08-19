@@ -1,9 +1,9 @@
 %% Setup Parameters for running MINEOS to calculate senstivity kernels, dispersion, and synthetics
 
 %clear all;
-addpath('./functions');
-
-path2runMINEOS = './';
+addpath('./functions'); % Path to matlab unctions
+path2runMINEOS = './'; % Path to this folder
+path2BIN = '../FORTRAN/bin'; % Path to fortran binaries
 
 % Mineos table parameters
 maxN = 400000; % Estimate of max number of modes
@@ -19,6 +19,9 @@ ch_mode = 0; % mode branch to check for missed eigenfrequencies 0 => T0 ------- 
 % (1 => yes, 0 => no)
 SONLY = 0; %Spheroidal modes? (RAYLEIGH)
 TONLY = 1; %Toroidal modes? (LOVE)
+
+% for plotting kernels
+param.periods = round(logspace(log10(5),log10(200),15));
 
 %% Parameters for idagrn synthetics
 LENGTH_HR = 1.0; %1.0; % length of seismogram in hours
@@ -87,5 +90,8 @@ param.STYPEID = ['s',num2str(floor(minF)),'to',num2str(floor(maxF))];
 param.TMODEIN = ['t.mode',num2str(floor(minF)),'_',num2str(floor(maxF)),'_b',num2str(N_modes)];
 param.TTYPEID = ['t',num2str(floor(minF)),'to',num2str(floor(maxF))];%'t0to150';
 
-%% plotting kernels
-param.periods = round(logspace(log10(5),log10(200),15));
+%% Setup paths to FORTRAN binaries
+PATH = getenv('PATH');
+if isempty(strfind(PATH,path2BIN))
+    setenv('PATH', [PATH ':',path2BIN]);
+end
