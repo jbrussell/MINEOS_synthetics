@@ -8,7 +8,7 @@ Open makeall.sh and edit the 3 variables at the top of the script
 3) BINPATH - path to the output binaries.
 
 ----- STEP 2 -----
-To compile everything, simply open the terminal and type: 
+To compile everything, open the terminal and type: 
 sudo ./makeall.sh
 
 If everything works, there should be 20 files in the bin directory:
