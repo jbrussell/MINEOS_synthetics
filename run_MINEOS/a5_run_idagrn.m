@@ -48,7 +48,7 @@ end
 setpath_idagrn;
 write_idagrn(TYPE,CARDID,EVTPATH,STAPATH,LENGTH_HR,DT)
 
-fprintf('------- Calculating Full synthetics & Excitation %s0-%d -------\n',TYPE,N_modes)
+fprintf('------- Calculating Full synthetics & Excitation %s0-%d -------\n',TYPE,N_modes-1)
 system(['cat run_idagrn.',lower(TYPE),' > idagrn.in']);
 com = ['cat idagrn.in | idagrn6_sac_excite > idagrn.LOG'];
 [status,log] = system(com);
