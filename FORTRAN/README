@@ -21,3 +21,10 @@ frechet              frechet_psi          mineos_table
 frechet_ACFLN_love   idagrn6_mask         plot_wk
 frechet_cv           idagrn6_sac
 
+
+----- STEP 3 -----
+The bin folder containing the fortran executables must be added to your 
+path. To do this, open ~/.profile and enter the following:
+
+export PATH="path/to/bin:$PATH"
+
