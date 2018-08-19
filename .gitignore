@@ -4,3 +4,5 @@ IDAGRN
 *.m~
 *.mat
 .DS_Store
+*.pdf
+*.o

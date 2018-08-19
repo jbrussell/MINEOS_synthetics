@@ -1,0 +1,13 @@
+MLIB=../
+OBJTAU = libtau.o libsun.o
+FFLAGS = -O3
+LFLAGS = -L$(MYLIB)
+LLIBS = -ltau
+ARFLAGS= rcv
+
+
+libtau.a:	${OBJTAU}
+		gfortran $(FFLAGS) -c libtau.f
+		gfortran $(FFLAGS) -c libsun.f
+		ar ${ARFLAGS} $(MYLIB)/libtau.a ${OBJTAU}
+		ranlib $(MYLIB)/libtau.a
