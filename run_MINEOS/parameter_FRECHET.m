@@ -13,6 +13,8 @@
 %clear all;
 addpath('./functions');
 
+path2runMINEOS = './';
+
 % Mineos table parameters
 maxN = 400000; % Estimate of max number of modes
 minF = 0;
@@ -37,7 +39,7 @@ stationfile = 'stations.stn';
 
 
 % Setup idagrn paths
-param.IDAGRN = '/Users/russell/Lamont/PROJ_LoveOvertones/MINEOS/IDAGRN/';
+param.IDAGRN = [path2runMINEOS,'/IDAGRN/'];
 param.EVTPATH = [param.IDAGRN,'EVT_FILES/',eventfile];
 param.STAPATH = [param.IDAGRN,'STATION/',stationfile];
 param.SYNTH_OUT = [param.IDAGRN,'SYNTH/',param.CARDID,'_b',num2str(N_modes),'/',eventfile,'/'];
@@ -57,9 +59,9 @@ end
 
 % Setup Parameters for Initial Model
 param.CARD = [param.CARDID,'.card'];
-param.CARDPATH  = '/Users/russell/Lamont/PROJ_LoveOvertones/MINEOS/CARDS/';
-param.TABLEPATH = '/Users/russell/Lamont/PROJ_LoveOvertones/MINEOS/MODE/TABLES/';
-param.MODEPATH  = '/Users/russell/Lamont/PROJ_LoveOvertones/MINEOS/MODE/TABLES/MODE.in/';
+param.CARDPATH  = [path2runMINEOS,'/CARDS/'];
+param.TABLEPATH = [path2runMINEOS,'/MODE/TABLES/'];
+param.MODEPATH  = [path2runMINEOS,'/MODE/TABLES/MODE.in/'];
 param.RUNPATH = pwd;
 
 %% create dir for output MINEOS automatically, doesn't need to be changed.
@@ -70,21 +72,21 @@ if ~exist(CARDTABLE)
 end
 
 %% setup Parameters for kernals
-param.frechetpath = ['/Users/russell/Lamont/PROJ_LoveOvertones/MINEOS/MODE/FRECHET/',param.CARDID,'/'];
+param.frechetpath = [path2runMINEOS,'/MODE/FRECHET/',param.CARDID,'/'];
 
 if ~exist(param.frechetpath) 
     mkdir(param.frechetpath)
 end
 
 %% setup Parameters for eigenfunctions
-param.eigpath = ['/Users/russell/Lamont/PROJ_LoveOvertones/MINEOS/MODE/EIGEN/',param.CARDID,'/'];
+param.eigpath = [path2runMINEOS,'/MODE/EIGEN/',param.CARDID,'/'];
 
 if ~exist(param.eigpath) 
     mkdir(param.eigpath)
 end
 
 %% setup Parameters for Dispersion
-param.disperspath = ['/Users/russell/Lamont/PROJ_LoveOvertones/MINEOS/MODE/DISPERSION/',param.CARDID,'/'];
+param.disperspath = [path2runMINEOS,'/MODE/DISPERSION/',param.CARDID,'/'];
 
 if ~exist(param.disperspath) 
     mkdir(param.disperspath)
