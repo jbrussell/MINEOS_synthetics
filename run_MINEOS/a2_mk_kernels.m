@@ -12,12 +12,12 @@
 clear; close all;
 
 parameter_FRECHET;
-branch = 1; % Fundamental -> 0
+branch = 0; % Fundamental -> 0
 
 TYPE = param.TYPE;
 CARDID = param.CARDID;
 
-titlename = 'Patty Isotropic';
+titlename = '';
 
 if ( TYPE == 'T') 
     TYPEID = param.TTYPEID;
