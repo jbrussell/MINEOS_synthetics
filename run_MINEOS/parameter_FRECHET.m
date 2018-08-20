@@ -14,14 +14,14 @@ maxL = 50000;
 N_modes = 2; % <0 uses all mode branches, 1=fundamental only -------- JOSH 8/22/15
 param.CARDID = 'pa5_5km'; %'Nomelt_taper_aniso_constxicrman_etaPREM_constxilays'; %'pa5_5km';
 
-ch_mode = 0; % mode branch to check for missed eigenfrequencies 0 => T0 ------- JOSH 10/7/15
-
 % (1 => yes, 0 => no)
 SONLY = 0; %Spheroidal modes? (RAYLEIGH)
 TONLY = 1; %Toroidal modes? (LOVE)
 
 % for plotting kernels
 param.periods = round(logspace(log10(5),log10(200),15));
+
+ch_mode = 0; % (DO NOT CHANGE) mode branch to check for missed eigenfrequencies 0 => T0 ------- JOSH 10/7/15
 
 %% Parameters for idagrn synthetics
 LENGTH_HR = 1.0; %1.0; % length of seismogram in hours
@@ -30,6 +30,7 @@ eventfile = 'evt_0000001';
 stationfile = 'stations.stn';
 
 
+%%
 % Setup idagrn paths
 param.IDAGRN = [path2runMINEOS,'/IDAGRN/'];
 param.EVTPATH = [param.IDAGRN,'EVT_FILES/',eventfile];
