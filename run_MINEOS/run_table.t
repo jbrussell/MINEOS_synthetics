@@ -1,7 +1,0 @@
-.//MODE/TABLES/fail_H01221_90L/tables/fail_H01221_90L.t0to200.table
-400000
-0 200.050000
-0 50000
-.//MODE/TABLES/fail_H01221_90L/tables/fail_H01221_90L.t0to200.q
-.//MODE/TABLES/fail_H01221_90L/tables/fail_H01221_90L.t0to200.strip
-
