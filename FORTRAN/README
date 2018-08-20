@@ -1,5 +1,7 @@
 # README for compiling MINEOS and idagrn6 FORTRAN codes
 # 
+After installing gfortran (which also requires XCode):
+
 ----- STEP 1 -----
 Open makeall.sh and edit the 3 variables at the top of the script
 1) COMPILER - specifies the compiler. I have only tested gfortran
