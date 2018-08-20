@@ -202,7 +202,7 @@ if TONLY
         
         disp(['--- Rerunning mineos_nohang: LOOP ',num2str(num_loop),' ---']);
         disp(['Starting at l = ',num2str(l_start)]);
-        tic
+%         tic
         LOG = [CARDTABLE,'log',num2str(num_loop)];
         com = ['cat run_nohang.t | mineos_nohang > ',LOG];
         [status,log] = system(com);
@@ -210,7 +210,7 @@ if TONLY
         if status ~= 0     
             error( 'something is wrong at mineos_nohang')
         end
-        toc
+%         toc
         
         l_start_prev = l_start;
         l_start = check_mode(LOG,num_loop,l_start_prev); % Check that all eigenfrequencies were calcualted 
@@ -235,7 +235,6 @@ if TONLY
         % WRITE DRIVERS
         write_chk_q_strip_table(num_loop);
     end
-    
     
     % mineos_qcorrectphv
     disp('Running mineos_qcorrectphv');

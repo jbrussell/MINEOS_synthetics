@@ -13,9 +13,9 @@ clear all;
 %%%% PARAMETERS %%%%
 bw = 0;        % print in black and white? (1=yes, 0=no)
 paus = 0;      % pause figure? (1=yes, 0=no)
-Tlim = [4 30]; %[2 100]; %[20 150]; %[0 50]; % sec
+Tlim = [5 100]; %[2 100]; %[20 150]; %[0 50]; % sec
 gvlim = [1 5]; %[1 5]; %[3 5]; %[1 8]; % km/s
-cvlim = [4 5]; %[1 5]; %[3 5]; %[1 8]; % km/s
+cvlim = [3 5]; %[1 5]; %[3 5]; %[1 8]; % km/s
 %%%%%%%%%%%%%%%%%%%%%
 
 

@@ -12,7 +12,7 @@ maxF = 200.05; % max frequency in mHz; %10.1; %250.05; %333.4; %500.05; %200.05;
 minL = 0;
 maxL = 50000;
 N_modes = 2; % <0 uses all mode branches, 1=fundamental only -------- JOSH 8/22/15
-param.CARDID = 'prem_35'; %'Nomelt_taper_aniso_constxicrman_etaPREM_constxilays'; %'pa5_5km';
+param.CARDID = 'fail_H01221_90L'; %'prem_35'; %'Nomelt_taper_aniso_constxicrman_etaPREM_constxilays'; %'pa5_5km';
 
 % (1 => yes, 0 => no)
 SONLY = 0; %Spheroidal modes? (RAYLEIGH)

@@ -80,11 +80,12 @@ fid=fopen(RUNFILE_q,'w');
 fprintf(fid,'%s\n',QMOD);
 fprintf(fid,'%s\n',QOUT);
 fprintf(fid,'%s\n',EIG0);
-fprintf(fid,'%s\n','y');
 for i = 1:LOOP
     EIG = [TABLEPATH,CARDID,'/tables/',CARDID,'.',TYPEID,'_',num2str(i),'.eig_fix'];
     fprintf(fid,'%s\n',EIG);
 end
+% fprintf(fid,'%s\n','y');
+fprintf(fid,' \n');
 fprintf(fid,'\n');
 fclose(fid);
 
