@@ -241,7 +241,13 @@ if TONLY
     com = ['cat run_q.t | mineos_qcorrectphv > qlog'];
     [status,log] = system(com);
     if status ~= 0     
-        error( 'something is wrong at mineos_qcorrectphv')
+        write_chk_q_strip_table2(num_loop);
+        disp('Something broke... trying mineos_qcorrectphv again');
+        com = ['cat run_q.t | mineos_qcorrectphv > qlog'];
+        [status,log] = system(com);
+        if status ~= 0
+            error( 'something is wrong at mineos_qcorrectphv')
+        end
     end
     
     % mineos_strip
