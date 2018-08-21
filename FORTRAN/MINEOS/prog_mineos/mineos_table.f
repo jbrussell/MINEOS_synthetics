@@ -154,14 +154,16 @@ c       allowing for simultaneos runs.
 c
         call kblnk(fileo,k)
         filen = fileo(1:k)//'_scratch.h'
-        open(3,file=filen,access='sequential',form='unformatted')
+c        open(3,file=filen,access='sequential',form='unformatted')
+        open(3,status='scratch',access='sequential',form='unformatted')
         if (jcom .eq. 3) then
            rlen = 16
         else
            rlen = 8
         endif
         filen = fileo(1:k)//'_scratch.e'
-        open(4,access='direct',form='unformatted',file=filen,recl=rlen)
+c        open(4,access='direct',form='unformatted',file=filen,recl=rlen)
+        open(4,access='direct',form='unformatted',status='scratch',recl=rlen)
 c
 c       set up bookkeeping devices
 c         because the eigenfunctions have been stripped already,

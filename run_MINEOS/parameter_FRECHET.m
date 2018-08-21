@@ -8,11 +8,11 @@ path2BIN = '../FORTRAN/bin'; % Path to fortran binaries
 % Mineos table parameters
 maxN = 400000; % Estimate of max number of modes
 minF = 0;
-maxF = 200.05; % max frequency in mHz; %10.1; %250.05; %333.4; %500.05; %200.05; %%150.05; %50.05;
+maxF = 100.05; % max frequency in mHz; %10.1; %250.05; %333.4; %500.05; %200.05; %%150.05; %50.05;
 minL = 0;
 maxL = 50000;
 N_modes = 2; % <0 uses all mode branches, 1=fundamental only -------- JOSH 8/22/15
-param.CARDID = 'fail_H01221_90L'; %'prem_35'; %'Nomelt_taper_aniso_constxicrman_etaPREM_constxilays'; %'pa5_5km';
+param.CARDID = 'prem_35'; %'fail_H01221_90L'; %'prem_35'; %'Nomelt_taper_aniso_constxicrman_etaPREM_constxilays'; %'pa5_5km';
 
 % (1 => yes, 0 => no)
 SONLY = 0; %Spheroidal modes? (RAYLEIGH)
@@ -55,6 +55,9 @@ param.CARD = [param.CARDID,'.card'];
 param.CARDPATH  = [path2runMINEOS,'/CARDS/'];
 param.TABLEPATH = [path2runMINEOS,'/MODE/TABLES/'];
 param.MODEPATH  = [path2runMINEOS,'/MODE/TABLES/MODE.in/'];
+if ~exist(param.MODEPATH)
+    mkdir(param.MODEPATH);
+end
 param.RUNPATH = pwd;
 
 %% create dir for output MINEOS automatically, doesn't need to be changed.
