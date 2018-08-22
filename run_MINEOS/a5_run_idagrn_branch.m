@@ -4,7 +4,6 @@
 % Must first run run_mineos_check and mk_kernels
 %
 % JBR 07/18
-
 clear; close all;
 
 branches = [0 1]; % Fundamental -> 0

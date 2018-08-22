@@ -1,0 +1,112 @@
+  Enter the pathname of the output mode table.
+  Enter the best guess for the max number of modes
+   please over-estimate
+  Enter min and max frequencies to be reformatted (mhz)
+  Enter min and max angular orders to be reformatted 
+ mineos_q output file for this mode set
+ mineos_strip output file to be reformatted.
+  mode type =            3  lmin =            1  lmax =        50000
+  wmin =    5.00000007E-02  wmax =    100.099998    
+  knots =          660
+  stripped knots =           98
+ Frequency out of range of input bounds:    100.06131693558687                0          1367
+ mineos_strip output file to be reformatted.
+  now writing mode table for         2274  modes
+  radius   0.875843644      written to output
+  radius   0.877413273      written to output
+  radius   0.878982902      written to output
+  radius   0.878982902      written to output
+  radius   0.880552530      written to output
+  radius   0.882122099      written to output
+  radius   0.883691728      written to output
+  radius   0.885261357      written to output
+  radius   0.886830926      written to output
+  radius   0.888400555      written to output
+  radius   0.889970183      written to output
+  radius   0.891539812      written to output
+  radius   0.893109381      written to output
+  radius   0.894679010      written to output
+  radius   0.894835949      written to output
+  radius   0.894835949      written to output
+  radius   0.896248639      written to output
+  radius   0.897818267      written to output
+  radius   0.899387836      written to output
+  radius   0.900957465      written to output
+  radius   0.902527094      written to output
+  radius   0.904096663      written to output
+  radius   0.905666292      written to output
+  radius   0.905823290      written to output
+  radius   0.905823290      written to output
+  radius   0.907235920      written to output
+  radius   0.908805549      written to output
+  radius   0.910375118      written to output
+  radius   0.911944747      written to output
+  radius   0.913514376      written to output
+  radius   0.915083945      written to output
+  radius   0.916653574      written to output
+  radius   0.918223202      written to output
+  radius   0.919792831      written to output
+  radius   0.921362400      written to output
+  radius   0.922932029      written to output
+  radius   0.924501657      written to output
+  radius   0.926071286      written to output
+  radius   0.927640855      written to output
+  radius   0.929210484      written to output
+  radius   0.930780113      written to output
+  radius   0.932349682      written to output
+  radius   0.933919311      written to output
+  radius   0.935488939      written to output
+  radius   0.937058568      written to output
+  radius   0.937215507      written to output
+  radius   0.937215507      written to output
+  radius   0.938628137      written to output
+  radius   0.940197766      written to output
+  radius   0.941767395      written to output
+  radius   0.943337023      written to output
+  radius   0.944906592      written to output
+  radius   0.946476221      written to output
+  radius   0.948045850      written to output
+  radius   0.949615419      written to output
+  radius   0.951185048      written to output
+  radius   0.952754676      written to output
+  radius   0.954324305      written to output
+  radius   0.955893874      written to output
+  radius   0.957463503      written to output
+  radius   0.959033132      written to output
+  radius   0.960602760      written to output
+  radius   0.962172329      written to output
+  radius   0.963741958      written to output
+  radius   0.965311587      written to output
+  radius   0.965468526      written to output
+  radius   0.965468526      written to output
+  radius   0.966881156      written to output
+  radius   0.968450785      written to output
+  radius   0.970020413      written to output
+  radius   0.971590042      written to output
+  radius   0.973159611      written to output
+  radius   0.974729240      written to output
+  radius   0.976298869      written to output
+  radius   0.977868438      written to output
+  radius   0.979438066      written to output
+  radius   0.981007695      written to output
+  radius   0.982577324      written to output
+  radius   0.984146893      written to output
+  radius   0.985716522      written to output
+  radius   0.987286150      written to output
+  radius   0.987443089      written to output
+  radius   0.987443089      written to output
+  radius   0.988855779      written to output
+  radius   0.990425348      written to output
+  radius   0.991994977      written to output
+  radius   0.993564606      written to output
+  radius   0.995134175      written to output
+  radius   0.996170163      written to output
+  radius   0.996170163      written to output
+  radius   0.996703804      written to output
+  radius   0.997645557      written to output
+  radius   0.997645557      written to output
+  radius   0.998273432      written to output
+  radius   0.999529123      written to output
+  radius   0.999529123      written to output
+  radius   0.999843061      written to output
+  radius    1.00000000      written to output

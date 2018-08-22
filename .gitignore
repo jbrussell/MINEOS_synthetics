@@ -1,5 +1,6 @@
 MODE
-IDAGRN
+SYNTH
+figs
 *.lst
 *.m~
 *.mat

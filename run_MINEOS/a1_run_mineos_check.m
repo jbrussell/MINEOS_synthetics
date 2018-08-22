@@ -9,12 +9,8 @@
 % pylin.patty 2014.. 
 % JBR 2015
 %
-
-
 clear
 
-
-% % % fid = fopen('run_mineos.LOG','w'); %JBR -- to track an error
 %% get pamameters information 
 parameter_FRECHET;
 CARD = param.CARD;
@@ -114,23 +110,6 @@ if SONLY
         % WRITE DRIVERS
         write_chk_q_strip_table(num_loop);
     end
-    
-%     com = ['cat run_nohang2.s | mineos_nohang'];
-%     [status,log] = system(com);
-%     if status ~= 0     
-%         disp( 'something is wrong at mineos_nohang')
-%         break;
-%     end
-
-
-%     %mineos_q       
-%     disp('Running mineos_q');
-%     com = ['cat run_q.s | mineos_q'];
-%     [status,log] = system(com);
-%     if status ~= 0     
-%         disp( 'something is wrong at mineos_q')
-%         break;
-%     end
     
     % mineos_qcorrectphv
     disp('Running mineos_qcorrectphv');

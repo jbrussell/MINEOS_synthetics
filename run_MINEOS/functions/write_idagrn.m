@@ -48,17 +48,17 @@ if exist(RUNFILE,'file') == 2
 end
 
 fid = fopen(RUNFILE,'w');
-fprintf(fid,'%s\n',TABLE);
-fprintf(fid,'%.4f %.1f\n',LENGTH_HR,DT);
-fprintf(fid,'35.\n');
-fprintf(fid,'%s\n',CARDID);
-fprintf(fid,'%s\n',TYPE);
-fprintf(fid,'.true.\n');
-fprintf(fid,'.false.\n');
-fprintf(fid,'sa_junk\n');
-fprintf(fid,'frechet_file_junk\n');
-fprintf(fid,'%s',EVTSTR);
-fprintf(fid,'%s',STASTR);
+fprintf(fid,'%s\n',TABLE);               % path to mode table
+fprintf(fid,'%.4f %.1f\n',LENGTH_HR,DT); % length (hours); 1/samplerate (s)
+fprintf(fid,'35.\n');                    % reference frequency wref
+fprintf(fid,'%s\n',CARDID);              % card
+fprintf(fid,'%s\n',TYPE);                % T (toroidal) or S (spheroidal)
+fprintf(fid,'.true.\n');                 % .true. = Displacement; .false. = Acceleration
+fprintf(fid,'.false.\n');                % use crust5.1 model? May or may not work...
+fprintf(fid,'sa_junk\n');                %junk if no crustal model
+fprintf(fid,'frechet_file_junk\n');      %junk if no crustal model
+fprintf(fid,'%s',EVTSTR);                % event file information
+fprintf(fid,'%s',STASTR);                % station file information
 fclose(fid);
 
 

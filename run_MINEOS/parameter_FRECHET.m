@@ -15,8 +15,8 @@ N_modes = 2; % <0 uses all mode branches, 1=fundamental only -------- JOSH 8/22/
 param.CARDID = 'prem_35'; %'fail_H01221_90L'; %'prem_35'; %'Nomelt_taper_aniso_constxicrman_etaPREM_constxilays'; %'pa5_5km';
 
 % (1 => yes, 0 => no)
-SONLY = 0; %Spheroidal modes? (RAYLEIGH)
-TONLY = 1; %Toroidal modes? (LOVE)
+SONLY = 1; %Spheroidal modes? (RAYLEIGH)
+TONLY = 0; %Toroidal modes? (LOVE)
 
 % for plotting kernels
 param.periods = round(logspace(log10(5),log10(200),15));
@@ -26,7 +26,7 @@ ch_mode = 0; % (DO NOT CHANGE) mode branch to check for missed eigenfrequencies 
 %% Parameters for idagrn synthetics
 LENGTH_HR = 1.0; %1.0; % length of seismogram in hours
 DT = 1.0; % 1/samplerate
-eventfile = 'evt_0000001';
+eventfile = 'evt_201404131236';
 stationfile = 'stations.stn';
 
 
