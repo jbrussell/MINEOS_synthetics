@@ -241,7 +241,7 @@ if TONLY
     com = ['cat run_q.t | mineos_qcorrectphv > qlog'];
     [status,log] = system(com);
     if status ~= 0     
-        write_chk_q_strip_table2(num_loop);
+        write_chk_q_strip_table2(num_loop); % Some cards with *.eig_fix files prefer this version...
         disp('Something broke... trying mineos_qcorrectphv again');
         com = ['cat run_q.t | mineos_qcorrectphv > qlog'];
         [status,log] = system(com);
@@ -270,7 +270,11 @@ if TONLY
 end
 
 delete('*.LOG','qlog');
-
+delete([CARDTABLE,'log*']);
+delete([CARDTABLE,'*.asc']);
+if exist([CARDTABLE,param.CARDID,'.',TYPEID,'_0.eig_fix'],'file') ~= 0
+    delete([CARDTABLE,'*.eig']);
+end
 %% Change the environment variables back to the way they were
 setenv('GFORTRAN_STDIN_UNIT', '-1') 
 setenv('GFORTRAN_STDOUT_UNIT', '-1') 
