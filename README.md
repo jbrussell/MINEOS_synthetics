@@ -16,5 +16,5 @@ Must have installed
 - gfortran (other Fortran compilers might work but have not been tested)
 - MATLAB
 
-### For compiling fortran binaries, see ./FORTRAN/README
+### For compiling fortran binaries, see [./FORTRAN/README](https://github.com/jbrussell/MINEOS_synthetics/blob/master/FORTRAN/README)
 

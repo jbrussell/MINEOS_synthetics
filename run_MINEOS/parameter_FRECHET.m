@@ -97,5 +97,6 @@ param.TTYPEID = ['t',num2str(floor(minF)),'to',num2str(floor(maxF))];%'t0to150';
 %% Setup paths to FORTRAN binaries
 PATH = getenv('PATH');
 if isempty(strfind(PATH,path2BIN))
-    setenv('PATH', [PATH ':',path2BIN]);
+%     setenv('PATH', [PATH,':',path2BIN]);
+    setenv('PATH', [path2BIN,':',PATH]);
 end
