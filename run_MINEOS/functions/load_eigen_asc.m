@@ -53,7 +53,7 @@
 % JBR 1/20/17 -- Modified to include both Spheroidal and Toroidal
 %
 
-function [eigen,eig,saveopt] = load_eigen_asc(TYPE,mode)
+function [eigen,eig,saveopt] = load_eigen_asc(TYPE,mode,periods)
 
 % Get useful info from parameter file
 parameter_FRECHET;
@@ -66,7 +66,7 @@ elseif ( TYPE == 'S')
     TYPEID = param.STYPEID;
 end
 EIGPATH = param.eigpath;
-periods = param.periods;
+% periods = param.periods;
 
 setpath_mineos;
 
@@ -121,42 +121,42 @@ if nfils == 0 % %no .eig_fix files
     [status,log] = system(com);
     
 elseif nfils ~= 0    
-% LOOP OVER *.eig_fix FILES
-for ifil = 1:nfils
-    EIG_ASC_FIX = [EIGPATH,CARDID,'.',TYPEID,'.',num2str(N_modes),'_',num2str(ifil-1),'_fix.asc'];
-    EIG_I = [TABLEPATH,CARDID,'/tables/',CARDID,'.',TYPEID,'_',num2str(ifil-1),'.eig_fix'];
-    display(['Working on: ',EIG_I])
+    % LOOP OVER *.eig_fix FILES
+    for ifil = 1:nfils
+        EIG_ASC_FIX = [EIGPATH,CARDID,'.',TYPEID,'.',num2str(N_modes),'_',num2str(ifil-1),'_fix.asc'];
+        EIG_I = [TABLEPATH,CARDID,'/tables/',CARDID,'.',TYPEID,'_',num2str(ifil-1),'.eig_fix'];
+        display(['Working on: ',EIG_I])
 
-    RUNFILE = [EIGPATH,'eigen.in'];
-    if exist(RUNFILE,'file') == 2
-    %disp('File exists! Removing it now')
-    com = ['rm -f ',RUNFILE];
-    [status,log] = system(com);
+        RUNFILE = [EIGPATH,'eigen.in'];
+        if exist(RUNFILE,'file') == 2
+        %disp('File exists! Removing it now')
+        com = ['rm -f ',RUNFILE];
+        [status,log] = system(com);
+        end
+        % Write runfile for eigen_asc
+        fid = fopen(RUNFILE,'w');
+        fprintf(fid,'%s\n',BRANCH);%input branch file
+        fprintf(fid,'%s\n',EIG_ASC_FIX); %output ascii file
+        fprintf(fid,'%s\n',EIG_I); %input raw .eig file
+        fprintf(fid,'%d\n',NDISC);
+        fclose(fid);
+
+        %% Run fortran program
+
+        if exist(EIG_ASC_FIX,'file') == 2
+        %disp('File exists! Removing it now')
+        com = ['rm -f ',EIG_ASC_FIX];
+        [status,log] = system(com);
+        end
+
+        com = sprintf('cat %s | eigenST_asc',RUNFILE);
+    %     com = sprintf('cat %s | eigenSTscaled_asc',RUNFILE);
+        [status,log] = system(com);
+
+        % COMBINE ASCI FILES
+        system(['cat ',EIG_ASC_FIX,' >> ',EIG_ASC]);
+        delete(EIG_ASC_FIX);
     end
-    % Write runfile for eigen_asc
-    fid = fopen(RUNFILE,'w');
-    fprintf(fid,'%s\n',BRANCH);%input branch file
-    fprintf(fid,'%s\n',EIG_ASC_FIX); %output ascii file
-    fprintf(fid,'%s\n',EIG_I); %input raw .eig file
-    fprintf(fid,'%d\n',NDISC);
-    fclose(fid);
-
-    %% Run fortran program
-
-    if exist(EIG_ASC_FIX,'file') == 2
-    %disp('File exists! Removing it now')
-    com = ['rm -f ',EIG_ASC_FIX];
-    [status,log] = system(com);
-    end
-
-    com = sprintf('cat %s | eigenST_asc',RUNFILE);
-%     com = sprintf('cat %s | eigenSTscaled_asc',RUNFILE);
-    [status,log] = system(com);
-    
-    % COMBINE ASCI FILES
-    system(['cat ',EIG_ASC_FIX,' >> ',EIG_ASC]);
-    delete(EIG_ASC_FIX);
-end
 end
 
 %% Load eigenfunctions into data structure
@@ -177,6 +177,7 @@ if (TYPE == 'S')
     vp = eigen(:,11)*scale;
     phi = eigen(:,12);
     phip = eigen(:,13);
+    per = 2*pi./w;
     
     % CALCULATE vert traction R (Dahlen & Tromp eq. 8.47) k = sqrt(l*(l+1)
     R = (kappa+4/3*mu).*up + (kappa-2/3*mu).*(2*u-sqrt(ll.*(ll+1)).*v)./r;
@@ -187,36 +188,33 @@ if (TYPE == 'S')
     eigen(:,15) = S(:,:);
     
     % Sort eigenfunctions into structure
-    num_ll = ll(end);
-    for i = 1:num_ll %loop over angular orders
-        eigen_ll = eigen(eigen(:,1) == i,:);
-        if ~isempty(eigen_ll)
-            first_nn = eigen_ll(1,2);
-            last_nn = eigen_ll(end,2);
-            for j = first_nn:last_nn %loop over modes
-                eigen_ll_nn = eigen_ll(eigen_ll(:,2) == j,:);
-                %eig.nn(j+1).ll(i).dat = eigen_ll_nn(:,:);
-                eig.nn(j+1).ll(i).ll = eigen_ll_nn(1,1);
-                eig.nn(j+1).ll(i).nn = eigen_ll_nn(1,2);
-                eig.nn(j+1).ll(i).w = eigen_ll_nn(1,3);
-                eig.r = eigen_ll_nn(:,4);
-                eig.kappa = eigen_ll_nn(:,5);
-                eig.mu = eigen_ll_nn(:,6);
-                eig.rho = eigen_ll_nn(:,7);
-                eig.nn(j+1).ll(i).u = eigen_ll_nn(:,8)*scale;
-                eig.nn(j+1).ll(i).up = eigen_ll_nn(:,9)*scale;
-                eig.nn(j+1).ll(i).v = eigen_ll_nn(:,10)*scale;
-                eig.nn(j+1).ll(i).vp = eigen_ll_nn(:,11)*scale;
-                eig.nn(j+1).ll(i).phi = eigen_ll_nn(:,12);
-                eig.nn(j+1).ll(i).phip = eigen_ll_nn(:,13);
-                eig.nn(j+1).ll(i).R = eigen_ll_nn(:,14);
-                eig.nn(j+1).ll(i).S = eigen_ll_nn(:,15);
-                eig.rad = 6371 - eig.r/1000;
-                eig.nn(j+1).ll(i).per = 2*pi./eig.nn(j+1).ll(i).w;
-            end
-        else
-            eig.ll(i).nn = [];
+    for iper = 1:length(periods)
+        [~,Iper] = min(abs( per(nn==mode) - periods(iper) ));
+        eigen_nn = eigen(nn==mode,:);
+        w_ind = 2*pi./per(Iper);
+        eigen_ind = eigen_nn(eigen_nn(:,3)==eigen_nn(Iper,3),:);
+        
+        %eig.nn(j+1).ll(i).dat = eigen_ll_nn(:,:);
+        eig(iper).ll = eigen_ind(1,1);
+        eig(iper).nn = eigen_ind(1,2);
+        eig(iper).w = eigen_ind(1,3);
+        if iper == 1
+            eig(iper).r = eigen_ind(:,4);
+            eig(iper).z = 6371 - eig(iper).r/1000;
+            eig(iper).kappa = eigen_ind(:,5);
+            eig(iper).mu = eigen_ind(:,6);
+            eig(iper).rho = eigen_ind(:,7);
         end
+        eig(iper).u = eigen_ind(:,8)*scale;
+        eig(iper).up = eigen_ind(:,9)*scale;
+        eig(iper).v = eigen_ind(:,10)*scale;
+        eig(iper).vp = eigen_ind(:,11)*scale;
+        eig(iper).phi = eigen_ind(:,12);
+        eig(iper).phip = eigen_ind(:,13);
+        eig(iper).R = eigen_ind(:,14);
+        eig(iper).S = eigen_ind(:,15);
+        eig(iper).per = 2*pi./eig(iper).w;
+
     end
     
 % TOROIDAL

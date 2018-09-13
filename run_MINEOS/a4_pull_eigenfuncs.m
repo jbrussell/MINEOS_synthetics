@@ -19,8 +19,8 @@
 
 clear; close all;
 
-mbranch = 1; % mode number
-overwrite = 1; % overwrite existing eigenfunction *.mat file?
+mbranch = 0; % mode number
+overwrite = 0; % overwrite existing eigenfunction *.mat file?
 
 
 parameter_FRECHET;
@@ -32,7 +32,7 @@ if ( TYPE == 'T')
 elseif ( TYPE == 'S') 
     TYPEID = param.STYPEID;
 end
-mat_name = ['./eig_mats/',param.CARDID,'.',num2str(N_modes),'.',TYPE,'.mat'];
+mat_name = [param.eigpath,param.CARDID,'.',num2str(N_modes),'.',TYPE,num2str(mbranch),'.mat'];
 
 % check if eigenfunction *.mat file already exists in ./eig_mats directory
 if ~exist(mat_name,'file') || overwrite
@@ -43,11 +43,11 @@ if ~exist(mat_name,'file') || overwrite
     [status eig_fils] = system(com);
     if strcmp(eig_fils(end-25:end-1),'No such file or directory')
         disp('No *.eig_fix files')
-        [eigen,eig,saveopt] = load_eigen_asc(TYPE,mbranch);
+        [eigen,eig,saveopt] = load_eigen_asc(TYPE,mbranch,periods);
         save(mat_name,'eig',saveopt);
     else
         disp('Found *.eig_fix files')
-        [eigen,eig,saveopt] = load_eigen_asc(TYPE,mbranch);
+        [eigen,eig,saveopt] = load_eigen_asc(TYPE,mbranch,periods);
         save(mat_name,'eig',saveopt);
     end
 else
@@ -66,19 +66,38 @@ for iper = 1:length(periods)
 %     [~,Iper] = min(abs([eig.nn(mbranch+1).ll(:).per]-periods(iper)));   
     %        if last_nn >= (size(eig.ll(2).nn,2) - 1)           
     r = 6371 - eig(1).r/1000;
-    wl = eig(iper).wl;
-    wp = eig(iper).wp;
-    per = eig(iper).per;
+    if TYPE == 'T'
+        wl = eig(iper).wl;
+        wp = eig(iper).wp;
+        per = eig(iper).per;
 
-    %subplot(1,2,1)
-    %            plot(wl,r,'linewidth',2); hold on;
-    plot(wl,r,'linewidth',2,'color',clr(iper,:),'linewidth',3); hold on;
-    %            hold off;
-    axis ij
-    %            set(gca,'linewidth',2);
-    title(sprintf('Eigenfunctions: nn = %d',mbranch),'fontsize',12);
-    xlabel('wl');
-    ylabel('depth (km)');
+        %subplot(1,2,1)
+        %            plot(wl,r,'linewidth',2); hold on;
+        h(iper) = plot(wl,r,'color',clr(iper,:),'linewidth',2); hold on;
+        %            hold off;
+        axis ij
+        %            set(gca,'linewidth',2);
+        title(sprintf('Eigenfunctions: nn = %d',mbranch),'fontsize',12);
+        xlabel('wl');
+        ylabel('depth (km)');
+    end
+    
+    if TYPE == 'S'
+        u = eig(iper).u;
+        v = eig(iper).v;
+        per = eig(iper).per;
+        
+        %subplot(1,2,1)
+        %            plot(wl,r,'linewidth',2); hold on;
+        h(iper) = plot(u,r,'-','color',clr(iper,:),'linewidth',2); hold on;
+        plot(v,r,'--','color',clr(iper,:),'linewidth',2); hold on;
+        %            hold off;
+        axis ij
+        %            set(gca,'linewidth',2);
+        title(sprintf('Eigenfunctions: nn = %d',mbranch),'fontsize',12);
+        xlabel('wl');
+        ylabel('depth (km)');
+    end
     %              xlim([-1 1]);
     ylim([0 400]);
     xlim([-0.1 0.1]);
@@ -86,10 +105,12 @@ for iper = 1:length(periods)
     lgd{iper}=[num2str(periods(iper)),'s'];
 
     %            pause;
+    
+    
 end
 
 %subplot(1,2,1); hold on;
-legend(lgd,'location','EastOutside','box','off');
+legend(h,lgd,'location','EastOutside','box','off');
 plot([0,0],[0,3000],'--k','linewidth',2);
 set(gca,'fontsize',16,'linewidth',2);
 
