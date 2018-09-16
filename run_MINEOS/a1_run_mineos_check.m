@@ -16,7 +16,7 @@ parameter_FRECHET;
 CARD = param.CARD;
 
 %% Remove existing table files -- JOSH 8/24/15 to allow using mutliple branches
-com = ['rm ',CARDTABLE,'*',num2str(floor(minF)),'to',num2str(floor(maxF)),'*'];
+com = ['rm ',CARDTABLE,'*',lower(param.TYPE),num2str(floor(minF)),'to',num2str(floor(maxF)),'*'];
 [status,log] = system(com);
 com = ['rm ',CARDTABLE,'log*'];
 [status,log] = system(com);
@@ -248,12 +248,16 @@ if TONLY
 
 end
 
+% Delete unnecessary files
 delete('*.LOG','qlog');
 delete([CARDTABLE,'log*']);
 delete([CARDTABLE,'*.asc']);
 if exist([CARDTABLE,param.CARDID,'.',TYPEID,'_0.eig_fix'],'file') ~= 0
-    delete([CARDTABLE,'*.eig']);
+    delete([CARDTABLE,'*',TYPEID,'.eig']);
+elseif num_loop == 0
+    delete([CARDTABLE,param.CARDID,'.',TYPEID,'_',num2str(num_loop),'.eig']);
 end
+
 %% Change the environment variables back to the way they were
 setenv('GFORTRAN_STDIN_UNIT', '-1') 
 setenv('GFORTRAN_STDOUT_UNIT', '-1') 
