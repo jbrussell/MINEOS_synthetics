@@ -6,6 +6,8 @@
 % JBR 07/18
 clear; close all;
 
+COMP = 'R'; %'Z' 'R' 'T' % Component
+
 parameter_FRECHET;
 TYPE = param.TYPE;
 CARDID = param.CARDID;
@@ -15,8 +17,14 @@ SYNTH_OUT = param.SYNTH_OUT;
 
 if ( TYPE == 'T') 
     TYPEID = param.TTYPEID;
+    if COMP == 'Z' || COMP == 'R'
+        error('Toroidal mode: Component must be T');
+    end
 elseif ( TYPE == 'S') 
     TYPEID = param.STYPEID;
+    if COMP == 'T'
+        error('Spheroidal mode: Component must be Z or R');
+    end
 end
 
 %% Change environment variables to deal with gfortran
@@ -46,9 +54,9 @@ end
 
 %% Run idagrn6_sac_excite
 setpath_idagrn;
-write_idagrn(TYPE,CARDID,EVTPATH,STAPATH,LENGTH_HR,DT)
+write_idagrn(TYPE,CARDID,EVTPATH,STAPATH,LENGTH_HR,DT,COMP)
 
-fprintf('------- Calculating Full synthetics & Excitation %s0-%d -------\n',TYPE,N_modes-1)
+fprintf('------- Calculating Full synthetics & Excitation %s0-%d: %s-------\n',TYPE,N_modes-1,COMP)
 system(['cat run_idagrn.',lower(TYPE),' > idagrn.in']);
 com = ['cat idagrn.in | idagrn6_sac_excite > idagrn.LOG'];
 [status,log] = system(com);
@@ -56,8 +64,10 @@ if status ~= 0
     error( 'something is wrong at idagrn6_sac_excite')
 end
 
-system(sprintf('mv *.%s.sac %s',TYPE,SAC_OUT));
-system(sprintf('mv *.excite.asc %s',EXCITE_OUT));
+system(sprintf('mv *.%s.sac %s',COMP,SAC_OUT));
+if TYPE == 'T'
+    system(sprintf('mv *.excite.asc %s',EXCITE_OUT));
+end
 
 %% Change the environment variables back to the way they were
 setenv('GFORTRAN_STDIN_UNIT', '-1') 

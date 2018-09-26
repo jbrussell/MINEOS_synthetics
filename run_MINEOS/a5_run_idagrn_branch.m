@@ -7,6 +7,7 @@
 clear; close all;
 
 branches = [0 1]; % Fundamental -> 0
+COMP = 'R'; %'Z' 'R' 'T' % Component
 
 parameter_FRECHET;
 TYPE = param.TYPE;
@@ -17,8 +18,14 @@ SYNTH_OUT = param.SYNTH_OUT;
 
 if ( TYPE == 'T') 
     TYPEID = param.TTYPEID;
+    if COMP == 'Z' || COMP == 'R'
+        error('Toroidal mode: Component must be T');
+    end
 elseif ( TYPE == 'S') 
     TYPEID = param.STYPEID;
+    if COMP == 'T'
+        error('Spheroidal mode: Component must be Z or R');
+    end
 end
 
 %% Change environment variables to deal with gfortran
@@ -44,9 +51,9 @@ for branch = branches
 
     %% Run idagrn6_mask
     setpath_idagrn;
-    write_idagrn_branch(TYPE,CARDID,branch,EVTPATH,STAPATH,LENGTH_HR,DT)
+    write_idagrn_branch(TYPE,CARDID,branch,EVTPATH,STAPATH,LENGTH_HR,DT,COMP)
     
-    fprintf('-------Calculating synthetics %s%d-------\n',TYPE,branch)
+    fprintf('-------Calculating synthetics %s%d: %s-------\n',TYPE,branch,COMP)
     system(['cat run_idagrn_branch.',lower(TYPE),' > idagrn.in']);
     com = ['cat idagrn.in | idagrn6_mask > idagrn.LOG'];
     [status,log] = system(com);
@@ -55,7 +62,7 @@ for branch = branches
     end
     
 
-    system(sprintf('mv *.%s.sac %s',TYPE,BRANCH_OUT));
+    system(sprintf('mv *.%s.sac %s',COMP,BRANCH_OUT));
 end
 
 %% Change the environment variables back to the way they were
