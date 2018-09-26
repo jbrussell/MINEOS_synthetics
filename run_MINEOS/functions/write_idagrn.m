@@ -1,7 +1,7 @@
 %% Write idagrn driver
 % JBR 7/18
 %
-function write_idagrn(TYPE,CARD,EVT,STA,LENGTH_HR,DT)
+function write_idagrn(TYPE,CARD,EVT,STA,LENGTH_HR,DT,COMP)
 
 
 parameter_FRECHET;
@@ -52,7 +52,7 @@ fprintf(fid,'%s\n',TABLE);               % path to mode table
 fprintf(fid,'%.4f %.1f\n',LENGTH_HR,DT); % length (hours); 1/samplerate (s)
 fprintf(fid,'35.\n');                    % reference frequency wref
 fprintf(fid,'%s\n',CARDID);              % card
-fprintf(fid,'%s\n',TYPE);                % T (toroidal) or S (spheroidal)
+fprintf(fid,'%s\n',COMP);                % T (Transverse; toroidal) Z (Vertical; spheroidal) R (Radial; spheroidal)
 fprintf(fid,'.true.\n');                 % .true. = Displacement; .false. = Acceleration
 fprintf(fid,'.false.\n');                % use crust5.1 model? May or may not work...
 fprintf(fid,'sa_junk\n');                %junk if no crustal model
