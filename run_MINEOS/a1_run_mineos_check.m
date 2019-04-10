@@ -253,7 +253,7 @@ delete('*.LOG','qlog','log_table');
 delete([CARDTABLE,'log*']);
 delete([CARDTABLE,'*.asc']);
 if exist([CARDTABLE,param.CARDID,'.',TYPEID,'_0.eig_fix'],'file') ~= 0
-    delete([CARDTABLE,'*',TYPEID,'*.eig']);
+    delete([CARDTABLE,'*',TYPEID,'*.eig']); % Delete regular .eig files
 elseif num_loop == 0
     delete([CARDTABLE,param.CARDID,'.',TYPEID,'_',num2str(num_loop),'.eig']);
 end
