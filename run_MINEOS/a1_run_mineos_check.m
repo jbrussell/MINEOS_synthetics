@@ -22,7 +22,7 @@ com = ['rm ',CARDTABLE,'log*'];
 [status,log] = system(com);
 
 %% Set path to fortran executables
-setpath_mineos;
+% setpath_mineos;
 
 
 %% Change environment variables to deal with gfortran
@@ -249,11 +249,11 @@ if TONLY
 end
 
 % Delete unnecessary files
-delete('*.LOG','qlog');
+delete('*.LOG','qlog','log_table');
 delete([CARDTABLE,'log*']);
 delete([CARDTABLE,'*.asc']);
 if exist([CARDTABLE,param.CARDID,'.',TYPEID,'_0.eig_fix'],'file') ~= 0
-    delete([CARDTABLE,'*',TYPEID,'.eig']);
+    delete([CARDTABLE,'*',TYPEID,'*.eig']);
 elseif num_loop == 0
     delete([CARDTABLE,param.CARDID,'.',TYPEID,'_',num2str(num_loop),'.eig']);
 end

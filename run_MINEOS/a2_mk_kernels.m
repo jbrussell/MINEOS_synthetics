@@ -14,6 +14,8 @@ clear; close all;
 parameter_FRECHET;
 branch = 0; % Fundamental -> 0
 
+is_deletefrech = 0; % Delete the .frech files to save space? Need these for idagrn!
+
 TYPE = param.TYPE;
 CARDID = param.CARDID;
 
@@ -136,15 +138,19 @@ if ( TYPE == 'S')
         set(gcf,'position',[112   169   830   532]);
         clf
          CC=lines(length(periods));
+         CC = flip(brewermap(length(periods),'Spectral'));
          %CC=copper(length(periods));
             ax1 = subplot(1,3,1);
-            plot(vs,r,'linewidth',2,'color',[0 0 1]);
+            plot(VSV/1000,r,'linewidth',3,'color',[0 0 0]); hold on;
+            plot(VSH/1000,r,'linewidth',3,'color',[1 0 0]);
             set(gca,'Ydir','reverse','linewidth',2,'YMinorTick','on','XMinorTick','on');
             ylim([yaxis]);
-            %ylim([0 100]);
-            %xlim([3 5]);
-            xlim([0 5.2]);
-            title('Vs');
+            xlim([3 5.2]);
+            xlabel('V_{S} (km/s)','fontsize',18);
+            ylabel('Depth (km)','fontsize',18);
+            legend({'V_{SV}','V_{SH}'},'location','southwest');
+            set(gca,'fontsize',16);
+%             title('Vs');
             dx = 0.06;
             ax1.Position = [ax1.Position(1:2) ax1.Position(3)+dx ax1.Position(4)];
 
@@ -165,7 +171,7 @@ if ( TYPE == 'S')
 
             end            
             fig=gcf;
-            set(gca,'fontsize',18);
+            set(gca,'fontsize',16);
             ax2.Position = [ax1.Position(1)+ax1.Position(3)+0.1 ax2.Position(2) ax2.Position(3)+dx ax2.Position(4)];
             legend(lgd,'position',[ax2.Position(1)+ax2.Position(3)+0.08 0.5 0 0],'box','off');
 
@@ -183,16 +189,19 @@ elseif ( TYPE == 'T')
         set(gcf,'position',[112   169   830   532]);
         clf
 %          CC=jet(length(periods));
-         CC=lines(length(periods));
+%          CC=lines(length(periods));
+        CC = flip(brewermap(length(periods),'Spectral'));
          %CC=copper(length(periods));
             ax1 = subplot(1,3,1);
-            plot(vs,r,'linewidth',3,'color',[0 0 0]);
+            plot(VSV/1000,r,'linewidth',3,'color',[0 0 0]); hold on;
+            plot(VSH/1000,r,'linewidth',3,'color',[1 0 0]);
             set(gca,'Ydir','reverse','linewidth',2,'YMinorTick','on','XMinorTick','on');
             ylim([yaxis]);
             xlim([3 5.2]);
-            xlabel('V_{SH} (km/s)','fontsize',18);
+            xlabel('V_{S} (km/s)','fontsize',18);
             ylabel('Depth (km)','fontsize',18);
-            set(gca,'fontsize',18);
+            legend({'V_{SV}','V_{SH}'},'location','southwest');
+            set(gca,'fontsize',16);
             dx = 0.06;
             ax1.Position = [ax1.Position(1:2) ax1.Position(3)+dx ax1.Position(4)];
             
@@ -216,7 +225,7 @@ elseif ( TYPE == 'T')
             end
             
             fig=gcf;
-            set(gca,'fontsize',18);
+            set(gca,'fontsize',16);
             ax2.Position = [ax1.Position(1)+ax1.Position(3)+0.1 ax2.Position(2) ax2.Position(3)+dx ax2.Position(4)];
             legend(lgd,'position',[ax2.Position(1)+ax2.Position(3)+0.08 0.5 0 0],'box','off');
 
@@ -236,4 +245,6 @@ setenv('GFORTRAN_STDOUT_UNIT', '-1')
 setenv('GFORTRAN_STDERR_UNIT', '-1')
 
 delete('*.LOG');
-delete([param.frechetpath,'*.fcv.*'],[param.frechetpath,'*.frech'])
+if is_deletefrech
+    delete([param.frechetpath,'*.fcv.*'],[param.frechetpath,'*.frech'])
+end
