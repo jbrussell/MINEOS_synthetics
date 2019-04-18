@@ -102,6 +102,7 @@ for iper = 1:length(periods)
         per = eig(iper).per;
         ll = eig(iper).ll;
         
+        
         %subplot(1,2,1)
         %            plot(wl,r,'linewidth',2); hold on;
         h(iper) = plot(u,r,'-','color',clr(iper,:),'linewidth',2); hold on;
@@ -123,6 +124,7 @@ for iper = 1:length(periods)
     
     
 end
+[ ones_v ] = check_eignorm( eig,scale,TYPE );
 
 %subplot(1,2,1); hold on;
 legend(h,lgd,'location','EastOutside','box','off');
