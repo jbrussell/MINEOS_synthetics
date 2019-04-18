@@ -5,15 +5,15 @@
 %
 % 11/2/15 JBR -- This version allows for custom CARDID input
 %
-function write_frech_chk(NDISC,CARDID)
+function write_frech_chk_multicard(NDISC,CARDID)
 
 
 parameter_FRECHET;
 CARDPATH  = param.CARDPATH;
 TABLEPATH = param.TABLEPATH;
-FRECHETPATH  = param.frechetpath;
+% FRECHETPATH = param.frechetpath;
+FRECHETPATH = [param.frechet,CARDID,'/'];
 TYPE = param.TYPE;
-CARD = param.CARD;
 % Set number of discontinuities to add
 if NDISC > 0
     

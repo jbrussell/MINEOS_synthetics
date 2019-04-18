@@ -19,7 +19,8 @@ fid_log = fopen('draw_frechet_gv.LOG','w'); %JBR -- write log file
 % Get useful info from parameter file
 parameter_FRECHET;
 CARDPATH = param.CARDPATH;
-FRECHETPATH = param.frechetpath;
+% FRECHETPATH = param.frechetpath;
+FRECHETPATH = [param.frechet,CARD,'/'];
 TABLEPATH = param.TABLEPATH;
 periods = param.periods;
 

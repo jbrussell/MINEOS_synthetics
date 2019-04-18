@@ -9,7 +9,8 @@ function write_frechcv(TYPE,CARD,BR)
 parameter_FRECHET;
 
 CARDPATH = param.CARDPATH;
-FRECHETPATH = param.frechetpath;
+% FRECHETPATH = param.frechetpath;
+FRECHETPATH = [param.frechet,CARD,'/'];
 TABLEPATH = param.TABLEPATH;
 
 if strcmp(TYPE,'T') == 1
