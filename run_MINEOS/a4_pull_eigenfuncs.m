@@ -64,7 +64,13 @@ clr = jet(length(periods));
             %clr = copper(1);
 for iper = 1:length(periods)
 %     [~,Iper] = min(abs([eig.nn(mbranch+1).ll(:).per]-periods(iper)));   
-    %        if last_nn >= (size(eig.ll(2).nn,2) - 1)           
+    %        if last_nn >= (size(eig.ll(2).nn,2) - 1)     
+    % Scaling parameters
+    rn = 6371000;
+    bigg = 6.6723e-11; % m/kg/s2
+    rhobar = 5515; % kg/m3
+    scale = 1/(rn*sqrt(rn*pi*bigg)*rhobar);
+    
     r = 6371 - eig(1).r/1000;
     if TYPE == 'T'
         wl = eig(iper).wl;
@@ -86,6 +92,7 @@ for iper = 1:length(periods)
         u = eig(iper).u;
         v = eig(iper).v;
         per = eig(iper).per;
+        ll = eig(iper).ll;
         
         %subplot(1,2,1)
         %            plot(wl,r,'linewidth',2); hold on;
@@ -100,7 +107,7 @@ for iper = 1:length(periods)
     end
     %              xlim([-1 1]);
     ylim([0 400]);
-    xlim([-0.1 0.1]);
+%     xlim([-0.1 0.1]);
 
     lgd{iper}=[num2str(periods(iper)),'s'];
 
