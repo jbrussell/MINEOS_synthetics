@@ -6,6 +6,14 @@
 % MUST FIRST RUN 'run_mineos.m' to generate eigenfunction file and
 % 'mk_kernels.m' to generate branch file
 %
+% !!! IMPORTANT - Unnormalized !!!
+% By default, eigenfunctions are unnormalized and need to be multiplied 
+% by a scale factor:
+% scale = 1/(rn*sqrt(rn*pi*bigg)*rhobar)
+% such that 
+% 1 = trapz(r , rho.*(U.^2+V.^2).*r.^2 ) * omega^2;
+% 1 = trapz(r , rho.*(W.^2     ).*r.^2 ) * omega^2;
+%
 %
 % calls on programs: 
 %           parameter_FRECHET
