@@ -14,7 +14,7 @@ clear; close all;
 parameter_FRECHET;
 branch = 0; % Fundamental -> 0
 
-is_deletefrech = 0; % Delete the .frech files to save space? Need these for idagrn!
+is_deletefrech = 1; % Delete the .frech files to save space?
 
 TYPE = param.TYPE;
 CARDID = param.CARDID;
