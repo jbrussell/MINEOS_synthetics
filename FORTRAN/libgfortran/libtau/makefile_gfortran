@@ -1,4 +1,4 @@
-MLIB=../
+MYLIB=../
 OBJTAU = libtau.o libsun.o
 FFLAGS = -O3
 LFLAGS = -L$(MYLIB)
