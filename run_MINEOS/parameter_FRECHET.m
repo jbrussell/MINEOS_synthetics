@@ -68,6 +68,7 @@ if ~exist(CARDTABLE)
 end
 
 %% setup Parameters for kernals
+param.frechet = [path2runMINEOS,'/MODE/FRECHET/'];
 param.frechetpath = [path2runMINEOS,'/MODE/FRECHET/',param.CARDID,'/'];
 
 if ~exist(param.frechetpath) 
