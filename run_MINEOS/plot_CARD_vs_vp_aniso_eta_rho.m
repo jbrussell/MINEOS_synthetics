@@ -21,23 +21,16 @@ YLIMS = [0 500];
 h_ncard = [param.CARDPATH,param.CARD];
 h_nqmod = [param.CARDPATH,param.CARDID,'.qmod'];
 
-fidr = fopen(h_ncard,'r');
-hdr_l1 = fgetl(fidr);
-hdr_l2 = fgetl(fidr);
-hdr_l3 = fgetl(fidr);
-ncard = textscan(fidr, '%f%f%f%f%f%f%f%f%f');
-fclose(fidr);
-
-ncard_temp = ncard;
-R = ncard{1};
-RHO = ncard{2};
-VPV = ncard{3};
-VSV = ncard{4};
-QKAPPA = ncard{5};
-QSHEAR = ncard{6};
-VPH = ncard{7};
-VSH = ncard{8};
-eta = ncard{9};
+card = read_model_card(h_ncard);
+R = card.rad;
+RHO = card.rho;
+VPV = card.vpv;
+VSV = card.vsv;
+QKAPPA = card.qkap;
+QSHEAR = card.qmu;
+VPH = card.vph;
+VSH = card.vsh;
+eta = card.eta;
 
 %% Plot card
 fig1 = figure(1); clf; set(gcf, 'Color', 'w');
