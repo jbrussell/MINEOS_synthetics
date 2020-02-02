@@ -8,7 +8,7 @@ path2BIN = '../FORTRAN/bin'; % Path to fortran binaries
 % Mineos table parameters
 maxN = 400000; % Estimate of max number of modes
 minF = 0;
-maxF = 150.05; % max frequency in mHz; %10.1; %250.05; %333.4; %500.05; %200.05; %%150.05; %50.05;
+maxF = 200.05; % max frequency in mHz; %10.1; %250.05; %333.4; %500.05; %200.05; %%150.05; %50.05;
 minL = 0;
 maxL = 50000;
 N_modes = 2; % <0 uses all mode branches, 1=fundamental only -------- JOSH 8/22/15
