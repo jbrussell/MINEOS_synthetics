@@ -13,7 +13,7 @@
 % COLUMNS OF CARD FILE: 1   2  3   4     5     6     7   8   9
 %                       R,RHO,VPV,VSV,QKAPPA,QSHEAR,VPH,VSH,ETA
 %
-function [] = write_MINE_mod(ncard,CARD)
+function [] = write_MINEOS_mod(ncard,CARD)
 
 % CARD : Name of output card file
 % ncard : input card structure to write out
@@ -49,8 +49,9 @@ fprintf(fid, '%i\t%f\t%i\n',[ifanis trec ifdeck]);
 
 % Line 3 - N, nic, noc
 N = length(card.rho);
-nic = 63; % Get from model card -- inner core
-noc = 177; % Get from model card -- outer core
+ind_oc = find(card.vsv==0 & card.vpv>7000); % index liquid outer core
+nic = ind_oc(1)-1; % top of inner core
+noc = ind_oc(end); % top of outer core
 
 fprintf(fid,'%3i\t%2i\t%2i\n',[N nic noc]);
 
