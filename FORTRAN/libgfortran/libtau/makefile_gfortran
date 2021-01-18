@@ -1,6 +1,7 @@
 MYLIB=../
 OBJTAU = libtau.o libsun.o
 FFLAGS = -O3
+# FFLAGS = $(MYFFLAGS)
 LFLAGS = -L$(MYLIB)
 LLIBS = -ltau
 ARFLAGS= rcv
@@ -11,3 +12,11 @@ libtau.a:	${OBJTAU}
 		gfortran $(FFLAGS) -c libsun.f
 		ar ${ARFLAGS} $(MYLIB)/libtau.a ${OBJTAU}
 		ranlib $(MYLIB)/libtau.a
+setbrn:		setbrn.o
+		gfortran $(FFLAGS) $(MYLIB)/libtau.a setbrn.o -o $(MYLIB)/setbrn
+ttimes:		ttimes.o
+		gfortran $(FFLAGS) $(LFLAGS) ttimes.o $(LLIBS) -o $(MYLIB)/ttimes
+
+
+$(OBJTAU): libtau.f libsun.f
+	gfortran $(FFLAGS) -c $*.f

@@ -10,5 +10,5 @@
 
 ------------------------------------------------------------
 ./prog_mask (1 makefile)
-3_idagrn6_mask.mk       - idagrn6_mask (outputs synthetics for individual mode branches)
+1_idagrn6_mask.mk       - idagrn6_mask (outputs synthetics for individual mode branches)
 
