@@ -77,7 +77,7 @@ rn = 6371000;
 bigg = 6.6723e-11; % m/kg/s2
 rhobar = 5515; % kg/m3
 scale = 1/(rn*sqrt(rn*pi*bigg)*rhobar);
-scale = 1;
+% scale = 1;
 
 %% Change environment variables to deal with gfortran
 setenv('GFORTRAN_STDIN_UNIT', '5') 
@@ -214,6 +214,7 @@ if (TYPE == 'S')
         eig(iper).R = eigen_ind(:,14);
         eig(iper).S = eigen_ind(:,15);
         eig(iper).per = 2*pi./eig(iper).w;
+        eig(iper).per_want = periods(iper);
 
     end
     
@@ -259,6 +260,7 @@ elseif ( TYPE == 'T')
         eig(iper).wp = eigen_ind(:,9)*scale;
         eig(iper).T = eigen_ind(:,10);
         eig(iper).per = 2*pi./eig(iper).w;
+        eig(iper).per_want = periods(iper);
 
     end
 end
