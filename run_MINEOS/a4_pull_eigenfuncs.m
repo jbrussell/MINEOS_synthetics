@@ -40,7 +40,7 @@ if ( TYPE == 'T')
 elseif ( TYPE == 'S') 
     TYPEID = param.STYPEID;
 end
-mat_name = [param.eigpath,param.CARDID,'.',num2str(N_modes),'.',TYPE,num2str(mbranch),'.mat'];
+mat_name = [param.eigpath,param.CARDID,'.',TYPE,num2str(mbranch),'.mat'];
 
 % check if eigenfunction *.mat file already exists in ./eig_mats directory
 if ~exist(mat_name,'file') || overwrite
@@ -124,7 +124,8 @@ for iper = 1:length(periods)
     
     
 end
-[ ones_v ] = check_eignorm( eig,scale,TYPE );
+scale_factor = 1; % eigenfunctions already scaled in load_eigen_asc
+[ ones_v ] = check_eignorm( eig,scale_factor,TYPE );
 
 %subplot(1,2,1); hold on;
 legend(h,lgd,'location','EastOutside','box','off');
@@ -141,6 +142,6 @@ CARDID = param.CARDID;
 TYPEID = param.TTYPEID;
 EIGPATH = param.eigpath;
 %print('-painters','-dpdf','-r400',[EIGPATH,CARDID,'.',TYPEID,'.',num2str(j),'mod.',num2str(N_modes),'_fix.pdf']);
-save2pdf([EIGPATH,CARDID,'.',TYPEID,'.',num2str(j),'mod.',num2str(N_modes),'_fix.pdf'],fig1,1000);
+save2pdf([EIGPATH,CARDID,'.',TYPEID,'.',num2str(mbranch),'mod.',num2str(N_modes),'_fix.pdf'],fig1,1000);
 
 delete([param.eigpath,'*_fix.asc'],[param.eigpath,'*.asc']);
