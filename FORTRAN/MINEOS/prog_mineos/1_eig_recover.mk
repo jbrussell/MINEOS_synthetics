@@ -1,4 +1,4 @@
-MYBIN = /Users/russell/Lamont/PROJ_LoveOvertones/FORTRAN/bin
+MYBIN = /Users/russell/Lamont/GITHUB/MINEOS_synthetics/FORTRAN/bin
 FC = gfortran
 FFLAGS=-ffixed-line-length-none
 #
