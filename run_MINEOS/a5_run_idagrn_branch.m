@@ -7,7 +7,6 @@
 clear; close all;
 
 branches = [0 1]; % Fundamental -> 0
-COMP = 'R'; %'Z' 'R' 'T' % Component
 
 parameter_FRECHET;
 TYPE = param.TYPE;
@@ -15,6 +14,11 @@ CARDID = param.CARDID;
 EVTPATH = param.EVTPATH;
 STAPATH = param.STAPATH;
 SYNTH_OUT = param.SYNTH_OUT;
+COMP = param.COMP;
+LENGTH_HR = param.LENGTH_HR;
+DT = param.DT;
+eventfile = param.eventfile;
+stationfile = param.stationfile;
 
 if ( TYPE == 'T') 
     TYPEID = param.TTYPEID;

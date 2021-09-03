@@ -24,10 +24,11 @@ param.periods = round(logspace(log10(5),log10(200),15));
 ch_mode = 0; % (DO NOT CHANGE) mode branch to check for missed eigenfrequencies 0 => T0 ------- JOSH 10/7/15
 
 %% Parameters for idagrn synthetics
-LENGTH_HR = 1.0; %1.0; % length of seismogram in hours
-DT = 1.0; % 1/samplerate
-eventfile = 'evt_201404131236';
-stationfile = 'stations.stn';
+param.COMP = 'Z'; % 'Z:vertical'; 'R:radial'; 'T:tangential'; Component
+param.LENGTH_HR = 1.0; %1.0; % length of seismogram in hours
+param.DT = 1.0; % 1/samplerate
+param.eventfile = 'evt_201404131236';
+param.stationfile = 'stations.stn';
 
 
 %%
