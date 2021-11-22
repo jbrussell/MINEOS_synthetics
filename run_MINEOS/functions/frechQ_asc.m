@@ -108,18 +108,18 @@ for ip = 1:length(periods)
     if strcmp(TYPE,'S') == 1
         FRECH(ip).per = periods(ip);
         FRECH(ip).rad = C{1};
-        FRECH(ip).qmu = C{2};
-        FRECH(ip).qkappa = C{3};
-%         FRECH(ip).N = C{4}; % dummy
-%         FRECH(ip).A = C{5}; % dummy
+        FRECH(ip).K_qmu = C{2};
+        FRECH(ip).K_qkappa = C{3};
+        FRECH(1).qmu = C{4}; % qmu from qmod interpolated to card knots
+        FRECH(1).qkappa = C{5}; % qkappa from qmod interpolated to card knots
 %         FRECH(ip).F = C{6}; % dummy
-        FRECH(ip).rho = C{7};
+        FRECH(ip).K_rho = C{7};
     elseif strcmp(TYPE,'T') == 1
         FRECH(ip).per = periods(ip);
         FRECH(ip).rad = C{1};
-        FRECH(ip).qmu = C{2};
-        FRECH(ip).qkappa = C{3};
-        FRECH(ip).rho = C{4};
+        FRECH(ip).K_qmu = C{2};
+        FRECH(1).qmu = C{3}; % qmu from qmod interpolated to card knots
+        FRECH(ip).K_rho = C{4};
     end
 end
 

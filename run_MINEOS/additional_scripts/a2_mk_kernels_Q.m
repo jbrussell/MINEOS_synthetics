@@ -141,14 +141,18 @@ if ( TYPE == 'S')
          CC = flip(brewermap(length(periods),'Spectral'));
          %CC=copper(length(periods));
             ax1 = subplot(1,3,1);
-            plot(VSV/1000,r,'linewidth',3,'color',[0 0 0]); hold on;
-            plot(VSH/1000,r,'linewidth',3,'color',[1 0 0]);
+%             plot(VSV/1000,r,'linewidth',3,'color',[0 0 0]); hold on;
+%             plot(VSH/1000,r,'linewidth',3,'color',[1 0 0]);
+            plot(FRECH_S(1).qmu,(6371000-FRECH_S(1).rad)./1000,'linewidth',3,'color',[1 0 0]); hold on;
+            plot(FRECH_S(1).qkappa,(6371000-FRECH_S(1).rad)./1000,'linewidth',3,'color',[0 0 0]); hold on;
             set(gca,'Ydir','reverse','linewidth',2,'YMinorTick','on','XMinorTick','on');
             ylim([yaxis]);
-            xlim([3 5.2]);
-            xlabel('V_{S} (km/s)','fontsize',18);
+            xlim([0 1500]);
+%             xlabel('V_{S} (km/s)','fontsize',18);
+            xlabel('Q','fontsize',18);
             ylabel('Depth (km)','fontsize',18);
-            legend({'V_{SV}','V_{SH}'},'location','southwest');
+%             legend({'V_{SV}','V_{SH}'},'location','southwest');
+            legend({'Q_{\mu}','Q_{\kappa}'},'location','southwest');
             set(gca,'fontsize',16);
 %             title('Vs');
             dx = 0.06;
@@ -157,7 +161,7 @@ if ( TYPE == 'S')
             for ip = 1:length(periods)
                 ax2 = subplot(1,3,2);
                 hold on
-                plot(FRECH_S(ip).qmu,(6371000-FRECH_S(ip).rad)./1000,'-k','linewidth',3,'color',CC(ip,:))
+                plot(FRECH_S(ip).K_qmu,(6371000-FRECH_S(ip).rad)./1000,'-k','linewidth',3,'color',CC(ip,:))
                 title('FRECH S - Q_{\mu}','fontname','Times New Roman','fontsize',12);
                 lgd{ip}=[num2str(periods(ip)),'s'];
                 set(gca,'Ydir','reverse','linewidth',2,'YMinorTick','on','XMinorTick','on');
@@ -194,14 +198,17 @@ elseif ( TYPE == 'T')
         CC = flip(brewermap(length(periods),'Spectral'));
          %CC=copper(length(periods));
             ax1 = subplot(1,3,1);
-            plot(VSV/1000,r,'linewidth',3,'color',[0 0 0]); hold on;
-            plot(VSH/1000,r,'linewidth',3,'color',[1 0 0]);
+%             plot(VSV/1000,r,'linewidth',3,'color',[0 0 0]); hold on;
+%             plot(VSH/1000,r,'linewidth',3,'color',[1 0 0]);
+            plot(FRECH_T(1).qmu,(6371000-FRECH_T(1).rad)./1000,'linewidth',3,'color',[1 0 0]); hold on;
             set(gca,'Ydir','reverse','linewidth',2,'YMinorTick','on','XMinorTick','on');
             ylim([yaxis]);
-            xlim([3 5.2]);
-            xlabel('V_{S} (km/s)','fontsize',18);
+            xlim([0 1500]);
+%             xlabel('V_{S} (km/s)','fontsize',18);
+            xlabel('Q','fontsize',18);
             ylabel('Depth (km)','fontsize',18);
-            legend({'V_{SV}','V_{SH}'},'location','southwest');
+%             legend({'V_{SV}','V_{SH}'},'location','southwest');
+            legend({'Q_{\mu}'},'location','southwest');
             set(gca,'fontsize',16);
             dx = 0.06;
             ax1.Position = [ax1.Position(1:2) ax1.Position(3)+dx ax1.Position(4)];
@@ -211,7 +218,7 @@ elseif ( TYPE == 'T')
                 ax2 = subplot(1,3,2);
                 axis tight;
                 hold on
-                plot(FRECH_T(ip).qmu,(6371000-FRECH_T(ip).rad)./1000,'-k','linewidth',3,'color',CC(ip,:))
+                plot(FRECH_T(ip).K_qmu,(6371000-FRECH_T(ip).rad)./1000,'-k','linewidth',3,'color',CC(ip,:))
 %                 title(titlename,'fontsize',18);
                 lgd{ip}=[num2str(periods(ip)),'s'];
                 set(gca,'YDir','reverse','linewidth',2,'YMinorTick','on','XMinorTick','on')

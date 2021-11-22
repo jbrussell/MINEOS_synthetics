@@ -74,6 +74,8 @@ c 	  11/22/21 - Modified to calculate and save Q_mu and Q_kappa Kernels. Kernels
 c                are premultiplied by factors of mu and kappa:
 c                K_qmu = mu * mm
 c                K_qkappa = kappa * kk
+c              - Output interpolated Q_mu and Q_kappa values in columns followng
+c                K_qmu and K_qkappa
 c
 c     SEE file FRECHET.DEFS for variable definitions
 c
@@ -760,13 +762,13 @@ c            Q kappa kernel (Q_k)
 c             intg(j,4) = dnn(j)* alphav(j)**2 *xcc 
              intg(j,4) = kappa(j)*kk          
 
-c            Dummy value
+c            Q_mu (divide by 0.5*scale*scale because it will be multipled later in draw_frechet_gv)
 c             intg(j,5) = dnn(j)* betah(j)**2 *xnn
-             intg(j,5) = 0
+             intg(j,5) = muq(j) / (0.5*scale*scale)
              
-c            Dummy value
+c            Q_kappa (divide by 0.5*scale*scale because it will be multipled in draw_frechet_gv)
 c             intg(j,6) = dnn(j)* alphah(j)**2 *xaa
-             intg(j,6) = 0
+             intg(j,6) = kapq(j) / (0.5*scale*scale)
              
 c            Dummy value
 c             intg(j,7) = dnn(j)* eta(j)*(alphah(j)**2
@@ -995,9 +997,9 @@ c            Q mu kernel (Q_mu)
 c             intg(j,3) = dnn(j)* betav(noc+j)**2 *xll  
              intg(j,3) = mu(j)*mm        
 
-c            Dummy value
-c             intg(j,4) = dnn(j)* betah(noc+j)**2 *xnn
-             intg(j,4) = 0
+c            Q_mu (divide by 0.5*scale*scale because it will be multipled later in draw_frechet_gv)
+c             intg(j,5) = dnn(j)* betah(j)**2 *xnn
+             intg(j,4) = muq(j) / (0.5*scale*scale)
              
                           
 c
@@ -1261,13 +1263,13 @@ c            Q kappa kernel (Q_k)
 c             intg(j,4) = dnn(j)* alphav(j)**2 *xcc 
              intg(j,4) = kappa(j)*kk          
 
-c            Dummy value
+c            Q_mu (divide by 0.5*scale*scale because it will be multipled later in draw_frechet_gv)
 c             intg(j,5) = dnn(j)* betah(j)**2 *xnn
-             intg(j,5) = 0
-             
-c            Dummy value
+             intg(j,4) = muq(j) / (0.5*scale*scale)
+           
+c            Q_kappa (divide by 0.5*scale*scale because it will be multipled in draw_frechet_gv)
 c             intg(j,6) = dnn(j)* alphah(j)**2 *xaa
-             intg(j,6) = 0
+             intg(j,6) = kapq(j) / (0.5*scale*scale)
              
 c            Dummy value
 c             intg(j,7) = dnn(j)* eta(j)*(alphah(j)**2
