@@ -74,7 +74,7 @@ c 	  11/22/21 - Modified to calculate and save Q_mu and Q_kappa Kernels. Kernels
 c                are premultiplied by factors of mu and kappa:
 c                K_qmu = mu * mm
 c                K_qkappa = kappa * kk
-c              - Output interpolated Q_mu and Q_kappa values in columns followng
+c              - Output interpolated Q_mu and Q_kappa values in columns following
 c                K_qmu and K_qkappa
 c
 c     SEE file FRECHET.DEFS for variable definitions
