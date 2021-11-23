@@ -162,11 +162,11 @@ if ( TYPE == 'S')
                 ax2 = subplot(1,3,2);
                 hold on
                 plot(FRECH_S(ip).K_qmu,(6371000-FRECH_S(ip).rad)./1000,'-k','linewidth',3,'color',CC(ip,:))
-                title('FRECH S - Q_{\mu}','fontname','Times New Roman','fontsize',12);
+                title('FRECH S - Q_{\mu}^{-1}','fontname','Times New Roman','fontsize',12);
                 lgd{ip}=[num2str(periods(ip)),'s'];
                 set(gca,'Ydir','reverse','linewidth',2,'YMinorTick','on','XMinorTick','on');
                 ylim(yaxis)
-                xlabel('dQ/dQ_{\mu}');
+                xlabel('dQ^{-1}/dQ_{\mu}^{-1}');
                 if is_frech_x == 1
                     xlim(frech_x);
                 end
@@ -224,7 +224,7 @@ elseif ( TYPE == 'T')
                 lgd{ip}=[num2str(periods(ip)),'s'];
                 set(gca,'YDir','reverse','linewidth',2,'YMinorTick','on','XMinorTick','on')
                 ylim(yaxis)
-                xlabel('dQ/dQ_{\mu}');
+                xlabel('dQ^{-1}/dQ_{\mu}^{-1}');
                 if is_frech_x == 1
                     xlim(frech_x);
                 end
@@ -232,7 +232,7 @@ elseif ( TYPE == 'T')
                 box on;
 
             end
-            title('FRECH T - Q_{\mu}','fontname','Times New Roman','fontsize',12);
+            title('FRECH T - Q_{\mu}^{-1}','fontname','Times New Roman','fontsize',12);
             
             fig=gcf;
             set(gca,'fontsize',16);
@@ -242,7 +242,6 @@ elseif ( TYPE == 'T')
 
     end
     FRECH = FRECH_S;
-    
 end
 
 %% Test Scaling of kernels
@@ -259,8 +258,8 @@ for ip = 1:length(periods)
     qmu = FRECH(1).qmu;
     qkappa = FRECH(1).qkappa;
     
-    intg = sum( (K_qmu./qmu + K_qkappa./qkappa).* dr ) ;
-    q_est(ip) = 1./intg;
+    qinv = sum( (K_qmu./qmu + K_qkappa./qkappa).* dr ) ;
+    q_est(ip) = 1./qinv;
 end
 
 figure(63); clf;
@@ -271,7 +270,9 @@ xlabel('Period (s)');
 ylabel('Q');
 xlim([min(periods)-5 max(periods)+5]);
 
+
 %%
+
 FRECHETPATH = param.frechetpath;
 delete(['run_plotwk.',lower(TYPE)],['run_frechcv.',lower(TYPE)],['run_frechet.',lower(TYPE)],['run_frechcv_asc.',lower(TYPE)]);
 save2pdf([FRECHETPATH,'CARD_Q_kernels_',lower(TYPE),'_',CARDID,'_b',num2str(branch),'.',num2str(N_modes),'_',num2str(periods(1)),'_',num2str(periods(end)),'s.pdf'],fig1,1000)
