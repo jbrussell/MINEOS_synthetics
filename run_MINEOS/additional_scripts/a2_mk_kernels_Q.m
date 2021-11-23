@@ -183,6 +183,7 @@ if ( TYPE == 'S')
 
 
     end
+    FRECH = FRECH_S;
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif ( TYPE == 'T')
@@ -240,8 +241,37 @@ elseif ( TYPE == 'T')
 
 
     end
+    FRECH = FRECH_S;
+    
 end
 
+%% Test Scaling of kernels
+[mineos] = readMINEOS_qfile(branch);
+q = mineos.q;
+T = mineos.T;
+
+q_est = [];
+for ip = 1:length(periods)
+    dr = abs(diff(FRECH(ip).rad));
+    dr = [0; dr];
+    K_qmu = FRECH(ip).K_qmu;
+    K_qkappa = FRECH(ip).K_qkappa;
+    qmu = FRECH(1).qmu;
+    qkappa = FRECH(1).qkappa;
+    
+    intg = sum( (K_qmu./qmu + K_qkappa./qkappa).* dr ) ;
+    q_est(ip) = 1./intg;
+end
+
+figure(63); clf;
+hold on;
+plot(T,q,'-k','linewidth',3);
+plot(periods,q_est,'or','linewidth',2);
+xlabel('Period (s)');
+ylabel('Q');
+xlim([min(periods)-5 max(periods)+5]);
+
+%%
 FRECHETPATH = param.frechetpath;
 delete(['run_plotwk.',lower(TYPE)],['run_frechcv.',lower(TYPE)],['run_frechet.',lower(TYPE)],['run_frechcv_asc.',lower(TYPE)]);
 save2pdf([FRECHETPATH,'CARD_Q_kernels_',lower(TYPE),'_',CARDID,'_b',num2str(branch),'.',num2str(N_modes),'_',num2str(periods(1)),'_',num2str(periods(end)),'s.pdf'],fig1,1000)

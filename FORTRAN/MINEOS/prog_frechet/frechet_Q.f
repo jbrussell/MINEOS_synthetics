@@ -754,13 +754,13 @@ c
 
 c            Q KERNELS (11/22/21 JBR)
 
-c            Q mu kernel (Q_mu)
+c            Q mu kernel (Q_mu) factor of 2 because later multipled by 0.5 in draw_frechet_gv
 c             intg(j,3) = dnn(j)* betav(j)**2 *xll
-             intg(j,3) = mu(j)*mm
+             intg(j,3) = mu(j)*mm * 2
              
-c            Q kappa kernel (Q_k)
+c            Q kappa kernel (Q_k) factor of 2 because later multipled by 0.5 in draw_frechet_gv
 c             intg(j,4) = dnn(j)* alphav(j)**2 *xcc 
-             intg(j,4) = kappa(j)*kk          
+             intg(j,4) = kappa(j)*kk * 2         
 
 c            Q_mu (divide by 0.5*scale*scale because it will be multipled later in draw_frechet_gv)
 c             intg(j,5) = dnn(j)* betah(j)**2 *xnn
@@ -993,9 +993,9 @@ c
 c             intg(j,4) = 2.*dnn(j)*betah(noc+j)*xnn
              
 c            Q KERNELS (11/22/21 JBR)
-c            Q mu kernel (Q_mu)
+c            Q mu kernel (Q_mu) factor of 2 because later multipled by 0.5 in draw_frechet_gv
 c             intg(j,3) = dnn(j)* betav(noc+j)**2 *xll  
-             intg(j,3) = mu(j)*mm        
+             intg(j,3) = mu(j)*mm * 2
 
 c            Q_mu (divide by 0.5*scale*scale because it will be multipled later in draw_frechet_gv)
 c             intg(j,5) = dnn(j)* betah(j)**2 *xnn
@@ -1255,13 +1255,13 @@ c
 
 c            Q KERNELS (11/22/21 JBR)
 
-c            Q mu kernel (Q_mu)
+c            Q mu kernel (Q_mu) factor of 2 because later multipled by 0.5 in draw_frechet_gv
 c             intg(j,3) = dnn(j)* betav(j)**2 *xll
-             intg(j,3) = mu(j)*mm
+             intg(j,3) = mu(j)*mm * 2
              
-c            Q kappa kernel (Q_k)
+c            Q kappa kernel (Q_k) factor of 2 because later multipled by 0.5 in draw_frechet_gv
 c             intg(j,4) = dnn(j)* alphav(j)**2 *xcc 
-             intg(j,4) = kappa(j)*kk          
+             intg(j,4) = kappa(j)*kk * 2         
 
 c            Q_mu (divide by 0.5*scale*scale because it will be multipled later in draw_frechet_gv)
 c             intg(j,5) = dnn(j)* betah(j)**2 *xnn
