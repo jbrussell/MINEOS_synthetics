@@ -1,4 +1,4 @@
-function [phV,grV,phVq] = readMINEOS_qfile(qfile,periods,mode)
+function [phV,grV,phVq] = readMINEOS_qfile_per(qfile,periods,mode)
 % [phV,grV] = readMINEOS_qfile(qfile,swperiods)
 %  
 %  Function to read MINEOS qfile file (qfile) with the fundamental mode
@@ -21,7 +21,7 @@ Q = C{4}(I_mode); % Q at each frequency
 phV_all = C{6}(I_mode); % phase velocity at each frequency
 grV_all = C{7}(I_mode); % group velocity at each frequency
 phV_all_q = C{8}(I_mode);
-T_all_q = 1./C{9}(I_mode);
+T_all_q = C{9}(I_mode);
 T_all = C{10}(I_mode);
 
 % desired frequencies
