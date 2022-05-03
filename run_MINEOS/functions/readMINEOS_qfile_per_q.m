@@ -32,7 +32,7 @@ phV = interp1(freq_all,phV_all,freq_want);
 grV = interp1(freq_all,grV_all,freq_want);
 
 phVq = interp1(1./T_all_q,phV_all_q,freq_want);
-Q(ii) = interp1(freq_all,Q_all,freq_want);
+Q = interp1(freq_all,Q_all,freq_want);
 
 end
 
