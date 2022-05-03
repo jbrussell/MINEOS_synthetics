@@ -1,4 +1,4 @@
-function [phV,grV,phVq,Q] = readMINEOS_qfile_per(qfile,periods,mode)
+function [phV,grV,phVq,Q] = readMINEOS_qfile_per_q(qfile,periods,mode)
 % [phV,grV] = readMINEOS_qfile(qfile,swperiods)
 %  
 %  Function to read MINEOS qfile file (qfile) with the fundamental mode
