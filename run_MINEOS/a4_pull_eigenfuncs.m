@@ -3,8 +3,7 @@
 % 
 % This program loads and plots the eigenfunctions
 %
-% MUST FIRST RUN 'run_mineos.m' to generate eigenfunction file and
-% 'mk_kernels.m' to generate branch file
+% MUST FIRST RUN 'run_mineos.m' to generate eigenfunction file
 %
 % !!! IMPORTANT - Unnormalized !!!
 % By default, eigenfunctions are unnormalized and need to be multiplied 
@@ -46,8 +45,16 @@ mat_name = [param.eigpath,param.CARDID,'.',TYPE,num2str(mbranch),'.mat'];
 % check if eigenfunction *.mat file already exists in ./eig_mats directory
 if ~exist(mat_name,'file') || overwrite
     display('Creating new eigenfunction *.mat file');
-    % CHECK FOR *.eig_fix files
     
+    % run plot_wk on the table_hdr file to generate the branch file
+    write_plotwk(TYPE,CARDID);
+    com = ['cat run_plotwk.',lower(TYPE),' | plot_wk > plot_wk.LOG'];
+    [status,log] = system(com);
+    if status ~= 0     
+        error( 'something is wrong at plot_wk')
+    end
+    
+    % CHECK FOR *.eig_fix files
     com = ['ls ',param.TABLEPATH,CARDID,'/tables/',CARDID,'.',TYPEID,'_1.eig_fix | cat'];
     [status eig_fils] = system(com);
     if strcmp(eig_fils(end-25:end-1),'No such file or directory')
