@@ -81,7 +81,8 @@ c JBR - end modify
 c
 cad added 1/10/18 and also 7/28/2021
       character*80 outfile
-      parameter (maxper=10)
+C  JBR    parameter (maxper=10)
+      parameter (maxper=200)
       real*8 period(maxper)
       real*8 diffsave(maxper),persave(maxper)
       real*8 uz0(maxper),grvelo(maxper)
@@ -129,7 +130,8 @@ c      write(6,*)'Enter desired n and l'
 c      read(5,*)nwant,lwant
       
       write(6,*)'Name of output file?'
-      read(5,*)outfile
+C  JBR    read(5,*)outfile
+      read(*,'(a)')outfile 
       open(1,file=outfile)
 cad end of additions
 
