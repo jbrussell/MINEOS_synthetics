@@ -79,6 +79,12 @@ sed -e "s/FCxreplace/${COMPILER}/ ; s+BINxreplace+${BINPATH}+ ; s+LIBxreplace+${
 (cd ${MAKEPATH} && make -f ${MAKEFILE}.mk)
 rm -r ${MAKEPATH}/*.o
 
+MAKEFILE="5_get_eigfxn_grvelo"
+sed -e "s/FCxreplace/${COMPILER}/ ; s+BINxreplace+${BINPATH}+ ; s+LIBxreplace+${LIBPATH}+" ${MAKEPATH}${MAKEFILE}.mkin > ${MAKEPATH}${MAKEFILE}.mk
+(cd ${MAKEPATH} && make clean -f ${MAKEFILE}.mk)
+(cd ${MAKEPATH} && make -f ${MAKEFILE}.mk)
+rm -r ${MAKEPATH}/*.o
+
 MAKEPATH="./MINEOS/prog_mineos/Mineos/"
 MAKEFILE="1_mineos_nohang"
 sed -e "s/FCxreplace/${COMPILER}/ ; s+BINxreplace+${BINPATH}+ ; s+LIBxreplace+${LIBPATH}+" ${MAKEPATH}${MAKEFILE}.mkin > ${MAKEPATH}${MAKEFILE}.mk
