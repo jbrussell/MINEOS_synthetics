@@ -1,6 +1,9 @@
 % Pull values from .eig file for calculating amplification. Must first run
 % a1 (mineos_nohang).
 %
+% !! THIS VERSION ONLY WORKS FOR FUNDAMENTAL MODE... 
+% !! USE a5_pull_amplification_fromEig.m FOR OTHER MODE BRANCHES
+%
 % This includes two different parameterizations of amplification
 % 1) Eddy & Ekstrom (2014)
 %    A_R = U_0 / sqrt(grv)
