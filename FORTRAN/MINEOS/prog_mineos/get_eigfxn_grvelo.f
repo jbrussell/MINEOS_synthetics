@@ -80,7 +80,7 @@ c JBR - end modify
       data qflag /999999.0/
 c
 cad added 1/10/18 and also 7/28/2021
-      character*80 outfile
+      character*250 outfile
 C  JBR    parameter (maxper=10)
       parameter (maxper=200)
       real*8 period(maxper)
