@@ -33,6 +33,7 @@ ampfile = [param.TABLEPATH,'/',card,'/tables/',card,'.',TYPEID,'.eigfxn_grvelo']
 %     6. eigenfunction V evaluated at the surface, r=6371km
 fid = fopen(ampfile,'r');
 C = textscan(fid,'%f%f%f%f%f%f%f');
+fclose(fid);
     
 if strcmp(TYPE,'S') == 1
     AMP.pers_want = C{1};

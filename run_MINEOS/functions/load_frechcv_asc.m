@@ -45,6 +45,7 @@ for ip = 1:length(periods)
     % disp(FRECHASC)
     fid = fopen(FRECHASC,'r');
     C = textscan(fid,'%f%f%f%f%f%f%f');
+    fclose(fid);
     
     if strcmp(TYPE,'S') == 1
         FRECH(ip).per = periods(ip);
