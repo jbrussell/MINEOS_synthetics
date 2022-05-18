@@ -258,7 +258,8 @@ C   JBR added 5/2022
                 rj = dble(rad(l))
                 dnj = dble(dn(l))
                 u_norm = dble(buf(l))*scale / u
-                v_norm = dble(buf(l + k2))*scale / v
+C                v_norm = dble(buf(l + k2))*scale / v
+                v_norm = dble(buf(l + k2))*scale / u
                 intg2(l) = dnj*(u_norm**2 + v_norm**2)*rj**2
 C          print *, dnj,' ',rj,' ',u,' ',v
 C          print *, intg2(j)
