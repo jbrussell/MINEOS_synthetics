@@ -270,7 +270,9 @@ c
       
       irecold=irec
       ib=1
-      if(nm(ib).gt.10000) stop 'nm(ib) too large!'
+c JBR - begin edit - Remove check for too many modes
+C      if(nm(ib).gt.10000) stop 'nm(ib) too large!'
+c JBR - end edit
       do i=1,nm(ib)
 c       print*,'nm(ib)',nm(ib)
 c        print*,'irec',irec
