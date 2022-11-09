@@ -123,7 +123,8 @@ fig1 = figure(1); clf;
 % set(gcf,'position',[58   255   916   450]);
 
 clr = jet(length(periods));
-rad = (FRECH(1).rad(end)-FRECH(1).rad)/1000;               
+rad = (FRECH(1).rad(end)-FRECH(1).rad)/1000;       
+dr = gradient(rad);        
 for iper = 1:length(FRECH) %length(periods)
     lgd{iper} = [num2str(FRECH(iper).per),' s'];
 
@@ -133,7 +134,7 @@ for iper = 1:length(FRECH) %length(periods)
         % L
         subplot(1,3,1);
         set(gca,'linewidth',2);
-        h(iper) = plot(FRECH(iper).L,rad,'linewidth',2,'color',clr(iper,:)); hold on;
+        h(iper) = plot(FRECH(iper).L .* dr,rad,'linewidth',2,'color',clr(iper,:)); hold on;
         axis ij
         title(['L (2\theta)'],'fontsize',15);
         ylabel('Depth (km)','fontsize',15);
@@ -147,7 +148,7 @@ for iper = 1:length(FRECH) %length(periods)
         % N
         subplot(1,3,2);
         set(gca,'linewidth',2);
-        plot(FRECH(iper).N,rad,'linewidth',2,'color',clr(iper,:)); hold on;
+        plot(FRECH(iper).N .* dr,rad,'linewidth',2,'color',clr(iper,:)); hold on;
         axis ij
         title(['N (4\theta)'],'fontsize',15);
         ylabel('Depth (km)','fontsize',15);
@@ -161,7 +162,7 @@ for iper = 1:length(FRECH) %length(periods)
         % RHO
         subplot(1,3,3);
         set(gca,'linewidth',2);
-        plot(FRECH(iper).rho,rad,'linewidth',2,'color',clr(iper,:)); hold on;
+        plot(FRECH(iper).rho .* dr,rad,'linewidth',2,'color',clr(iper,:)); hold on;
         axis ij
         title(['\rho Kernels'],'fontsize',15);
         ylabel('Depth (km)','fontsize',15);
@@ -180,7 +181,7 @@ for iper = 1:length(FRECH) %length(periods)
         % A
         subplot(1,5,1);
         set(gca,'linewidth',2);
-        h(iper) = plot(FRECH(iper).A,rad,'linewidth',2,'color',clr(iper,:)); hold on;
+        h(iper) = plot(FRECH(iper).A .* dr,rad,'linewidth',2,'color',clr(iper,:)); hold on;
         axis ij
         title(['A (2\theta & 4\theta)'],'fontsize',15);
         ylabel('Depth (km)','fontsize',15);
@@ -194,7 +195,7 @@ for iper = 1:length(FRECH) %length(periods)
         % C
         subplot(1,5,2);
         set(gca,'linewidth',2);
-        plot(FRECH(iper).C,rad,'linewidth',2,'color',clr(iper,:)); hold on;
+        plot(FRECH(iper).C .* dr,rad,'linewidth',2,'color',clr(iper,:)); hold on;
         axis ij
         title(['C'],'fontsize',15);
         ylabel('Depth (km)','fontsize',15);
@@ -211,7 +212,7 @@ for iper = 1:length(FRECH) %length(periods)
         if iper == 1
             plot([0 0],ylims,'--k'); hold on;
         end
-        plot(FRECH(iper).F,rad,'linewidth',2,'color',clr(iper,:)); hold on;
+        plot(FRECH(iper).F .* dr,rad,'linewidth',2,'color',clr(iper,:)); hold on;
         axis ij
         title(['F (2\theta)'],'fontsize',15);
         ylabel('Depth (km)','fontsize',15);
@@ -225,7 +226,7 @@ for iper = 1:length(FRECH) %length(periods)
         % L
         subplot(1,5,4);
         set(gca,'linewidth',2);
-        plot(FRECH(iper).L,rad,'linewidth',2,'color',clr(iper,:)); hold on;
+        plot(FRECH(iper).L .* dr,rad,'linewidth',2,'color',clr(iper,:)); hold on;
         axis ij
         title(['L (2\theta)'],'fontsize',15);
         ylabel('Depth (km)','fontsize',15);
@@ -239,7 +240,7 @@ for iper = 1:length(FRECH) %length(periods)
         % RHO
         subplot(1,5,5);
         set(gca,'linewidth',2);
-        plot(FRECH(iper).rho,rad,'linewidth',2,'color',clr(iper,:)); hold on;
+        plot(FRECH(iper).rho .* dr,rad,'linewidth',2,'color',clr(iper,:)); hold on;
         axis ij
         title(['\rho'],'fontsize',15);
         ylabel('Depth (km)','fontsize',15);

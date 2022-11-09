@@ -161,7 +161,8 @@ if ( TYPE == 'S')
             for ip = 1:length(periods)
                 ax2 = subplot(1,3,2);
                 hold on
-                plot(FRECH_S(ip).K_qmu,(6371000-FRECH_S(ip).rad)./1000,'-k','linewidth',3,'color',CC(ip,:))
+                dr = gradient(FRECH_S(ip).rad);
+                plot(FRECH_S(ip).K_qmu .* dr,(6371000-FRECH_S(ip).rad)./1000,'-k','linewidth',3,'color',CC(ip,:))
                 title('FRECH S - Q_{\mu}^{-1}','fontname','Times New Roman','fontsize',12);
                 lgd{ip}=[num2str(periods(ip)),'s'];
                 set(gca,'Ydir','reverse','linewidth',2,'YMinorTick','on','XMinorTick','on');
@@ -219,7 +220,8 @@ elseif ( TYPE == 'T')
                 ax2 = subplot(1,3,2);
                 axis tight;
                 hold on
-                plot(FRECH_T(ip).K_qmu,(6371000-FRECH_T(ip).rad)./1000,'-k','linewidth',3,'color',CC(ip,:))
+                dr = gradient(FRECH_T(ip).rad);
+                plot(FRECH_T(ip).K_qmu .* dr,(6371000-FRECH_T(ip).rad)./1000,'-k','linewidth',3,'color',CC(ip,:))
 %                 title(titlename,'fontsize',18);
                 lgd{ip}=[num2str(periods(ip)),'s'];
                 set(gca,'YDir','reverse','linewidth',2,'YMinorTick','on','XMinorTick','on')
@@ -241,7 +243,7 @@ elseif ( TYPE == 'T')
 
 
     end
-    FRECH = FRECH_S;
+    FRECH = FRECH_T;
 end
 
 %% Test Scaling of kernels
@@ -251,12 +253,19 @@ T = mineos.T;
 
 q_est = [];
 for ip = 1:length(periods)
-    dr = abs(diff(FRECH(ip).rad));
-    dr = [0; dr];
+    dr = gradient(FRECH(ip).rad);
     K_qmu = FRECH(ip).K_qmu;
-    K_qkappa = FRECH(ip).K_qkappa;
+    if isfield(FRECH,'K_qkappa')
+        K_qkappa = FRECH(ip).K_qkappa;
+    else
+        K_qkappa = zeros(size(K_qmu));
+    end
     qmu = FRECH(1).qmu;
-    qkappa = FRECH(1).qkappa;
+    if isfield(FRECH,'qkappa')
+        qkappa = FRECH(1).qkappa;
+    else
+        qkappa = 99999*ones(size(qmu));
+    end
     
     qinv = sum( (K_qmu./qmu + K_qkappa./qkappa).* dr ) ;
     q_est(ip) = 1./qinv;
