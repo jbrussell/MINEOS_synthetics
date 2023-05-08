@@ -14,11 +14,14 @@ b) Install homebrew for x86_64
 Make sure "which brew" returns: /usr/local/bin/brew. This is the x86_64 version of brew.
 
 If instead it returns /opt/homebrew/bin/brew then you have the arm64 version at the top of your path. You will need to move /usr/local/bin higher in the path using this command:
-export PATH=/usr/local/bin:$PATH
+
+`export PATH=/usr/local/bin:$PATH`
+
 Double check that "which brew" now returns /usr/local/bin/brew.
 
 c) Now install gcc, which includes gfortran
-arch -x86_64 brew install gcc
+
+`arch -x86_64 brew install gcc`
 
 If installed correctly, "which gfortran" should return: /usr/local/bin/gfortran
 
@@ -33,8 +36,8 @@ Unzip the directory and put it here: /opt/local/sac
 Step 3: Compile Fortran libraries
 
 a) Within this git repository, navigate to ./libgfortran and run: 
-rm ./*.a
-sudo ./makelibs.sh
+    rm ./*.a
+    sudo ./makelibs.sh
 
 This will remove existing libraries and compile all new libraries compatible with the same architecture as gfortran.
 
