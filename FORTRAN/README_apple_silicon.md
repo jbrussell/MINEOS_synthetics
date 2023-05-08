@@ -9,19 +9,19 @@ a) Ensure that terminal is running Rosetta. Navigate to the Terminal app in the 
 
 b) Install homebrew for x86_64
 
-`arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+    arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 Make sure "which brew" returns: /usr/local/bin/brew. This is the x86_64 version of brew.
 
 If instead it returns /opt/homebrew/bin/brew then you have the arm64 version at the top of your path. You will need to move /usr/local/bin higher in the path using this command:
 
-`export PATH=/usr/local/bin:$PATH`
+    export PATH=/usr/local/bin:$PATH
 
 Double check that "which brew" now returns /usr/local/bin/brew.
 
 c) Now install gcc, which includes gfortran
 
-`arch -x86_64 brew install gcc`
+    arch -x86_64 brew install gcc
 
 If installed correctly, "which gfortran" should return: /usr/local/bin/gfortran
 
@@ -43,11 +43,14 @@ a) Within this git repository, navigate to ./libgfortran and run:
 This will remove existing libraries and compile all new libraries compatible with the same architecture as gfortran.
 
 b) Move back one directory and rename ./bin so you can check at the end that all executables were created successfully.
-cd ..
-mv ./bin ./bin_save
+
+    cd ..
+    mv ./bin ./bin_save
 
 c) Next compile MINEOS and idagrn executables. Run the shell script:
-sudo ./makeall_M2chip.sh
 
-If done correctly, all files should appear in ./bin and you can delete the saved version
-rm -r ./bin_save
+    sudo ./makeall_M2chip.sh
+
+If done correctly, all files should appear in ./bin, and you can delete the saved version:
+
+    rm -r ./bin_save
