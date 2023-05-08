@@ -36,6 +36,7 @@ Unzip the directory and put it here: /opt/local/sac
 Step 3: Compile Fortran libraries
 
 a) Within this git repository, navigate to ./libgfortran and run: 
+
     rm ./*.a
     sudo ./makelibs.sh
 
