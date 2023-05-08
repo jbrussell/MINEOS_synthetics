@@ -3,7 +3,7 @@ These are instructions for compiling MINEOS and idagrn on systems that use the A
 In the future, we will try compiling using native arm64, but for now SAC is only readily available for x86_64.
 
 ---
-Step 1: Install gfortran for x86_64 using homebrew
+### Step 1: Install gfortran for x86_64 using homebrew
 
 a) Ensure that terminal is running Rosetta. Navigate to the Terminal app in the Finder at "Applications/Utilities". Right click on the Terminal and select Get Info. Check the "Open using Rosetta" check-box. Close the Terminal Info. Now the terminal will install tools with Rosetta translation.
 
@@ -26,14 +26,14 @@ c) Now install gcc, which includes gfortran
 If installed correctly, "which gfortran" should return: /usr/local/bin/gfortran
 
 ---
-Step 2: Install sac for Mac (this will be x86_64). This is required for idagrn6 to generate seismograms. MINEOS will still work without this step.
+### Step 2: Install sac for Mac (this will be x86_64). This is required for idagrn6 to generate seismograms. MINEOS will still work without this step.
 
 Request the latest version of SAC for macOS: http://ds.iris.edu/ds/nodes/dmc/forms/sac/
 
 Unzip the directory and put it here: /opt/local/sac
 
 ---
-Step 3: Compile Fortran libraries
+### Step 3: Compile Fortran libraries
 
 a) Within this git repository, navigate to ./libgfortran and run: 
 
