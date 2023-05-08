@@ -8,7 +8,8 @@ Step 1: Install gfortran for x86_64 using homebrew
 a) Ensure that terminal is running Rosetta. Navigate to the Terminal app in the Finder at "Applications/Utilities". Right click on the Terminal and select Get Info. Check the "Open using Rosetta" check-box. Close the Terminal Info. Now the terminal will install tools with Rosetta translation.
 
 b) Install homebrew for x86_64
-arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+`arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 
 Make sure "which brew" returns: /usr/local/bin/brew. This is the x86_64 version of brew.
 
