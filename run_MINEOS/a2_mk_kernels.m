@@ -7,6 +7,9 @@
 %
 % JOSH 8/25/2015
 %
+% By default, kernels are scaled by a factor (c^2/U). Therefore, when setting 
+% up the inversion data should be in  units of km/s and the output model perturbations are in km/s.
+%
 
 
 clear; close all;
@@ -157,9 +160,9 @@ if ( TYPE == 'S')
             for ip = 1:length(periods)
                 ax2 = subplot(1,3,2);
                 hold on
-                dr = gradient(FRECH_S(ip).rad);
+                dr = gradient(FRECH_S(ip).rad) / 1000; % m --> km
                 plot(FRECH_S(ip).vsv .* dr,(6371000-FRECH_S(ip).rad)./1000,'-k','linewidth',3,'color',CC(ip,:))
-                title('FRECH S - Vsv','fontname','Times New Roman','fontsize',12);
+                title('FRECH S - Vsv (km^{-1})','fontname','Times New Roman','fontsize',12);
                 lgd{ip}=[num2str(periods(ip)),'s'];
                 set(gca,'Ydir','reverse','linewidth',2,'YMinorTick','on','XMinorTick','on');
                 ylim(yaxis)
@@ -269,13 +272,13 @@ elseif ( TYPE == 'T')
                 ax2 = subplot(1,3,2);
                 axis tight;
                 hold on
-                dr = gradient(FRECH_T(ip).rad);
+                dr = gradient(FRECH_T(ip).rad) / 1000; % m --> km
                 plot(FRECH_T(ip).vsh .* dr,(6371000-FRECH_T(ip).rad)./1000,'-k','linewidth',3,'color',CC(ip,:))
 %                 title(titlename,'fontsize',18);
                 lgd{ip}=[num2str(periods(ip)),'s'];
                 set(gca,'YDir','reverse','linewidth',2,'YMinorTick','on','XMinorTick','on')
                 ylim(yaxis)
-                xlabel('dc/dV_{SH}');
+                xlabel('dc/dV_{SH} (km^{-1})');
                 if is_frech_x == 1
                     xlim(frech_x);
                 end
