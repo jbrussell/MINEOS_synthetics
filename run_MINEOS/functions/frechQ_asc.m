@@ -64,7 +64,7 @@ FRECHCV = [FRECHETPATH,CARD,'.',TYPEID,'.fcv.',BRID];
 
 for ip = 1:length(periods)
     
-    FRECHASC = [FRECHETPATH,CARD,'.',TYPEID,'.',BRID,'.',num2str(periods(ip))];
+    FRECHASC = [FRECHETPATH,CARD,'.',TYPEID,'.',BRID,'.',num2str(periods(ip)),'.Q'];
     
     % Write runfile for draw_frechet_gv
     fid = fopen(RUNFILE,'w');

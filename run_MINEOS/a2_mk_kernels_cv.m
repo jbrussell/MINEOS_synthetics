@@ -1,8 +1,7 @@
 %% Driver to Calculate Frechet Kernels in terms of Phase Velocity
 % NJA, 2014
 % 
-% This involves calling fortran programs plot_wk, frechet, frechet_gv,
-% frechet_pv
+% This involves calling fortran programs plot_wk, frechet, frechet_cv, draw_frechet_gv
 % pylin.patty 2014
 %
 % JOSH 8/25/2015
@@ -328,7 +327,7 @@ end
 
 FRECHETPATH = param.frechetpath;
 delete(['run_plotwk.',lower(TYPE)],['run_frechcv.',lower(TYPE)],['run_frechet.',lower(TYPE)],['run_frechcv_asc.',lower(TYPE)]);
-save2pdf([FRECHETPATH,'CARD_Vs_kernels_',lower(TYPE),'_',CARDID,'_b',num2str(branch),'.',num2str(N_modes),'_',num2str(periods(1)),'_',num2str(periods(end)),'s.pdf'],fig1,1000)
+save2pdf([FRECHETPATH,'CARD_Vs_kernels_cv_',lower(TYPE),'_',CARDID,'_b',num2str(branch),'.',num2str(N_modes),'_',num2str(periods(1)),'_',num2str(periods(end)),'s.pdf'],fig1,1000)
 
 %    savefile = [CARD,'_fcv.mat'];
 %    save(savefile,'FRECH_T','FRECH_S');
