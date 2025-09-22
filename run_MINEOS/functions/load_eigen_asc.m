@@ -4,6 +4,15 @@
 % into an ascii file using forgran code 'eigenST_asc'.
 %
 % MUST RUN mk_kernels FIRST !!!!!
+%
+% !!! IMPORTANT - Unnormalized !!!
+% By default, eigenfunctions are unnormalized and need to be multiplied 
+% by a scale factor:
+% scale = 1/(rn*sqrt(rn*pi*bigg)*rhobar)
+% such that 
+% 1 = trapz(r , rho.*(U.^2+V.^2).*r.^2 ) * omega^2;
+% 1 = trapz(r , rho.*(W.^2     ).*r.^2 ) * omega^2;
+%
 % 
 % OUTPUT DESCRIPTIONS: 
 %
@@ -263,6 +272,11 @@ elseif ( TYPE == 'T')
         eig(iper).per_want = periods(iper);
 
     end
+end
+
+if 0
+    % Check normalization of eigenfunctions = 1
+    [ ones_v ] = check_eignorm( eig,scale,TYPE );
 end
 
 % Check if size of 'eig' is greater than 2 Gb

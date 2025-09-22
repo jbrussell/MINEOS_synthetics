@@ -5,7 +5,6 @@
 %
 % MUST FIRST RUN 'run_mineos.m' to generate eigenfunction file
 %
-% !!! IMPORTANT - Unnormalized !!!
 % By default, eigenfunctions are unnormalized and need to be multiplied 
 % by a scale factor:
 % scale = 1/(rn*sqrt(rn*pi*bigg)*rhobar)
