@@ -37,6 +37,8 @@ is_frech_x = 0; % 1 => scale ax; 0 => autoscale
 frech_x = [0 2e-8]; %[0 2.0e-7]; %[0 2.0e-8];
 %frech_x = [-2.5e-8 2.5e-8];
 
+is_dr_mult = 0; % include multiplication by dr?
+
 isfigure = 1; % plot kernels?
 
 %% Set path to executables
@@ -159,7 +161,11 @@ if ( TYPE == 'S')
             for ip = 1:length(periods)
                 ax2 = subplot(1,3,2);
                 hold on
-                dr = gradient(FRECH_S(ip).rad) / 1000; % m --> km
+                if is_dr_mult
+                    dr = gradient(FRECH_S(ip).rad) / 1000; % m --> km
+                else
+                    dr = 1;
+                end
                 plot(FRECH_S(ip).vsv .* dr,(6371000-FRECH_S(ip).rad)./1000,'-k','linewidth',3,'color',CC(ip,:))
                 title('FRECH S - Vsv (km^{-1})','fontname','Times New Roman','fontsize',12);
                 lgd{ip}=[num2str(periods(ip)),'s'];
@@ -271,7 +277,11 @@ elseif ( TYPE == 'T')
                 ax2 = subplot(1,3,2);
                 axis tight;
                 hold on
-                dr = gradient(FRECH_T(ip).rad) / 1000; % m --> km
+                if is_dr_mult
+                    dr = gradient(FRECH_T(ip).rad) / 1000; % m --> km
+                else
+                    dr = 1;
+                end
                 plot(FRECH_T(ip).vsh .* dr,(6371000-FRECH_T(ip).rad)./1000,'-k','linewidth',3,'color',CC(ip,:))
 %                 title(titlename,'fontsize',18);
                 lgd{ip}=[num2str(periods(ip)),'s'];
