@@ -292,3 +292,49 @@ xlabel('\eta');
 ylabel('Depth');
 ylim([0 z_dampbot+100]);
 set(gca,'FontSize',18,'linewidth',1.5,'ydir','reverse');
+
+%% Plot Vsv Resolution kernel and Backus-Gilbert spread
+
+nlayer = length(card_inv.z);
+dr = gradient(card_inv.rad); % m
+iv  = 1:nlayer; % indices for vsv
+Rvv = unc.R(iv,iv);
+z   = card_inv.z;
+
+figure(5); clf; 
+set(gcf,'position',[425   379   902   542])
+
+subplot(1,2,1); box on; hold on;
+box on; hold on
+lgd5 = {};
+ii = 0;
+% averaging kernels: row k shows how true Vsv at all depths maps into estimated Vsv at depth z(k)
+for k = find(z > 20 & z < z_dampbot, 1):10:find(z < z_dampbot, 1, 'last')
+    ii = ii + 1;
+    plot(Rvv(k,:)./dr(:)'*1000, z, 'linewidth', 1.5);   % divide by dr -> per-km, handles uneven layers
+    lgd5{ii} = [num2str(z(k)),'km'];
+end
+legend(lgd5,'location','southeast');
+ylim([0 z_dampbot+100]);
+xlabel('Averaging kernel (1/km)');
+ylabel('Depth (km)')
+set(gca,'FontSize',18,'linewidth',1.5,'ydir','reverse');
+
+% Calculate Backus spread
+% The Backus–Gilbert spread boils the averaging kernel down to one number: 
+% the depth width over which the estimate is averaging. In practice it is 
+% the vertical resolution length at that depth.
+subplot(1,2,2); box on; hold on;
+% summary metrics
+diagR = diag(Rvv); % ~1 = well resolved, ~0 = constraint-determined
+dof_vsv = trace(Rvv); % effective # of independent Vsv parameters
+width_bg = zeros(nlayer,1); % averaging width (Backus-Gilbert-style spread)
+for k = 1:nlayer
+    a = Rvv(k,:)'; if sum(a)==0, continue; end
+    width_bg(k) = sqrt( sum(a.^2 .* (z - z(k)).^2) / sum(a.^2) ) ;   % km Half width (add factor of x2 for full-width)
+end
+plot(width_bg,z,'-b','linewidth',2)
+ylim([0 z_dampbot+100]);
+xlabel('Backus-Gilbert Spread (km)');
+ylabel('Depth (km)')
+set(gca,'FontSize',18,'linewidth',1.5,'ydir','reverse');
