@@ -47,6 +47,7 @@ function [card_final,cpre,unc] = run_mineos_inv_Rayl_Vsvh_Vpvh_Rho_Eta(cobs,cstd
 % jbrussell - 9/26/2026
 
 cobs = cobs*1000; % km/s -> m/s
+cstd = cstd*1000; % km/s -> m/s
 
 eps_large = 1e9; % large weight to force constraint equation
 
