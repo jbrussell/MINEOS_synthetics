@@ -307,10 +307,6 @@ end
 
 card_final = card_pre;
 cpre = cpre/1000; % m/s -> km/s
-unc.vsv_std = unc.vsv_std/1000;
-unc.vsh_std = unc.vsh_std/1000;
-unc.vpv_std = unc.vpv_std/1000;
-unc.vph_std = unc.vph_std/1000;
 % cpre = dispR_surf96(periods,finalmod,nmode,'C',fref);
 
 end
