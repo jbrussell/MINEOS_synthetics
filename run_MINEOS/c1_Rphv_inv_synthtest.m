@@ -112,6 +112,12 @@ card_pert.vsh(I_pert) = card_pert.vsh(I_pert)*0.95;
 card_pert.vpv(I_pert) = card_pert.vpv(I_pert)*0.95;
 card_pert.vph(I_pert) = card_pert.vph(I_pert)*0.95;
 card_pert.rho(I_pert) = card_pert.rho(I_pert)*0.95;
+I_pert = find(card_pert.z>=230 & card_pert.z<=400);
+card_pert.vsv(I_pert) = card_pert.vsv(I_pert)*1.1;
+card_pert.vsh(I_pert) = card_pert.vsh(I_pert)*1.1;
+card_pert.vpv(I_pert) = card_pert.vpv(I_pert)*1.1;
+card_pert.vph(I_pert) = card_pert.vph(I_pert)*1.1;
+card_pert.rho(I_pert) = card_pert.rho(I_pert)*1.1;
 
 % Write perturbed card file to base location
 write_MINEOS_mod(card_pert,[CARDPATH,CARD])
