@@ -42,7 +42,7 @@ function [card_final,cpre,unc] = run_mineos_inv_Rayl_Vsvh_Vpvh_Rho_Eta(cobs,cstd
 % OUTPUTS
 % card_final - final MINEOS card structure
 % cpre - phase velocity predicted for final model (km/s) [N x 1]
-% unc - formal uncertainties on all model parameters (km/s) [struct: M x 1]
+% unc - formal uncertainties on all model parameters (m/s, kg/m^3) [struct: M x 1]
 %
 % jbrussell - 9/26/2026
 
