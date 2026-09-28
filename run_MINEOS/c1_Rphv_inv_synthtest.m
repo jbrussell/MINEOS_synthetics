@@ -304,6 +304,8 @@ z   = card_inv.z;
 figure(5); clf; 
 set(gcf,'position',[425   379   902   542])
 
+sgtitle('V_{SV} Resolution','fontsize',20,'fontweight','bold')
+
 subplot(1,2,1); box on; hold on;
 box on; hold on
 lgd5 = {};
@@ -328,12 +330,18 @@ subplot(1,2,2); box on; hold on;
 % summary metrics
 diagR = diag(Rvv); % ~1 = well resolved, ~0 = constraint-determined
 dof_vsv = trace(Rvv); % effective # of independent Vsv parameters
+dof_vsv_cumsum = flip(cumsum(flip(diag(Rvv))));
+zlay_effective = interp1(dof_vsv_cumsum+[0:length(dof_vsv_cumsum)-1]'*1e-10,z+[0:length(z)-1]'*1e-10,[1:floor(dof_vsv)]);
 width_bg = zeros(nlayer,1); % averaging width (Backus-Gilbert-style spread)
 for k = 1:nlayer
     a = Rvv(k,:)'; if sum(a)==0, continue; end
     width_bg(k) = sqrt( sum(a.^2 .* (z - z(k)).^2) / sum(a.^2) ) ;   % km Half width (add factor of x2 for full-width)
 end
-plot(width_bg,z,'-b','linewidth',2)
+h5(1) = plot(width_bg,z,'-b','linewidth',2);
+for ii = 1:length(zlay_effective)
+    h5(2) = yline(zlay_effective(ii),'-r','linewidth',2);
+end
+legend(h5,{'Spread';'Eff. Layer Depth'},'location','southwest');
 ylim([0 z_dampbot+100]);
 xlabel('Backus-Gilbert Spread (km)');
 ylabel('Depth (km)')
