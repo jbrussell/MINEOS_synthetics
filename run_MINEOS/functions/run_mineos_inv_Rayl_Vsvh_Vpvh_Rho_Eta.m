@@ -46,10 +46,10 @@ function [card_final,cpre,unc] = run_mineos_inv_Rayl_Vsvh_Vpvh_Rho_Eta(cobs,cstd
 %
 % jbrussell - 9/26/2026
 
+eps_large = 1e4; % large weight to force constraint equations
+
 cobs = cobs*1000; % km/s -> m/s
 cstd = cstd*1000; % km/s -> m/s
-
-eps_large = 1e9; % large weight to force constraint equation
 
 vpv_vsv = card.vpv ./ card.vsv; vpv_vsv(isinf(vpv_vsv))=0;
 vph_vsh = card.vph ./ card.vsh; vph_vsh(isinf(vph_vsh))=0;
@@ -258,13 +258,26 @@ for ii = 1:nit
     card_pre.eta = eta_pre;
     
     % Model uncertainties
-    m_std = diag(inv(F'*F)).^(1/2);
+    % m_std = diag(inv(F'*F)).^(1/2);
+    FtF = F'*F;
+    Ginv = eps_data^2 * (FtF \ (G'*(W'*W))); % generalized inverse [6M x N]
+    R = Ginv * G; % model resolution  [6M x 6M]
+    Ndat = G * Ginv; % data resolution   [N x N]
+    % sanity check: should be ~0 (up to round-off; eps_large rows can make this noisy)
+    % norm(R - (eye(size(FtF)) - FtF\(H'*H)), 'fro')
+    % model covariance from data errors (corrects my earlier snippet)
+    Cd = diag(cstd.^2); % cstd in m/s
+    Cm = Ginv * Cd * Ginv';
+    m_std = sqrt(diag(Cm));
+
     unc.vsv_std = m_std(1:nlayer);
     unc.vsh_std = m_std(  nlayer+1:2*nlayer);
     unc.vpv_std = m_std(2*nlayer+1:3*nlayer);
     unc.vph_std = m_std(3*nlayer+1:4*nlayer);
     unc.rho_std = m_std(4*nlayer+1:5*nlayer);
     unc.eta_std = m_std(5*nlayer+1:6*nlayer);
+    unc.R = R; % Model resolution matrix
+    unc.Ndat = Ndat; % Data resolution matrix
     
     if mod(ii,nit_recalc_c)==0
         error('HAVENT YET IMPLEMENTED THIS FOR MINEOS!')

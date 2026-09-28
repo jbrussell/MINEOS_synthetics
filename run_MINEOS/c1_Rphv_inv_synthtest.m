@@ -154,7 +154,7 @@ set(gca,'fontsize',15,'linewidth',1.5);
 
 % Save "observed" data vectors
 cobs = phv_pert(:); % [km/s] "observations"
-cstd = cobs * 0.01; % [km/s] observation uncertainties
+cstd = cobs * 0.005; % [km/s] observation uncertainties
 
 %% %%%%%%%%%%%%%%%%%% END SYNTHETIC SETUP %%%%%%%%%%%%%%%%%%
 
