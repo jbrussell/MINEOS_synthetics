@@ -1,6 +1,6 @@
 function [card_final,cpre,unc] = run_mineos_inv_Rayl_Vsvh_Vpvh_Rho_Eta(cobs,cstd,periods,card,discs,eps_data,eps_H,eps_J,eps_F,eps_vpvs,eps_rhovs,z_dampbot,is_dampcrust,vsv_thresh_dampcrust,nit,nit_recalc_c,nmode,qfile)
 % Do linearized inversion of Rayleigh wave phase velocities for Vs, Vp, 
-% and Density (rho) using mineos to generate the kernels and to calculate 
+% Density (rho), and eta using mineos to generate the kernels and to calculate 
 % phase velocity.
 %
 % The inversion solves for 6 parameters: Vsv, Vsh, Vpv, Vph, Rho, and Eta.
