@@ -1,5 +1,5 @@
 function [card_final,cpre,unc,Kfinal] = run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Eta(cobs,cstd,periods,wavetype,card,discs,eps_data,eps_H,eps_J,eps_F,eps_vpvs,eps_rhovs,eps_xi,eps_eta,z_dampbot,zmax,nit,nit_recalc_c,nmode,cardid_work,varargin)
-% [card_final,cpre,unc,Kfinal] = run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Eta(..., nmode, cardid_work, isfigure, vsv_thresh_xi, nit_recalc_G)
+% [card_final,cpre,unc,Kfinal] = run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Eta(..., nmode, cardid_work, isfigure, vsv_thresh_xi, nit_recalc_G, use_Q, fref)
 %
 % Linearized inversion of Rayleigh and/or Love wave phase velocities for a
 % transversely isotropic (radially anisotropic) model: Vsv, Vsh, Vpv, Vph,
@@ -56,6 +56,15 @@ function [card_final,cpre,unc,Kfinal] = run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Et
 %                 (km/s) in the starting model (OPTIONAL, default 0 = off)
 % nit_recalc_G - number of iterations after which to recalculate the
 %                kernels (OPTIONAL, default nit_recalc_c)
+% use_Q - 1 = include attenuation (see below) (OPTIONAL, default 0)
+% fref - reference frequency (Hz) of the Q model (OPTIONAL, default 1)
+%
+% ATTENUATION: with use_Q = 1, the phase velocities and kernels include the
+% causal (physical dispersion) correction for the Qmu and Qkappa of the
+% .qmod file of the starting card, with the card velocities defined at fref (mineos_apply_Q.m; the same
+% first-order correction as the CPS programs and the SURF96 version). Q is
+% not inverted for: Qmu and Qkappa are held at their starting values. With
+% use_Q = 0 the forward problem is elastic.
 %
 % OUTPUTS
 % card_final - final MINEOS card structure (m/s, kg/m^3)
@@ -66,7 +75,7 @@ function [card_final,cpre,unc,Kfinal] = run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Et
 %       resolution R [6M x 6M] (order Vsv, Vsh, Vpv, Vph, Rho, Eta) and the
 %       data resolution Ndat [N x N], and the phase velocities of the
 %       starting model cstart (km/s) [N x 1]
-% Kfinal - kernels of the final model at the inverted nodes, in km/s per
+% Kfinal - kernels (causal if use_Q) of the final model at the inverted nodes, in km/s per
 %       km/s (g/cm^3 for rho) integrated over each node's depth interval:
 %       Kfinal.(wavetype).dcdvsv etc. [M x Nper], Kfinal.z, Kfinal.periods
 %
@@ -88,6 +97,17 @@ end
 nit_recalc_G = nit_recalc_c;
 if length(varargin) >= 3 && ~isempty(varargin{3})
     nit_recalc_G = varargin{3};
+end
+use_Q = 0;
+if length(varargin) >= 4 && ~isempty(varargin{4})
+    use_Q = varargin{4};
+end
+fref = 1;
+if length(varargin) >= 5 && ~isempty(varargin{5})
+    fref = varargin{5};
+end
+if ~use_Q
+    fref = []; % elastic
 end
 
 cobs = cobs(:); cstd = cstd(:); periods = periods(:);
@@ -117,7 +137,7 @@ dr = gradient(card.rad); % node weights (m) for the kernel integrals
 dr = dr(I);
 
 % Kernels and phase velocities of the starting model
-[G, cstart, Kstart] = build_G(card, I, dr, periods, wavetype, nmode, cardid_work, 1); %#ok<ASGLU>
+[G, cstart] = build_G(card, I, dr, periods, wavetype, nmode, cardid_work, 1, fref);
 
 % Data weighting
 W = diag(1./cstd);
@@ -265,10 +285,10 @@ for ii = 1:nit
     do_G = mod(ii,nit_recalc_G)==0 && ii < nit; % recalculate kernels
     if do_G
         % kernels and phase velocities (one MINEOS calculation)
-        [G, cnew] = build_G(card_pre, I, dr, periods, wavetype, nmode, cardid_work, 1);
+        [G, cnew] = build_G(card_pre, I, dr, periods, wavetype, nmode, cardid_work, 1, fref);
     elseif do_c
         % phase velocities only
-        [~, cnew] = build_G(card_pre, I, dr, periods, wavetype, nmode, cardid_work, 0);
+        [~, cnew] = build_G(card_pre, I, dr, periods, wavetype, nmode, cardid_work, 0, fref);
     end
     if do_c || do_G
         inan = isnan(cnew);
@@ -315,16 +335,17 @@ end
 
 card_final = card_pre;
 % Phase velocities (and kernels) of the final model
-[~, cpre, Kfinal] = build_G(card_final, I, dr, periods, wavetype, nmode, cardid_work, nargout >= 4);
+[~, cpre, Kfinal] = build_G(card_final, I, dr, periods, wavetype, nmode, cardid_work, nargout >= 4, fref);
 Kfinal.z = z;
 
 end
 
 %% ------------------------------------------------------------------------
-function [G, c, Kout] = build_G(card, I, dr, periods, wavetype, nmode, cardid_work, do_kernels)
+function [G, c, Kout] = build_G(card, I, dr, periods, wavetype, nmode, cardid_work, do_kernels, fref)
 % Write the card, run MINEOS and build the kernel matrix [N x 6M] for
 % m = [Vsv; Vsh; Vpv; Vph; Rho; Eta] (km/s, g/cm^3) at the nodes I, and the
-% phase velocities c [N x 1] (km/s)
+% phase velocities c [N x 1] (km/s). fref = [] for elastic, otherwise the
+% reference frequency of the Q model (causal phase velocities and kernels)
 write_MINEOS_mod(card, ['./CARDS/', cardid_work, '.card']);
 N = length(periods);
 nlayer = length(I);
@@ -337,7 +358,7 @@ scale = [1000 1000 1000 1000 1000 1]; % card units -> km/s, g/cm^3
 for wt = 'RL'
     I_w = find(wavetype == wt);
     if isempty(I_w); continue; end
-    [c(I_w), K] = run_mineos_phv_kernels(cardid_work, wt, periods(I_w), nmode, do_kernels);
+    [c(I_w), K] = run_mineos_phv_kernels(cardid_work, wt, periods(I_w), nmode, do_kernels, [], fref);
     if ~do_kernels; continue; end
     % MINEOS kernels cover the top nK nodes of the card (all nodes for
     % spheroidal modes; the mantle and crust for toroidal modes)
