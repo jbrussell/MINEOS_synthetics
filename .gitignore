@@ -7,5 +7,3 @@ figs
 .DS_Store
 *.pdf
 *.o
-*.card
-*.qmod
