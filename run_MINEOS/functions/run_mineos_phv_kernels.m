@@ -1,5 +1,5 @@
-function [phv, K] = run_mineos_phv_kernels(cardid, wavetype, periods, nmode, do_kernels, maxF)
-% [phv, K] = run_mineos_phv_kernels(cardid, wavetype, periods, nmode, do_kernels, maxF)
+function [phv, K, phv_elastic] = run_mineos_phv_kernels(cardid, wavetype, periods, nmode, do_kernels, maxF, fref)
+% [phv, K, phv_elastic] = run_mineos_phv_kernels(cardid, wavetype, periods, nmode, do_kernels, maxF, fref)
 %
 % Run MINEOS (a1_run_mineos_check.m, and a2_mk_kernels_cv.m if kernels are
 % requested) for the card ./CARDS/<cardid>.card (with ./CARDS/<cardid>.qmod)
@@ -23,10 +23,17 @@ function [phv, K] = run_mineos_phv_kernels(cardid, wavetype, periods, nmode, do_
 % do_kernels - 1 = also compute kernels (OPTIONAL, default 1)
 % maxF       - maximum frequency (mHz) of the mode calculation (OPTIONAL,
 %              default: 10% above the highest frequency of interest)
+% fref       - (OPTIONAL, default [] = elastic) reference frequency (Hz) of
+%              the card velocities. If given, the causal (physical
+%              dispersion) correction for the card's Qmu and Qkappa is
+%              applied to the phase velocities and kernels with
+%              mineos_apply_Q.m (as in the CPS programs). This needs the
+%              kernels, so a2_mk_kernels_cv.m is always run.
 %
 % OUTPUTS
 % phv - phase velocity (km/s) [N x 1], interpolated from the mode table
-%       (elastic phase velocity, column 6 of the .q file)
+%       (elastic phase velocity, column 6 of the .q file), or the causal
+%       phase velocity if fref is given
 % K   - kernels at the card nodes, ordered as in read_model_card (center
 %       to surface), [Nnode x N] each:
 %       K.vsv, K.vsh, K.vpv, K.vph, K.rho, K.eta : dc/dm(r) (MINEOS units,
@@ -34,6 +41,8 @@ function [phv, K] = run_mineos_phv_kernels(cardid, wavetype, periods, nmode, do_
 %       to layer kernels), K.rad: radius (m) [Nnode x 1], K.per: period of
 %       the mode used for each kernel (closest mode to each period)
 %       Love waves: K.vpv, K.vph, K.eta are zero.
+%       Causal (Q-corrected) kernels if fref is given.
+% phv_elastic - elastic phase velocity (km/s) [N x 1]
 %
 % jbrussell 11/2026
 
@@ -43,6 +52,12 @@ end
 if nargin < 6 || isempty(maxF)
     maxF = ceil(1.1*1000/min(periods)) + 0.05;
 end
+if nargin < 7
+    fref = [];
+end
+use_Q = ~isempty(fref);
+do_kernels_out = do_kernels;
+do_kernels = do_kernels || use_Q; % the Q correction needs the kernels
 periods = periods(:);
 switch upper(wavetype)
     case {'R','S'}
@@ -74,6 +89,7 @@ end
 qfile = [CARDTABLE, param.CARDID, '.', TYPEID, '.q'];
 [phv, ~, ~] = readMINEOS_qfile_per(qfile, periods, nmode);
 phv = phv(:);
+phv_elastic = phv;
 
 % Kernels
 K = [];
@@ -118,6 +134,15 @@ if do_kernels
     end
     % Remove the ascii kernel files
     delete([param.frechet, param.CARDID, '/', param.CARDID, '.', TYPEID, '.*.cv']);
+end
+
+% Causal correction for attenuation
+if use_Q
+    card = read_model_card([param.CARDPATH, param.CARDID, '.card']);
+    [phv, K] = mineos_apply_Q(card, phv, K, periods, fref);
+end
+if ~do_kernels_out
+    K = [];
 end
 
 end

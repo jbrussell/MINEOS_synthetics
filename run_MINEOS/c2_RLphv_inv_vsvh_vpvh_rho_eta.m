@@ -33,9 +33,11 @@
 % - The model is the full spherical MINEOS card; the SURF96 version uses
 %   an earth-flattened layered model that ends in a half-space at zmax.
 %   Only the nodes shallower than zmax are inverted for here.
-% - The phase velocities are elastic (the card has tref = -1, and the
-%   elastic phase velocities of the MINEOS .q file are used), as for
-%   use_Q = 0 in the SURF96 version. Attenuation is not included.
+% - Attenuation (use_Q = 1) is included the same way as in the SURF96
+%   version: the causal (physical dispersion) correction for the card's
+%   Qmu and Qkappa is applied to the elastic MINEOS phase velocities and
+%   kernels to first order (mineos_apply_Q.m), with the card velocities
+%   defined at fref. Q is held fixed.
 %
 % No need to comment out "clear" in a1_run_mineos_check.m or
 % a2_mk_kernels_cv.m: run_mineos_phv_kernels.m runs them in their own
@@ -50,6 +52,19 @@ parameter_FRECHET; % paths to the functions and FORTRAN binaries
 
 %% Data to invert
 data_types = 'RL'; % 'RL' = Rayleigh + Love, 'R' = Rayleigh only, 'L' = Love only
+
+%% Attenuation
+% use_Q = 1: include Qp and Qs (from the card's Qkappa and Qmu) in the true
+% and starting models, so that the synthetic data, the forward
+% calculations and the kernels include the causal (physical dispersion)
+% correction. Q is held fixed (not inverted). use_Q = 0: elastic.
+use_Q = 0;
+fref = 1; % [Hz] reference frequency of the Q model
+if use_Q
+    fref_Q = fref;
+else
+    fref_Q = []; % elastic (see run_mineos_phv_kernels.m)
+end
 
 %% Inversion regularization parameters
 eps_data = 1; % data fit
@@ -119,16 +134,16 @@ for wt = data_types
 end
 cobs = zeros(size(periods));
 I_R = wavetype=='R'; I_L = wavetype=='L';
-if any(I_R); cobs(I_R) = run_mineos_phv_kernels(cardid_true,'R',periods(I_R),nmode,0); end % "observations"
-if any(I_L); cobs(I_L) = run_mineos_phv_kernels(cardid_true,'L',periods(I_L),nmode,0); end
+if any(I_R); cobs(I_R) = run_mineos_phv_kernels(cardid_true,'R',periods(I_R),nmode,0,[],fref_Q); end % "observations"
+if any(I_L); cobs(I_L) = run_mineos_phv_kernels(cardid_true,'L',periods(I_L),nmode,0,[],fref_Q); end
 cstd = cobs * 0.01; % observation uncertainties
 
 %% Starting model
 figure(1); clf; set(gcf,'position',[50 50 1200 600]);
-plot_card_TI({card_start, card_true}, {'-b','-k'}, {'start','true'}, zmax);
+plot_card_TI({card_start, card_true}, {'-b','-k'}, {'start','true'}, zmax, use_Q);
 
 %% Do linearized inversion using MINEOS
-[card_final, cpre, unc, Kfinal] = run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Eta(cobs,cstd,periods,wavetype,card_start,discs,eps_data,eps_H,eps_J,eps_F,eps_vpvs,eps_rhovs,eps_xi,eps_eta,z_dampbot,zmax,nit,nit_recalc_c,nmode,cardid_work,1,vsv_thresh_xi,nit_recalc_G);
+[card_final, cpre, unc, Kfinal] = run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Eta(cobs,cstd,periods,wavetype,card_start,discs,eps_data,eps_H,eps_J,eps_F,eps_vpvs,eps_rhovs,eps_xi,eps_eta,z_dampbot,zmax,nit,nit_recalc_c,nmode,cardid_work,1,vsv_thresh_xi,nit_recalc_G,use_Q,fref);
 cstart = unc.cstart; % phase velocities of the starting model
 
 %% Plot final kernels
