@@ -67,7 +67,7 @@ for ip = 1:length(periods)
     fid = fopen(RUNFILE,'w');
     fprintf(fid,'%s\n',FRECHCV); %input binary file
     fprintf(fid,'%s\n',FRECHASC); %output ascii file
-    fprintf(fid,'%i\n',periods(ip));
+    fprintf(fid,'%f\n',periods(ip)); % draw_frechet_gv reads a real period
     fclose(fid);
     
     % Run draw_frechet_gv

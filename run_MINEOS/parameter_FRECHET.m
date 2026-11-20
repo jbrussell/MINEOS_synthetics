@@ -21,6 +21,28 @@ TONLY = 0; %Toroidal modes? (LOVE)
 % for plotting kernels
 param.periods = round(logspace(log10(5),log10(200),15));
 
+% Optional overrides through environment variables. These let a driver
+% (e.g. run_mineos_phv_kernels.m, used by c2_RLphv_inv_vsvh_vpvh_rho_eta.m)
+% run MINEOS for any card, mode type and set of periods without editing this
+% file. When they are not set, the values above are used.
+%   MINEOS_CARDID  - card name (without .card)
+%   MINEOS_TYPE    - 'S' (spheroidal/Rayleigh) or 'T' (toroidal/Love)
+%   MINEOS_PERIODS - periods (s) for the kernels, e.g. '10 12.5 15.7'
+%   MINEOS_MAXF    - maximum frequency of the mode table (mHz)
+if ~isempty(getenv('MINEOS_CARDID'))
+    param.CARDID = getenv('MINEOS_CARDID');
+end
+if ~isempty(getenv('MINEOS_TYPE'))
+    SONLY = strcmpi(getenv('MINEOS_TYPE'),'S');
+    TONLY = strcmpi(getenv('MINEOS_TYPE'),'T');
+end
+if ~isempty(getenv('MINEOS_PERIODS'))
+    param.periods = str2num(getenv('MINEOS_PERIODS'));
+end
+if ~isempty(getenv('MINEOS_MAXF'))
+    maxF = str2double(getenv('MINEOS_MAXF'));
+end
+
 ch_mode = 0; % (DO NOT CHANGE) mode branch to check for missed eigenfrequencies 0 => T0 ------- JOSH 10/7/15
 
 %% Parameters for idagrn synthetics

@@ -7,3 +7,6 @@ figs
 .DS_Store
 *.pdf
 *.o
+# cards written by c2_RLphv_inv_vsvh_vpvh_rho_eta.m
+run_MINEOS/CARDS/c2_true.*
+run_MINEOS/CARDS/c2_inv.*
