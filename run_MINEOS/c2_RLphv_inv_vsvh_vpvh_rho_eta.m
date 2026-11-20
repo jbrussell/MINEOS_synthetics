@@ -33,11 +33,14 @@
 % - The model is the full spherical MINEOS card; the SURF96 version uses
 %   an earth-flattened layered model that ends in a half-space at zmax.
 %   Only the nodes shallower than zmax are inverted for here.
-% - Attenuation (use_Q = 1) is included the same way as in the SURF96
-%   version: the causal (physical dispersion) correction for the card's
-%   Qmu and Qkappa is applied to the elastic MINEOS phase velocities and
-%   kernels to first order (mineos_apply_Q.m), with the card velocities
-%   defined at fref. Q is held fixed.
+% - Attenuation (use_Q = 1) is applied the same way as in the SURF96
+%   version: the causal (physical dispersion) correction is applied to the
+%   elastic MINEOS phase velocities and kernels to first order
+%   (mineos_apply_Q.m), with the card velocities defined at fref. Q is
+%   held fixed. However, Qmu and Qkappa are taken from the .qmod file (the
+%   Q model MINEOS uses), whereas the SURF96 version uses the Q columns of
+%   the card, which differ for this card (e.g. Qmu = 110 at 70-200 km in
+%   the .qmod, 300 in the card).
 %
 % No need to comment out "clear" in a1_run_mineos_check.m or
 % a2_mk_kernels_cv.m: run_mineos_phv_kernels.m runs them in their own
@@ -54,8 +57,8 @@ parameter_FRECHET; % paths to the functions and FORTRAN binaries
 data_types = 'RL'; % 'RL' = Rayleigh + Love, 'R' = Rayleigh only, 'L' = Love only
 
 %% Attenuation
-% use_Q = 1: include Qp and Qs (from the card's Qkappa and Qmu) in the true
-% and starting models, so that the synthetic data, the forward
+% use_Q = 1: include Qp and Qs (from Qmu and Qkappa of the .qmod file) in
+% the true and starting models, so that the synthetic data, the forward
 % calculations and the kernels include the causal (physical dispersion)
 % correction. Q is held fixed (not inverted). use_Q = 0: elastic.
 use_Q = 0;
@@ -140,7 +143,7 @@ cstd = cobs * 0.01; % observation uncertainties
 
 %% Starting model
 figure(1); clf; set(gcf,'position',[50 50 1200 600]);
-plot_card_TI({card_start, card_true}, {'-b','-k'}, {'start','true'}, zmax, use_Q);
+plot_card_TI({card_start, card_true}, {'-b','-k'}, {'start','true'}, zmax, use_Q, ['./CARDS/',cardname,'.qmod']);
 
 %% Do linearized inversion using MINEOS
 [card_final, cpre, unc, Kfinal] = run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Eta(cobs,cstd,periods,wavetype,card_start,discs,eps_data,eps_H,eps_J,eps_F,eps_vpvs,eps_rhovs,eps_xi,eps_eta,z_dampbot,zmax,nit,nit_recalc_c,nmode,cardid_work,1,vsv_thresh_xi,nit_recalc_G,use_Q,fref);

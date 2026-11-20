@@ -1,9 +1,10 @@
-function plot_card_TI(cards, styles, names, zmax, plotQ)
-% plot_card_TI(cards, styles, names, zmax, plotQ)
+function plot_card_TI(cards, styles, names, zmax, plotQ, qmodfile)
+% plot_card_TI(cards, styles, names, zmax, plotQ, qmodfile)
 % Plot Vsv, Vsh, Vpv, Vph, rho and eta of MINEOS card structures
 % (read_model_card.m) above zmax (km) in a row of subplots of the current
 % figure. With plotQ = 1 (OPTIONAL, default 0), Qmu and Qkappa are plotted
-% in a 7th panel.
+% in a 7th panel: from the .qmod file qmodfile (OPTIONAL), or else from
+% the Q columns of the first card.
 % cards: cell array of cards; styles: cell array of line styles;
 % names: cell array of legend entries
 %
@@ -29,10 +30,16 @@ for k = 1:6
 end
 if plotQ
     subplot(1,npan,npan); box on; hold on;
-    c = cards{1}; Iz = c.z <= zmax;
-    h1 = plot(c.qmu(Iz), c.z(Iz), '-r', 'linewidth', 2);
-    h2 = plot(c.qkap(Iz), c.z(Iz), '-b', 'linewidth', 2);
-    xlabel('Q');
+    if nargin >= 6 && ~isempty(qmodfile)
+        q = read_qmod(qmodfile); ttl = '.qmod';
+    else
+        q = cards{1}; ttl = 'card';
+    end
+    qcap = 1e5; % display cap (e.g. 999999999 = elastic in .qmod files)
+    h1 = plot(min(q.qmu, qcap), q.z, '-r', 'linewidth', 2);
+    h2 = plot(min(q.qkap, qcap), q.z, '-b', 'linewidth', 2);
+    xlabel('Q (capped at 10^5)'); title(ttl);
+    xlim([10 2*qcap]);
     legend([h1 h2], {'Q_\mu','Q_\kappa'}, 'location', 'southeast');
     ylim([0 zmax]);
     set(gca,'FontSize',14,'linewidth',1.5,'ydir','reverse','xscale','log');

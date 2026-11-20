@@ -60,8 +60,8 @@ function [card_final,cpre,unc,Kfinal] = run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Et
 % fref - reference frequency (Hz) of the Q model (OPTIONAL, default 1)
 %
 % ATTENUATION: with use_Q = 1, the phase velocities and kernels include the
-% causal (physical dispersion) correction for the card's Qmu and Qkappa,
-% with the card velocities defined at fref (mineos_apply_Q.m; the same
+% causal (physical dispersion) correction for the Qmu and Qkappa of the
+% .qmod file of the starting card, with the card velocities defined at fref (mineos_apply_Q.m; the same
 % first-order correction as the CPS programs and the SURF96 version). Q is
 % not inverted for: Qmu and Qkappa are held at their starting values. With
 % use_Q = 0 the forward problem is elastic.

@@ -25,10 +25,10 @@ function [phv, K, phv_elastic] = run_mineos_phv_kernels(cardid, wavetype, period
 %              default: 10% above the highest frequency of interest)
 % fref       - (OPTIONAL, default [] = elastic) reference frequency (Hz) of
 %              the card velocities. If given, the causal (physical
-%              dispersion) correction for the card's Qmu and Qkappa is
-%              applied to the phase velocities and kernels with
-%              mineos_apply_Q.m (as in the CPS programs). This needs the
-%              kernels, so a2_mk_kernels_cv.m is always run.
+%              dispersion) correction for the Qmu and Qkappa of
+%              ./CARDS/<cardid>.qmod is applied to the phase velocities and
+%              kernels with mineos_apply_Q.m (as in the CPS programs). This
+%              needs the kernels, so a2_mk_kernels_cv.m is always run.
 %
 % OUTPUTS
 % phv - phase velocity (km/s) [N x 1], interpolated from the mode table
@@ -139,7 +139,8 @@ end
 % Causal correction for attenuation
 if use_Q
     card = read_model_card([param.CARDPATH, param.CARDID, '.card']);
-    [phv, K] = mineos_apply_Q(card, phv, K, periods, fref);
+    qmodfile = [param.CARDPATH, param.CARDID, '.qmod'];
+    [phv, K] = mineos_apply_Q(card, phv, K, periods, fref, qmodfile);
 end
 if ~do_kernels_out
     K = [];
