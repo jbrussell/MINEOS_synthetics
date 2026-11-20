@@ -143,23 +143,23 @@ eps_vphvsh0 = eps_vpvs*NA/NR;
 NR=norm(RHO_VSV_mat,1);
 eps_rhovsv0 = eps_rhovs*NA/NR;
 
-% Set Vp of water layer
+% Hold Vp of fluid layers (water, outer core) fixed to starting model (m/s)
 VPV_h2o_mat = zeros(length(ind_h2o),6*nlayer);
 VPH_h2o_mat = zeros(length(ind_h2o),6*nlayer);
 for ii = 1:length(ind_h2o)
     VPV_h2o_mat(ii, 2*nlayer + ind_h2o(ii)) = 1;
     VPH_h2o_mat(ii, 3*nlayer + ind_h2o(ii)) = 1;
 end
-vpv_h2o_vec = 1.5 * ones(length(ind_h2o),1);
-vph_h2o_vec = 1.5 * ones(length(ind_h2o),1);
+vpv_h2o_vec = card.vpv(ind_h2o);
+vph_h2o_vec = card.vph(ind_h2o);
 % NR=norm(VPV_h2o_mat,1);
 
-% Set Rho of water layer
+% Hold Rho of fluid layers (water, outer core) fixed to starting model (kg/m^3)
 RHO_h2o_mat = zeros(length(ind_h2o),6*nlayer);
 for ii = 1:length(ind_h2o)
     RHO_h2o_mat(ii, 4*nlayer + ind_h2o(ii)) = 1;
 end
-rho_h2o_vec = 1.03 * ones(length(ind_h2o),1);
+rho_h2o_vec = card.rho(ind_h2o);
 % NR=norm(RHO_h2o_mat,1);
 
 % % Set Vsh = Vsv, isotropic (Vsv - Vsh = 0)
