@@ -10,3 +10,6 @@ figs
 # cards written by c2_RLphv_inv_vsvh_vpvh_rho_eta.m
 run_MINEOS/CARDS/c2_true.*
 run_MINEOS/CARDS/c2_inv.*
+# cards written by RL_array_multimode_waveform_inv
+run_MINEOS/CARDS/prem_nomelt.*
+run_MINEOS/CARDS/RLinv_*

@@ -29,6 +29,7 @@ param.periods = round(logspace(log10(5),log10(200),15));
 %   MINEOS_TYPE    - 'S' (spheroidal/Rayleigh) or 'T' (toroidal/Love)
 %   MINEOS_PERIODS - periods (s) for the kernels, e.g. '10 12.5 15.7'
 %   MINEOS_MAXF    - maximum frequency of the mode table (mHz)
+%   MINEOS_NMODES  - number of mode branches (N_modes above; <0 = all)
 if ~isempty(getenv('MINEOS_CARDID'))
     param.CARDID = getenv('MINEOS_CARDID');
 end
@@ -41,6 +42,9 @@ if ~isempty(getenv('MINEOS_PERIODS'))
 end
 if ~isempty(getenv('MINEOS_MAXF'))
     maxF = str2double(getenv('MINEOS_MAXF'));
+end
+if ~isempty(getenv('MINEOS_NMODES'))
+    N_modes = str2double(getenv('MINEOS_NMODES'));
 end
 
 ch_mode = 0; % (DO NOT CHANGE) mode branch to check for missed eigenfrequencies 0 => T0 ------- JOSH 10/7/15

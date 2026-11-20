@@ -1,0 +1,214 @@
+# 15 shallow Pacific-rim earthquakes (Mw 6.4-7.8, 2012) recorded while the
+# NoMelt OBS array was deployed, in Global CMT CMTSOLUTION format, copied
+# verbatim from the Global CMT catalog (www.globalcmt.org; Dziewonski et
+# al., 1981; Ekstrom et al., 2012). Moment tensor in dyne-cm.
+
+ PDEW2012 10 28  3  4  8.80  52.7900 -132.1000  14.0 6.5 7.8 QUEEN CHARLOTTE ISLANDS                 
+event name:     201210280304A  
+time shift:     28.4300
+half duration:  18.7000
+latitude:       52.6100
+longitude:    -132.0600
+depth:          12.0000
+Mrr:       4.080000e+27
+Mtt:      -2.530000e+27
+Mpp:      -1.560000e+27
+Mrt:       3.260000e+27
+Mrp:      -1.780000e+27
+Mtp:       2.400000e+27
+
+ PDEW2012 12 14 10 36  1.60  31.0900 -119.6600  13.0 6.2 6.4 OFF W. COAST OF BAJA CAL                
+event name:     201212141036A  
+time shift:      3.1400
+half duration:   3.7000
+latitude:       31.0800
+longitude:    -119.6100
+depth:          21.1500
+Mrr:      -4.030000e+25
+Mtt:       9.030000e+24
+Mpp:       3.130000e+25
+Mrt:      -5.300000e+24
+Mrp:      -7.640000e+24
+Mtp:       2.590000e+25
+
+ PDEW2012  4 12  7 15 48.50  28.7000 -113.1000  13.0 6.2 7.0 BAJA CALIFORNIA, MEXICO                 
+event name:     201204120715A  
+time shift:     16.0500
+half duration:   8.1000
+latitude:       28.5700
+longitude:    -112.7600
+depth:          15.8300
+Mrr:      -2.110000e+25
+Mtt:      -4.220000e+26
+Mpp:       4.430000e+26
+Mrt:      -9.349999e+25
+Mrp:      -8.380000e+25
+Mtp:      -6.440000e+25
+
+ PDEW2012  3 20 18  2 47.50  16.5000  -98.2200  20.0 6.6 7.6 NEAR COAST OF GUERRERO,                 
+event name:     201203201802A  
+time shift:      7.4200
+half duration:  13.2000
+latitude:       16.6000
+longitude:     -98.3900
+depth:          15.3900
+Mrr:       6.790000e+26
+Mtt:      -5.640000e+26
+Mpp:      -1.150000e+26
+Mrt:       1.740000e+27
+Mrp:      -6.590000e+26
+Mtp:       2.420000e+26
+
+ PDEW2012  9  5 14 42  7.90  10.1000  -85.3100  35.0 6.8 7.7 COSTA RICA                              
+event name:     201209051442A  
+time shift:     15.3700
+half duration:  15.8000
+latitude:       10.0000
+longitude:     -85.6400
+depth:          29.6700
+Mrr:       1.850000e+27
+Mtt:      -1.370000e+27
+Mpp:      -4.830000e+26
+Mrt:       2.610000e+27
+Mrp:      -1.160000e+27
+Mtp:       8.600000e+26
+
+ PDEW2012  1 30  5 11  0.90 -14.1700  -75.6300  43.0 6.3 6.4 NEAR COAST OF PERU                      
+event name:     201201300511A  
+time shift:      4.6400
+half duration:   3.8000
+latitude:      -14.2600
+longitude:     -76.0500
+depth:          45.7000
+Mrr:       3.690000e+25
+Mtt:       6.070000e+23
+Mpp:      -3.750000e+25
+Mrt:      -1.380000e+24
+Mrp:      -2.740000e+25
+Mtp:       1.660000e+25
+
+ PDEW2012  3 25 22 37  6.00 -35.2000  -72.2200  40.7 6.5 7.1 NEAR COAST OF CENTRAL CH                
+event name:     201203252237A  
+time shift:     14.8800
+half duration:   8.8000
+latitude:      -35.3100
+longitude:     -72.4100
+depth:          33.8200
+Mrr:       2.920000e+26
+Mtt:      -3.770000e+24
+Mpp:      -2.880000e+26
+Mrt:       4.150000e+25
+Mrp:      -5.190000e+26
+Mtp:      -4.740000e+25
+
+ PDEW2012 10  9 12 32  9.80 -60.3300  153.7000  10.0 5.6 6.6 WEST OF MACQUARIE ISLAND                
+event name:     201210091232A  
+time shift:     10.1600
+half duration:   4.7000
+latitude:      -60.6500
+longitude:     153.3900
+depth:          20.7000
+Mrr:      -1.160000e+25
+Mtt:       7.250000e+25
+Mpp:      -6.090000e+25
+Mrt:       9.949999e+24
+Mrp:       1.080000e+25
+Mtp:      -5.920000e+25
+
+ PDEW2012  2  2 13 34 40.70 -17.8300  167.1300  23.0 6.5 7.1 VANUATU ISLANDS                         
+event name:     201202021334A  
+time shift:      8.4900
+half duration:   8.0000
+latitude:      -17.6900
+longitude:     167.1100
+depth:          20.5200
+Mrr:      -2.920000e+26
+Mtt:      -1.200000e+26
+Mpp:       4.130000e+26
+Mrt:      -9.170000e+25
+Mrp:       8.960000e+25
+Mtp:       2.360000e+26
+
+ PDEW2012  7 28 20  3 56.80  -4.6500  153.1700  41.0 6.1 6.5 NEW IRELAND REGION, P.N.                
+event name:     201207282004A  
+time shift:      7.1600
+half duration:   4.5000
+latitude:       -4.8500
+longitude:     153.0700
+depth:          57.7700
+Mrr:       5.980000e+25
+Mtt:      -6.980000e+25
+Mpp:       9.930000e+24
+Mrt:       3.300000e+25
+Mrp:       1.760000e+25
+Mtp:       1.330000e+25
+
+ PDEW2012  4 21  1 16 52.70  -1.6200  134.2800  16.0 6.3 6.7 IRIAN JAYA REGION, INDON                
+event name:     201204210116A  
+time shift:      3.6500
+half duration:   5.2000
+latitude:       -1.5700
+longitude:     134.3300
+depth:          18.0900
+Mrr:      -1.890000e+25
+Mtt:      -2.490000e+25
+Mpp:       4.370000e+25
+Mrt:       4.360000e+24
+Mrp:       1.370000e+25
+Mtp:       1.190000e+26
+
+ PDEW2012  8 31 12 47 33.40  10.8100  126.6400  28.0 7.2 7.6 PHILIPPINE ISLANDS REGIO                
+event name:     201208311247A  
+time shift:     10.4000
+half duration:  15.7000
+latitude:       10.8500
+longitude:     126.9700
+depth:          45.2000
+Mrr:       2.970000e+27
+Mtt:       5.310000e+26
+Mpp:      -3.500000e+27
+Mrt:      -7.510000e+26
+Mrp:      -4.270000e+26
+Mtp:      -1.470000e+26
+
+ PDEW2012  3 14  9  8 35.10  40.8900  144.9400  12.0 6.7 7.0 OFF EAST COAST OF HONSHU                
+event name:     201203140908A  
+time shift:      7.6800
+half duration:   7.3000
+latitude:       40.8800
+longitude:     144.9300
+depth:          13.0200
+Mrr:      -3.500000e+26
+Mtt:       3.110000e+26
+Mpp:       3.840000e+25
+Mrt:      -4.400000e+24
+Mrp:       5.660000e+25
+Mtp:      -1.270000e+25
+
+ PDEW2012 11 16 18 12 39.90  49.2800  155.4300  29.0 0.0 6.5 KURIL ISLANDS                           
+event name:     201211161812A  
+time shift:      5.0800
+half duration:   4.2000
+latitude:       49.2200
+longitude:     155.8700
+depth:          40.9200
+Mrr:       5.800000e+25
+Mtt:      -1.680000e+25
+Mpp:      -4.120000e+25
+Mrt:       1.440000e+25
+Mrp:       2.510000e+25
+Mtp:      -2.830000e+25
+
+ PDEW2012  9 26 23 39 55.10  51.5900 -178.2900  16.0 6.3 6.5 ANDREANOF ISLANDS, ALEUT                
+event name:     201209262339A  
+time shift:      4.0300
+half duration:   4.3000
+latitude:       51.5600
+longitude:    -178.0800
+depth:          15.2800
+Mrr:      -3.070000e+25
+Mtt:      -1.910000e+25
+Mpp:       4.980000e+25
+Mrt:       4.040000e+25
+Mrp:       1.970000e+25
+Mtp:      -2.730000e+25
