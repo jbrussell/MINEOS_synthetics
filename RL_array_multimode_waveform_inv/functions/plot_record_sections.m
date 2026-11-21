@@ -1,5 +1,5 @@
-function plot_record_sections(P, outdir, fc)
-% plot_record_sections(P, outdir, fc)
+function plot_record_sections(P, outdir, fc, U_start)
+% plot_record_sections(P, outdir, fc, U_start)
 %
 % Record sections of the full mode-sum idagrn6 synthetics of the step-2
 % prep structure P (prep_mineos_idagrn.m): the PA5 "data" (all branches
@@ -9,7 +9,9 @@ function plot_record_sections(P, outdir, fc)
 % [1/112 1/100 1/20 1/17]). The lines mark the overtone and fundamental-
 % mode windows of the inversion (group velocities of the reference model,
 % as in sub_setup_records.m): Delta/U_ov (overtone window start), Delta/U_b
-% (overtone/fundamental boundary) and Delta/U_f + 60 s (end).
+% (overtone/fundamental boundary; with opt.windows = 'single' the two are
+% one window) and Delta/U_f + 60 s (end). U_start (optional, km/s, scalar
+% or [Love Rayleigh]) replaces U_ov as in opt.U_start.
 %
 % Figures in outdir:
 %   record_section_all_<T|Z>.png    all events and stations vs epicentral
@@ -18,6 +20,7 @@ function plot_record_sections(P, outdir, fc)
 %                                   distance), normalized per event; PA5
 %                                   black, PREM red
 if nargin < 3 || isempty(fc), fc = [1/112 1/100 1/20 1/17]; end
+if nargin < 4, U_start = []; end
 if ~exist(outdir, 'dir'), mkdir(outdir); end
 if exist('OCTAVE_VERSION', 'builtin'), set(0, 'defaultfigurevisible', 'off'); end
 t = P.t(:); Nt = numel(t); dt = t(2) - t(1);
@@ -32,6 +35,7 @@ ecol = lines(nev);
 for wv = 1:2
     U = P.(['grv_ref_' ty{wv}]);
     Ub = max(U(:,1)) + 0.2; Uov = max(max(U(:, 2:end))) + 0.6; Uf = min(U(:,1)) - 0.35;
+    if ~isempty(U_start), Uov = U_start(min(wv, numel(U_start))); end
     D = zeros(nev, nst); Ut = cell(nev, 1); Up = cell(nev, 1);
     for e = 1:nev
         D(e, :) = gc_dist_az(P.sta.lat, P.sta.lon, P.ev(e).lat*ones(nst, 1), P.ev(e).lon*ones(nst, 1))';
@@ -49,7 +53,7 @@ for wv = 1:2
     end
     dd = linspace(floor(min(D(:))) - 1, ceil(max(D(:))) + 1, 50);
     hl = plot(dd/km2deg/Uov, dd, 'k--', dd/km2deg/Ub, dd, 'k-', dd/km2deg/Uf + 60, dd, 'k:', 'linewidth', 1.2);
-    legend(hl, {sprintf('overtone window start, U_{ov} = %.2f km/s', Uov), ...
+    legend(hl, {sprintf('window start, U_{ov} = %.2f km/s', Uov), ...
                 sprintf('overtone/fundamental boundary, U_b = %.2f km/s', Ub), ...
                 sprintf('fundamental window end, U_f = %.2f km/s (+60 s)', Uf)}, 'location', 'southeast');
     set(gca, 'ydir', 'normal'); xlim([0 t(end)]); ylim(dd([1 end]));

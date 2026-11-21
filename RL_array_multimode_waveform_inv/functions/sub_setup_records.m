@@ -144,12 +144,24 @@ ev = P.ev; nev = numel(ev);
 Del0 = Del_c * 6371*pi/180;                                   % km
 wname = {'Love', 'Rayleigh'}; uname = {'T', 'S'};
 rec = struct([]); r = 0;
+% windows (opt.windows): 'single' (default) = one surface-wave window per
+% wave type from Delta/U_start to Delta/U_f + 60 s (overtones and the
+% fundamental mode; one noise level and correlation per wave type, labelled
+% 2*wv-1, the slots 2*wv-1 and 2*wv tied in the samplers); 'split' = an
+% overtone window (to Delta/U_b) and a fundamental-mode window, each with
+% its own noise parameters. opt.U_start (km/s; scalar or [Love Rayleigh]):
+% start of the window; default (empty) max group velocity of branches
+% 1..nm-1 of the reference + 0.6 km/s.
+single_ = strcmp(og('windows', 'single'), 'single');
+U_start_ = og('U_start', []);
+mc.single_window = single_;
 segtap = tukeywin_(cfg.N, 0.1);          % taper of the time segments (data and Uref)
 for wv = 1:2
     % reference group velocities -> window boundaries for this wave type
     U = P.(['grv_ref_' uname{wv}]);
     U0 = U(:,1); Uov = U(:, 2:end);
     win(wv).Ub = max(U0) + 0.2; win(wv).Uov1 = max(Uov(:)) + 0.6; win(wv).Uf2 = min(U0) - 0.35;
+    if ~isempty(U_start_), win(wv).Uov1 = U_start_(min(wv, numel(U_start_))); end   % opt.U_start
     fprintf('%s ref. group vel: fund %.2f-%.2f, overtones %.2f-%.2f km/s\n', ...
         wname{wv}, min(U0), max(U0), min(Uov(:)), max(Uov(:)));
     for e = 1:nev
@@ -158,10 +170,16 @@ for wv = 1:2
         rec(r).az_prop = mod(baz(e) + 180, 360);
         rec(r).Del0 = Del0(e);
         rec(r).tred = cfg.dt*round((Del0(e)/win(wv).Uov1 - 150)/cfg.dt);
+        % (a late window start, opt.U_start, must not push the segment past
+        % the end of the idagrn records)
+        rec(r).tred = min(rec(r).tred, P.t(1) + cfg.dt*floor((P.t(end) - P.t(1))/cfg.dt - (cfg.N - 1)));
         Dj = gc_dist_az(lat, lon, ev(e).lat*ones(Nst,1), ev(e).lon*ones(Nst,1)) * 6371*pi/180;
         t  = (0:cfg.N-1)'*cfg.dt + rec(r).tred;
         it = round((t - P.t(1))/cfg.dt) + 1;          % samples of the idagrn traces
-        if it(end) > numel(P.t), error('idagrn records too short: increase opt.len_hr'); end
+        if it(end) > numel(P.t) || it(1) < 1, error('idagrn records too short: increase opt.len_hr'); end
+        if max(Dj)/win(wv).Uf2 + 60 > t(end) || min(Dj)/win(wv).Uov1 < t(1)
+            warning('record %d (%s): windows cut by the %d-sample segment (opt.N, opt.len_hr)', r, ev(e).id, cfg.N);
+        end
         % data: full idagrn6 synthetics of the true model, same processing
         X = fft(P.(['u_true_' uname{wv}]){e}(it, :) .* segtap);
         Y = zeros(cfg.N, Nst); Y(cfg.ib, :) = X(cfg.ib, :) .* taper;
@@ -171,7 +189,11 @@ for wv = 1:2
             io = find(t >= Dj(j)/win(wv).Uov1 & t < Dj(j)/win(wv).Ub);
             iF = find(t >= Dj(j)/win(wv).Ub   & t < Dj(j)/win(wv).Uf2 + 60);
             idx = [idx; io + (j-1)*cfg.N; iF + (j-1)*cfg.N];      %#ok<AGROW>
-            wt  = [wt; (2*wv-1)*ones(size(io)); 2*wv*ones(size(iF))]; %#ok<AGROW>
+            if single_
+                wt = [wt; (2*wv-1)*ones(numel(io) + numel(iF), 1)]; %#ok<AGROW>   % one surface-wave window
+            else
+                wt = [wt; (2*wv-1)*ones(size(io)); 2*wv*ones(size(iF))]; %#ok<AGROW>
+            end
         end
         rec(r).idx = idx; rec(r).wt = wt;
         rec(r).first = [true; diff(idx) ~= 1 | diff(wt) ~= 0];   % segment starts
@@ -219,6 +241,7 @@ for r = 1:nrec
     end
 end
 rho_emp = (cc(:,1) ./ cc(:,2))';
+if single_, rho_emp([2 4]) = rho_emp([1 3]); end   % tied slots (single window)
 fprintf('band-limited noise: empirical lag-1 correlation per window %s\n', mat2str(round(rho_emp*100)/100));
 fprintf('%d stations, %d events, %d records, %d data samples\n', Nst, nev, nrec, ...
     sum(arrayfun(@(x) numel(x.d), rec)));

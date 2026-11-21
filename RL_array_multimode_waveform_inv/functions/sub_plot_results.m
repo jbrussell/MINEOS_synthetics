@@ -45,6 +45,7 @@ names = {'vsv', 'vsh', 'xi'}; labs = {'V_{SV} (km/s)', 'V_{SH} (km/s)', '\xi = (
 truv = {tru.vsv, tru.vsh, tru.xi};
 refv = {refp.vsv, refp.vsh, refp.xi};
 eta_ = isfield(mc, 'eta_free') && mc.eta_free;   % eta a model parameter
+sw_ = isfield(mc, 'single_window') && mc.single_window;   % one surface-wave window per wave type
 if eta_
     V.eta = cat2('eta'); names{4} = 'eta'; labs{4} = '\eta'; truv{4} = tru.eta; refv{4} = refp.eta;
 end
@@ -105,6 +106,7 @@ end
 R4 = cell2mat(cellfun(@(x) x.rho, svc, 'uniformoutput', false));
 S4 = cell2mat(cellfun(@(x) x.sig, svc, 'uniformoutput', false));
 for fo = [1 fid]
+    if sw_, fprintf(fo, 'single surface-wave window per wave type: noise slots (L, L, R, R) tied\n'); end
     fprintf(fo, 'noise correlation r (L ovt, L fund, R ovt, R fund): posterior %s +- %s | empirical %s\n', ...
         mat2str(round(mean(R4)*100)/100), mat2str(round(std(R4)*100)/100), mat2str(round(rho_emp*100)/100));
     fprintf(fo, 'noise sigma / sigma_true: %s\n', mat2str(round(mean(S4)./sig_true*100)/100));
@@ -249,7 +251,10 @@ for e0 = unique([1 min(8, max([rec.event]))])
                         'location', 'northwest', 'fontsize', 7);
                 end
             end
-            if q == numel(pick), xlabel('Time since origin (s); orange: overtone window, blue: fundamental window'); end
+            if q == numel(pick)
+                if sw_, xlabel('Time since origin (s); shaded: surface-wave window');
+                else, xlabel('Time since origin (s); orange: overtone window, blue: fundamental window'); end
+            end
         end
     end
     print(fig, '-dpng', '-r130', fullfile(outdir, sprintf('fig4_waveform_fits_event%d.png', e0)));
@@ -289,6 +294,7 @@ ylim([min(Lall) - 20, max(max(Lall), 0) + 20]);
 plot([1 mc.nit], [0 0], 'r--'); yl = ylim; plot(mc.burn*[1 1], yl, 'k:');
 xlabel('iteration'); ylabel('log L - log L(true)'); title('Log likelihood (red: true model)');
 wl4 = {'L ovt', 'L fund', 'R ovt', 'R fund'};
+if sw_, wl4 = {'L', 'L (tied)', 'R', 'R (tied)'}; end
 subplot(1, 4, 2); hold on; box on;
 for i = 1:4, plot(i + 0.08*randn(size(S4,1),1), S4(:,i)./sig_true(i), '.', 'markersize', 3); end
 plot([0.5 4.5], [1 1], 'k--'); xlim([0.5 4.5]); set(gca, 'xtick', 1:4, 'xticklabel', wl4);

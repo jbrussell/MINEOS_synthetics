@@ -137,19 +137,36 @@ reference (step-1) model at period $T$, evaluated at the dispersion nodes
 defined:
 \begin{align}
   U^{\rm b}_w &= \max_T U^{w,\rm ref}_0(T)+0.2, \\
-  U^{\rm ov}_w &= \max_{T,\;1\le n<n_m} U^{w,\rm ref}_n(T)+0.6, \\
+  U^{\rm ov}_w &= \max_{T,\;1\le n<n_m} U^{w,\rm ref}_n(T)+0.6\quad\text{(or \texttt{opt.U\_start})}, \\
   U^{\rm f}_w &= \min_T U^{w,\rm ref}_0(T)-0.35 .
 \end{align}
-At station $j$ of record $r$ there are two windows:
+For the step-1 model, $U^{\rm ov}=8.30$ (Love) and $9.24$~km/s (Rayleigh).
+With \texttt{opt.U\_start} a slower start (e.g.\ 6~km/s) leaves out the
+early, body-wave-like energy (S, SS, \dots), which in mode terms is
+carried mostly by the unmodeled branches $n\ge n_m$.
+
+\emph{Single window} (\texttt{opt.windows = 'single'}, default): at station
+$j$ of record $r$ the data are one surface-wave window
+$\Delta_{ej}/U^{\rm ov}_w\le t<\Delta_{ej}/U^{\rm f}_w+60$~s, containing the
+overtones and the fundamental mode. Window types are labelled by wave
+type, $q\in\{1,3\}=\{$Love, Rayleigh$\}$.
+
+\emph{Split windows} (\texttt{opt.windows = 'split'}): two windows,
 \begin{itemize}
 \item the \emph{overtone window} $\Delta_{ej}/U^{\rm ov}_w\le t<\Delta_{ej}/U^{\rm b}_w$;
-\item the \emph{fundamental-mode window} $\Delta_{ej}/U^{\rm b}_w\le t<\Delta_{ej}/U^{\rm f}_w+60$~s.
+\item the \emph{fundamental-mode window} $\Delta_{ej}/U^{\rm b}_w\le t<\Delta_{ej}/U^{\rm f}_w+60$~s,
 \end{itemize}
-Window types are labelled
-$q\in\{1,2,3,4\}=\{$Love overtone, Love fundamental, Rayleigh overtone,
-Rayleigh fundamental$\}$. $q(i)$ is the window type of sample $i$. A
+labelled $q\in\{1,2,3,4\}=\{$Love overtone, Love fundamental, Rayleigh
+overtone, Rayleigh fundamental$\}$.
+
+The samples are the same in both cases; the choice only sets how many
+noise classes there are (Section~\ref{sec:like}). Separate classes let the
+overtone part, which also contains the unmodeled branches, have its own
+noise level, so it does not set the weight of the better-fit fundamental
+mode, nor the reverse. $q(i)$ is the window type of sample $i$. A
 \emph{segment} is a run of consecutive samples of one station and one
-window type.
+window type. In the single-window case the samplers keep the four noise
+slots and tie $(\sigma_1,r_1)=(\sigma_2,r_2)$ and $(\sigma_3,r_3)=(\sigma_4,r_4)$.
 
 \subsection{Data vector, normalization and noise}
 The data vector $\mathbf{d}_r\in\mathbb{R}^{N_{d,r}}$ of record $r$ stacks

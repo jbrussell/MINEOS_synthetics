@@ -25,5 +25,5 @@ o.ref_card = S1.card_final;                 % the step-1 isotropic model
 o.refid = opt.s1_final;
 P = prep_mineos_idagrn(o);
 fprintf('cached in %s: data branches 0-%d, modeled branches 0-%d\n', opt.prepfile, opt.nbranch_data-1, opt.nm-1);
-plot_record_sections(P, 'figs_step2', optget(opt, 'fc', []));
+plot_record_sections(P, 'figs_step2', optget(opt, 'fc', []), optget(opt, 'U_start', []));
 fprintf('record sections in figs_step2/\n');

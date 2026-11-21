@@ -102,6 +102,9 @@ for it = 1:mc.nit
     sg = st.sig; rh = st.rho; iw = randi(4); okn = true;
     if rand < 0.5, sg(iw) = sg(iw)*exp(mc.step_lsig*randn);
     else, rh(iw) = rh(iw) + mc.step_rho*randn; okn = rh(iw) >= 0 && rh(iw) < mc.rhomax; end
+    if isfield(mc, 'single_window') && mc.single_window   % one window per wave type: tied slots
+        pr_ = 2*ceil(iw/2) - [1 0]; sg(pr_) = sg(iw); rh(pr_) = rh(iw);
+    end
     if okn
         rr = find(wave == ceil(iw/2))'; Ln = Le;
         for r = rr, Ln(r) = llk(r, G{r}, sg, rh); end
