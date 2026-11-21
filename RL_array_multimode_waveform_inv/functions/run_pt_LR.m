@@ -13,7 +13,9 @@ function [sv, st, info] = run_pt_LR(rec, cfg, mc, Tdisp, fb, nm, zplot, seed, li
 % which are moved to the posterior mean of tau, dth and B for the state's
 % current structure every mc.relin iterations (default 1: before every
 % proposal) by one Gauss-Newton step, and the state's likelihood is then
-% re-evaluated there. Only Vsv, xi and the 8 noise parameters (sigma and
+% re-evaluated there. The posterior mean used for the update is cached
+% from the likelihood evaluation that produced the state's current
+% log-likelihood (no extra solve). Only Vsv, xi and the 8 noise parameters (sigma and
 % AR(1) correlation r per window type) are sampled and tempered.
 %
 % lin0 : {nrec} initial linearization points (e.g. fit_nuisance_LR at the
@@ -39,13 +41,13 @@ for k = 1:K
     for wv = 1:2, s.sig(2*wv-1:2*wv) = std(rec(find(wave == wv, 1)).d); end
     s.rho = 0.5*ones(1, 4);
     s.lin = lin0;
-    s.G = cell(nrec, 1); s.Le = zeros(nrec, 1);
+    s.G = cell(nrec, 1); s.Le = zeros(nrec, 1); s.xh = cell(nrec, 1);
     for r = 1:nrec
-        [~, s.Le(r), s.G{r}] = nuis_relin(rec(r), s.Cf{wave(r)}, s.lin{r}, cfg, s.sig, s.rho, mc, nm);
+        [~, s.Le(r), s.G{r}, s.xh{r}] = nuis_relin(rec(r), s.Cf{wave(r)}, s.lin{r}, cfg, s.sig, s.rho, mc, nm);
     end
     S{k} = s;
 end
-st0 = rmfield(S{1}, {'M', 'G', 'Le', 'lin'}); st0.prof = lr_common('profiles', S{1}, zplot, cfg);
+st0 = rmfield(S{1}, {'M', 'G', 'Le', 'lin', 'xh'}); st0.prof = lr_common('profiles', S{1}, zplot, cfg);
 
 nsave = floor((pt.nit - pt.burn)/pt.thin);
 sv.st0 = st0;
@@ -66,16 +68,17 @@ for it = 1:pt.nit
     for k = 1:K
         s = S{k}; Tk = pt.T(k);
         % ---------- relinearize tau, dth and B about the current structure ----------
+        % s.xh{r} is the posterior mean of [beta; dtau; dth] cached by the
+        % likelihood evaluation that produced s.Le(r) (same G, sig, rho, lin)
         if mod(it - 1, relin) == 0
             for r = 1:nrec
-                [mu, sb2, itau, ith] = lay(s.lin{r});
-                [~, xh] = event_loglike_ar(rec(r).d, s.G{r}, rec(r).wt, rec(r).first, s.sig, s.rho, mu, sb2);
-                lr = s.lin{r};
+                [~, ~, itau, ith] = lay(s.lin{r});
+                xh = s.xh{r}; lr = s.lin{r};
                 lr.b0   = reshape(xh(1:2:2*nm*Kb) + 1i*xh(2:2:2*nm*Kb), Kb, nm).';
                 lr.tau0 = lr.tau0 + max(min(xh(itau), mc.max_dtau), -mc.max_dtau);
                 lr.dth0 = lr.dth0 + max(min(xh(ith), mc.max_dth), -mc.max_dth);
                 s.lin{r} = lr;
-                [~, s.Le(r), s.G{r}] = nuis_relin(rec(r), s.Cf{wave(r)}, lr, cfg, s.sig, s.rho, mc, nm);
+                [~, s.Le(r), s.G{r}, s.xh{r}] = nuis_relin(rec(r), s.Cf{wave(r)}, lr, cfg, s.sig, s.rho, mc, nm);
             end
         end
         % ---------- structural move ----------
@@ -87,12 +90,12 @@ for it = 1:pt.nit
             which = 'both'; rr = 1:nrec;
             [Sn, ok] = lr_common('disp', s, mn, cfg, Tdisp, fb, nm, which);
             if ok
-                Gn = s.G; Ln = s.Le;
+                Gn = s.G; Ln = s.Le; Xn = s.xh;
                 for r = rr
-                    [~, Ln(r), Gn{r}] = nuis_relin(rec(r), Sn.Cf{wave(r)}, s.lin{r}, cfg, s.sig, s.rho, mc, nm);
+                    [~, Ln(r), Gn{r}, Xn{r}] = nuis_relin(rec(r), Sn.Cf{wave(r)}, s.lin{r}, cfg, s.sig, s.rho, mc, nm);
                 end
                 if log(rand) < (sum(Ln) - sum(s.Le)) / Tk
-                    Sn.G = Gn; Sn.Le = Ln; Sn.lin = s.lin; s = Sn;
+                    Sn.G = Gn; Sn.Le = Ln; Sn.xh = Xn; Sn.lin = s.lin; s = Sn;
                     if k == 1, info.acc(is, mv, 2) = info.acc(is, mv, 2) + 1; end
                 end
             end
@@ -102,12 +105,12 @@ for it = 1:pt.nit
         if rand < 0.5, sg(iw) = sg(iw)*exp(mc.step_lsig*randn);
         else, rh(iw) = rh(iw) + mc.step_rho*randn; okn = rh(iw) >= 0 && rh(iw) < mc.rhomax; end
         if okn
-            Ln = s.Le;
+            Ln = s.Le; Xn = s.xh;
             for r = find(wave == ceil(iw/2))'
                 [mu, sb2] = lay(s.lin{r});
-                Ln(r) = event_loglike_ar(rec(r).d, s.G{r}, rec(r).wt, rec(r).first, sg, rh, mu, sb2);
+                [Ln(r), Xn{r}] = event_loglike_ar(rec(r).d, s.G{r}, rec(r).wt, rec(r).first, sg, rh, mu, sb2);
             end
-            if log(rand) < (sum(Ln) - sum(s.Le)) / Tk, s.sig = sg; s.rho = rh; s.Le = Ln; end
+            if log(rand) < (sum(Ln) - sum(s.Le)) / Tk, s.sig = sg; s.rho = rh; s.Le = Ln; s.xh = Xn; end
         end
         S{k} = s; info.Ltrace(it, k) = sum(s.Le);
     end
@@ -127,8 +130,8 @@ for it = 1:pt.nit
         sv.CL(:,:,isv) = s.CL; sv.CR(:,:,isv) = s.CR;
         sv.kv(isv) = numel(s.m.V.zc); sv.kx(isv) = numel(s.m.X.zc); sv.sig(isv,:) = s.sig; sv.rho(isv,:) = s.rho;
         for r = 1:nrec
-            [mu, sb2, itau, ith] = lay(s.lin{r});
-            [~, xh] = event_loglike_ar(rec(r).d, s.G{r}, rec(r).wt, rec(r).first, s.sig, s.rho, mu, sb2);
+            [~, ~, itau, ith] = lay(s.lin{r});
+            xh = s.xh{r};                                                   % cached posterior mean
             tc = s.lin{r}.tau0 + xh(itau); dc = s.lin{r}.dth0 + xh(ith);   % nm x Kt, nm x Ka
             sv.tauc(r,:,:,isv) = reshape(tc, 1, nm, Kt); sv.tau(r,:,isv) = tc(:, 1)';
             sv.dthc(r,:,:,isv) = reshape(dc, 1, nm, Ka); sv.dth(r,:,isv) = dc(:, 1)';
@@ -142,7 +145,7 @@ for it = 1:pt.nit
 end
 info.Lmean = mean(info.Ltrace(pt.burn+1:end, :), 1)';
 sv.acc = info.acc;
-st = rmfield(S{1}, {'M', 'G', 'Le'});
+st = rmfield(S{1}, {'M', 'G', 'Le', 'xh'});
 i0 = max(1, isv-20);
 st.tauc = mean(sv.tauc(:,:,:,i0:isv), 4); st.dthc = mean(sv.dthc(:,:,:,i0:isv), 4);
 st.tau = st.tauc(:,:,1); st.dth = st.dthc(:,:,1);

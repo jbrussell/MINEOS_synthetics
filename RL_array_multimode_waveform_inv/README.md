@@ -107,7 +107,7 @@ reference misses is sampled differently at each period.
 |---|---|---|
 | `opt.nuisance` | `'marginal'` (default) | B, τ and δθ integrated out (Laplace approximation about a linearization point); only Vsv, ξ and the noise are sampled. Works with both samplers. |
 | | `'sample'` | τ and δθ sampled by Metropolis with the exact waveforms, B integrated out (plain sampler only) |
-| `opt.relin` | 1 (default) | the linearization points of τ, δθ and B of every state are moved to their conditional posterior mean (one Gauss–Newton step, clamped to ±2 s / ±3°) every `relin` iterations, i.e. before every proposal by default; larger values are cheaper and less accurate |
+| `opt.relin` | 1 (default) | the linearization points of τ, δθ and B of every state are moved to their conditional posterior mean (one Gauss–Newton step, clamped to ±2 s / ±3°) every `relin` iterations, i.e. before every proposal by default; larger values are cheaper and less accurate. Cost: one rebuild of the waveform derivatives and one likelihood per record, about the cost of a structural proposal, so `relin` = 1 roughly doubles the time per iteration (the posterior mean used for the update is cached from the last likelihood evaluation) |
 | `opt.spec_Kt` | 3 | number of τ_n(ω) terms |
 | `opt.tau_prior`, `opt.dtau_prior` | 15 s, 10 s | prior std of the constant term and of the higher τ terms |
 
