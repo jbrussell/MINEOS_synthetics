@@ -1,0 +1,15 @@
+Run _s1: 4 chains/ensembles, 1600 saved samples
+vsv : R-hat median 1.68 max 415.39 | truth in 5-95%:  26% | mean|err| 0.357 | chain-mean spread 0.055 | 5-95 width 0.169
+vsh : R-hat median 1.76 max 28.87 | truth in 5-95%:  34% | mean|err| 0.506 | chain-mean spread 0.086 | 5-95 width 0.260
+xi  : R-hat median 2.83 max 19.64 | truth in 5-95%:  37% | mean|err| 0.092 | chain-mean spread 0.028 | 5-95 width 0.080
+Love phase velocity R-hat max per mode: [10.82 2.55 5.44]
+Rayleigh phase velocity R-hat max per mode: [34.14 3.8 3.59]
+posterior median logL per chain: [277450 277480 277351 277487] | true model 239487.2
+interior control points: Vsv median 15 (5-95%: 14-15); xi median 14 (5-95%: 11-15)
+noise correlation r (L ovt, L fund, R ovt, R fund): posterior [0.76 0.65 0.73 0.61] +- [0 0.01 0 0] | empirical [0.66 0.66 0.66 0.67]
+noise sigma / sigma_true: [1.5 1.51 1.51 1.23]
+xi band averages (depth below seafloor): posterior mean [5-95%] | true | reference
+    7- 60 km: 1.115 [1.056-1.157] | 1.077 | 1.092
+   60-160 km: 1.077 [1.020-1.137] | 1.064 | 1.053
+  160-250 km: 1.101 [1.070-1.121] | 1.001 | 1.008
+  250-350 km: 0.908 [0.902-0.918] | 1.001 | 1.000
