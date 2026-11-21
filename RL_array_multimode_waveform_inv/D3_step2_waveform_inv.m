@@ -127,6 +127,7 @@ elseif ~isempty(runs)
                 V = V + sum(B.sv1.vsv, 2); Vh = Vh + sum(B.sv1.vsh, 2); Ve = Ve + sum(B.sv1.eta, 2);
                 ns = ns + size(B.sv1.vsv, 2);
             end
+            U = struct();                         % (U was the group-velocity table of the setup)
             U.vsv = V/ns; U.vsh = Vh/ns; U.eta = []; U.nsamples = ns;
             if mc.eta_free, U.eta = Ve/ns; end
             U.refid = sprintf('%s_upd%s', opt.refid, tag);
