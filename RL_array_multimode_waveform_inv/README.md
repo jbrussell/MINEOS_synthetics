@@ -36,7 +36,7 @@ calling a driver).
 | Driver | What it does | Time (4 cores) |
 |---|---|---|
 | `D1_step1_rayleigh_isotropic_inv.m` | step 1: Rayleigh n = 0 phase velocities → isotropic Vs; writes the step-2 reference card `../run_MINEOS/CARDS/RLinv_step1.card` | ~5 min |
-| `D2_step2_prep_mineos_idagrn.m` | MINEOS tables, dispersion and kernels; idagrn6 data (PA5, branches 0–15), reference spectra (step-1 model, branches 0–7) and PREM seismograms; cached in `prep_step2.mat` | ~10 min |
+| `D2_step2_prep_mineos_idagrn.m` | MINEOS tables, dispersion and kernels; idagrn6 data (PA5, branches 0–15), reference spectra (step-1 model, branches 0–7) and PREM seismograms; cached in `prep_step2.mat`; record sections of the full mode-sum synthetics (PA5 and PREM, T and Z, with the window bounds) in `figs_step2/` | ~10 min |
 | `D3_step2_waveform_inv.m` | the waveform inversion with the plain (`opt.sampler = 'plain'`) or parallel-tempering (`'pt'`) sampler | hours |
 | `D4_step2_plot_results.m` | figures and `summary.txt` in `figs_<sampler>/`; compares the two samplers if both were run (`figs_compare.png`) | 1 min |
 | `D5_step2_check_linearization.m` | full MINEOS vs the linearized dispersion at the posterior mean and at the (projected) truth: linearization error vs what the parameterization cannot represent (`d5_linearization.txt`, `fig10_linearization.png`) | ~5 min |
@@ -155,4 +155,5 @@ RESULTS_PLACEHOLDER
 | `fit_nuisance_LR.m` | best nuisance fit for a fixed structure (log L of the truth) |
 | `update_reference.m` | new reference card from Vsv/Vsh(/η) profiles (e.g. a posterior mean), MINEOS + idagrn6 rerun (end-of-burn-in update, D6) |
 | `compare_runs.m` | posteriors of several runs in one figure |
+| `plot_record_sections.m` | record sections of the full mode-sum synthetics (D2) |
 | `read_cmtsolution.m`, `gc_dist_az.m`, `tukeywin_.m`, … | helpers |

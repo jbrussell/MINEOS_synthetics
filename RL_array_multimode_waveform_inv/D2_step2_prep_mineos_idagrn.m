@@ -11,6 +11,9 @@
 %       Uref      : reference model, one branch at a time (idagrn6_mask)
 %       PREM      : PREM, all branches (for the waveform figures)
 % (functions/prep_mineos_idagrn.m). Takes a few minutes.
+% Then record sections of the full mode-sum synthetics (PA5 data and PREM,
+% T and Z, inversion band, with the window bounds) in figs_step2/
+% (functions/plot_record_sections.m).
 %
 % Needs the MINEOS and idagrn6 binaries (../FORTRAN/bin) and SAC (sacio).
 % Previous: D1_step1_rayleigh_isotropic_inv.m. Next: D3_step2_waveform_inv.m
@@ -22,3 +25,5 @@ o.ref_card = S1.card_final;                 % the step-1 isotropic model
 o.refid = opt.s1_final;
 P = prep_mineos_idagrn(o);
 fprintf('cached in %s: data branches 0-%d, modeled branches 0-%d\n', opt.prepfile, opt.nbranch_data-1, opt.nm-1);
+plot_record_sections(P, 'figs_step2', optget(opt, 'fc', []));
+fprintf('record sections in figs_step2/\n');
