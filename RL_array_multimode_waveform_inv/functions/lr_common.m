@@ -82,7 +82,8 @@ switch action
         end
         ok = all(isfinite(CL(cfg.need))) && all(isfinite(CR(cfg.need)));
         S.M = struct('vsv', vsv, 'vsh', vsh);
-        if exist('eta', 'var'), S.M.eta = eta; end S.CL = CL; S.CR = CR; S.m = m;
+        if exist('eta', 'var'), S.M.eta = eta; end
+        S.CL = CL; S.CR = CR; S.m = m;
         if ok, S.Cf = {disp_to_band(CL, Tdisp, fb), disp_to_band(CR, Tdisp, fb)}; end
         varargout = {S, ok};
     case 'profiles'
