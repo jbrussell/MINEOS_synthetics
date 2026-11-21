@@ -21,6 +21,7 @@ if exist(['refupd' tag '.mat'], 'file') == 2
     end
     Ltrue_setup = Ltrue; Ltrue = upd.Ltrue;
     upd.xi = (upd.vsh./upd.vsv).^2;
+    if isfield(upd, 'reverted') && upd.reverted, upd_plot = false; else, upd_plot = true; end
     clear Pu_ refsyn0_ Cu_f_
 end
 if ~exist(outdir, 'dir'), mkdir(outdir); end
@@ -33,6 +34,7 @@ for ic = 1:nc
 end
 cat2 = @(f) cell2mat(cellfun(@(x) x.(f), svc', 'uniformoutput', false));
 cat3 = @(f) cat3c(cellfun(@(x) x.(f), svc, 'uniformoutput', false));
+V = struct();                    % (V may be left over from D3)
 V.vsv = cat2('vsv'); V.vsh = cat2('vsh'); V.xi = cat2('xi');
 CLs = cat3('CL'); CRs = cat3('CR');
 ns = size(V.vsv, 2);
@@ -51,9 +53,12 @@ end
 fid = fopen(fullfile(outdir, 'summary.txt'), 'w');
 for fo = [1 fid]
     fprintf(fo, 'Run %s: %d chains/ensembles, %d saved samples\n', tag, nc, ns);
-    if ~isempty(upd)
+    if ~isempty(upd) && upd_plot
         fprintf(fo, 'reference updated at the end of burn-in (%s, mean of %d late burn-in samples); log L(true) %.1f -> %.1f\n', ...
             upd.refid, upd.nsamples, Ltrue_setup, Ltrue);
+    elseif ~isempty(upd)
+        fprintf(fo, 'reference update at the end of burn-in REJECTED (end-of-burn-in states fit worse, dL = %s): reference not updated\n', ...
+            mat2str(round(upd.dL')));
     end
 end
 Rz = struct();
@@ -137,7 +142,7 @@ for q = 1:3
     xlim(vb([1 end])); ylim([0 400]); xlabel(labs{q}); ylabel('Depth (km)');
     title(sprintf('Posterior %s', labs{q}));
     hh = [h1 h4 h2 h3(1)]; ll = {'true (PA5)', 'reference (step 1)', 'posterior mean', '5-95%'};
-    if ~isempty(upd)
+    if ~isempty(upd) && upd_plot
         im_ = zplot >= cfg.zmin & zplot <= cfg.zmax;
         hh(end+1) = plot(upd.(names{q})(im_), zplot(im_), '-.', 'color', [0.8 0.4 0], 'linewidth', 1.2); %#ok<SAGROW>
         ll{end+1} = 'updated reference (end of burn-in)'; %#ok<SAGROW>

@@ -28,6 +28,9 @@
 %       the process that finds all burn-in files first does the update
 %       (MINEOS + idagrn6, ~10 min) and the others wait for it.
 %   'none': the reference of opt.prepfile (step 1) throughout.
+%   The update is kept only if the end-of-burn-in (T = 1) states of the
+%   chains fit the data at least as well with it on average (refupd<tag>.mat
+%   records the log-likelihood changes dL and whether it was reverted).
 % opt.ref_prep: OPTIONAL prep file of another reference model to start from
 %   (used by D6_step2_update_reference_and_rerun.m).
 % The data, windows and normalizations are those of the step-1 reference
@@ -136,8 +139,36 @@ elseif ~isempty(runs)
             Pu = update_reference(U.vsv, U.vsh, zplot, cfg, opt, U.refid, U.prepfile, U.eta);
             [rec_u, cfg_u, Cu_f] = apply_reference(rec, cfg, Pu, Tdisp, fb);
             U.lin0 = spec_refine([], rec_u, Cu_f, sig_true, rho_emp, cfg_u, mc, nm, 30);
-            U.Ltrue = fit_nuisance_LR(rec_u, Ctrue_f, sig_true, rho_emp, cfg_u, mc, nm);
-            fprintf('logL of the true structure with the updated reference: %.1f (was %.1f)\n', U.Ltrue, Ltrue);
+            % safeguard: the T = 1 end-of-burn-in states of all chains must fit
+            % the data at least as well with the new reference (after moving
+            % their nuisance linearization points to it); otherwise keep the
+            % old reference
+            dL = zeros(mc.nchains, 1);
+            for i = 1:mc.nchains
+                B = load(burnf(i)); s1 = B.Sf{1};
+                [sk, okk] = lr_common('disp', struct(), s1.m, cfg_u, Tdisp, fb, nm, 'both');
+                Ln = -Inf;
+                if okk
+                    lk = spec_refine(U.lin0, rec_u, sk.Cf, s1.sig, s1.rho, cfg_u, mc, nm, opt.upd_ngn);
+                    Ln = 0;
+                    for r = 1:numel(rec_u)
+                        [~, Lr] = nuis_relin(rec_u(r), sk.Cf{rec_u(r).wave}, lk{r}, cfg_u, s1.sig, s1.rho, mc, nm, false);
+                        Ln = Ln + Lr;
+                    end
+                end
+                dL(i) = Ln - B.info1.Ltrace(end, 1);
+            end
+            U.dL = dL; U.reverted = mean(dL) < 0;
+            fprintf('reference update: logL change of the end-of-burn-in states %s (mean %.1f)\n', mat2str(round(dL')), mean(dL));
+            if U.reverted
+                fprintf('reference update REJECTED (the states fit worse): keeping the reference of %s\n', ...
+                    ifempty_(opt.ref_prep, opt.prepfile));
+                U.prepfile = ifempty_(opt.ref_prep, opt.prepfile); U.refid = 'not updated';
+                U.lin0 = lin0; U.Ltrue = Ltrue;
+            else
+                U.Ltrue = fit_nuisance_LR(rec_u, Ctrue_f, sig_true, rho_emp, cfg_u, mc, nm);
+                fprintf('logL of the true structure with the updated reference: %.1f (was %.1f)\n', U.Ltrue, Ltrue);
+            end
             tmpf = sprintf('refupd_%d.mat', round(1e6*rand)); save(tmpf, 'U'); movefile(tmpf, updf);
             rmdir(lockd); clear Pu rec_u cfg_u Cu_f B
         else

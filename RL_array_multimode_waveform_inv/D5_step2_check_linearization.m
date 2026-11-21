@@ -43,6 +43,7 @@ if exist(['refupd' tag '.mat'], 'file') == 2          % updated at the end of bu
     U = load(['refupd' tag '.mat']); U = U.U;
     Pr = load(U.prepfile); Pr = Pr.P;
     refname = sprintf('updated reference %s (end of burn-in)', U.refid);
+    if isfield(U, 'reverted') && U.reverted, refname = 'reference (end-of-burn-in update rejected)'; end
 elseif isfield(optS, 'ref_prep') && ~isempty(optS.ref_prep)   % D6 run
     Pr = load(optS.ref_prep); Pr = Pr.P;
     refname = sprintf('reference %s', optS.ref_prep);
