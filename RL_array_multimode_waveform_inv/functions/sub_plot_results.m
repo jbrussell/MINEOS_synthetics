@@ -1,6 +1,7 @@
-% PLOT_LR  Combine chains (or PT ensembles) and make figures for demo_LR /
-% demo_LR_pt. Set TAG ('_plain' or '_pt') before calling.
-% True model: PA5; reference (input) model: refp (PREM below the Moho).
+% SUB_PLOT_RESULTS  (drivee script, called by D4_step2_plot_results.m)
+% Combine the chains (or PT ensembles) of a run and make the figures and
+% summary.txt in its outdir. Set TAG ('_plain' or '_pt') before calling.
+% True model: PA5; reference model: refp (the step-1 isotropic model).
 if ~exist('tag', 'var'), tag = '_plain'; end
 load(['setup' tag '.mat']);
 if ~exist(outdir, 'dir'), mkdir(outdir); end
@@ -108,7 +109,7 @@ for q = 1:3
     plot(vb([1 end]), cfg.zmax*[1 1], 'k:');
     xlim(vb([1 end])); ylim([0 400]); xlabel(labs{q}); ylabel('Depth (km)');
     title(sprintf('Posterior %s', labs{q}));
-    if q == 1, legend([h1 h4 h2 h3(1)], {'true (PA5)', 'reference (PREM)', 'posterior mean', '5-95%'}, 'location', 'southwest'); end
+    if q == 1, legend([h1 h4 h2 h3(1)], {'true (PA5)', 'reference (step 1)', 'posterior mean', '5-95%'}, 'location', 'southwest'); end
 end
 print(fig, '-dpng', '-r130', fullfile(outdir, 'fig1_posteriors.png'));
 
@@ -170,75 +171,74 @@ for wv = 1:2
 end
 print(fig, '-dpng', '-r130', fullfile(outdir, 'fig3_dispersion_fits.png'));
 
-%% 4) waveform fits: data, initial and final predictions, with windows
-e0 = 1; pick = [1 6 11 16];
-fig = figure('position', [50 50 1400 950]);
-for wv = 1:2
-    r = find([rec.event]' == e0 & wave == wv);
-    mu_b = repmat([1; 0], nm, 1); sb2 = mc.sb^2*ones(2*nm, 1);
-    s0 = svc{1}.st0; s1 = stc{1};
-    K = size(cfg.Phi, 2); Ka = size(cfg.Psi, 2);
-    mu_b = repmat([1; 0], nm*K, 1); sb2 = mc.sb^2*ones(2*nm*K, 1);
-    Gw = @(s_, Cf) event_G_spec(rec(r), Cf, struct('tau0', s_.tau(r,:), ...
-        'dth0', reshape(s_.dthc(r,:,1:Ka), nm, Ka), 'b0', ones(nm, K)), cfg, [], [], true);
-    G0 = Gw(s0, s0.Cf{wv});
-    [~, b0] = event_loglike_ar(rec(r).d, G0, rec(r).wt, rec(r).first, s0.sig, s0.rho, mu_b, sb2);
-    G1 = Gw(s1, s1.Cf{wv});
-    [~, b1] = event_loglike_ar(rec(r).d, G1, rec(r).wt, rec(r).first, s1.sig, s1.rho, mu_b, sb2);
-    p0 = G0*b0; p1 = G1*b1;
-    stn = ceil(rec(r).idx/cfg.N); tt = mod(rec(r).idx - 1, cfg.N)*cfg.dt + rec(r).tred;
-    for q = 1:numel(pick)
-        subplot(numel(pick), 2, 2*(q-1) + wv); hold on; box on;
-        s = stn == pick(q); ymax = 1.15*max(abs(rec(r).d(s)));
-        io = s & rec(r).wt == 2*wv-1; iF = s & rec(r).wt == 2*wv;
-        if any(io), patch([min(tt(io)) max(tt(io)) max(tt(io)) min(tt(io))], ymax*[-1 -1 1 1], ...
-                [1 0.85 0.7], 'edgecolor', 'none'); end
-        if any(iF), patch([min(tt(iF)) max(tt(iF)) max(tt(iF)) min(tt(iF))], ymax*[-1 -1 1 1], ...
-                [0.8 0.9 1], 'edgecolor', 'none'); end
-        hd = plot(tt(s), rec(r).d(s), 'k-', 'linewidth', 1.2);
-        hi = plot(tt(s), p0(s), '-', 'color', [0.55 0.55 0.55]);
-        hf = plot(tt(s), p1(s), '-', 'color', [0.85 0.1 0.1], 'linewidth', 1);
-        ylim(ymax*[-1 1]); ylabel(sta{pick(q)});
-        if q == 1
-            title(sprintf('%s, event %d (\\Delta_0 = %.0f km)', wn{wv}, e0, rec(r).Del0));
-            if wv == 1
-                legend([hd hi hf], {'data', 'initial model', 'final model'}, ...
-                    'location', 'northwest', 'fontsize', 7);
+%% 4) waveform fits: data, PREM, reference and final model, with windows
+% PREM: idagrn6 seismograms of PREM (all branches, no nuisance correction);
+% reference: sum of the reference branches 0..nm-1 (idagrn6_mask, no
+% nuisance correction); final: the waveform operator for the final state
+% of chain/ensemble 1 (structure, tau_n, dth_n(w) and the best-fitting
+% B_n(w)). All processed like the data (band-pass, record normalization).
+pick = [1 6 11 16];
+for e0 = unique([1 min(8, max([rec.event]))])
+    fig = figure('position', [50 50 1500 950]);
+    for wv = 1:2
+        r = find([rec.event]' == e0 & wave == wv);
+        if isempty(r), continue; end
+        s1 = stc{1};
+        K = size(cfg.Phi, 2); Ka = size(cfg.Psi, 2);
+        mu_b = repmat([1; 0], nm*K, 1); sb2 = mc.sb^2*ones(2*nm*K, 1);
+        G1 = event_G_spec(rec(r), s1.Cf{wv}, struct('tau0', s1.tau(r,:), ...
+            'dth0', reshape(s1.dthc(r,:,1:Ka), nm, Ka), 'b0', ones(nm, K)), cfg, [], [], true);
+        [~, b1] = event_loglike_ar(rec(r).d, G1, rec(r).wt, rec(r).first, s1.sig, s1.rho, mu_b, sb2);
+        p1 = G1*b1;
+        stn = ceil(rec(r).idx/cfg.N); tt = mod(rec(r).idx - 1, cfg.N)*cfg.dt + rec(r).tred;
+        for q = 1:numel(pick)
+            subplot(numel(pick), 2, 2*(q-1) + wv); hold on; box on;
+            s = stn == pick(q); ymax = 1.15*max(abs(rec(r).d(s)));
+            io = s & rec(r).wt == 2*wv-1; iF = s & rec(r).wt == 2*wv;
+            if any(io), patch([min(tt(io)) max(tt(io)) max(tt(io)) min(tt(io))], ymax*[-1 -1 1 1], ...
+                    [1 0.88 0.75], 'edgecolor', 'none'); end
+            if any(iF), patch([min(tt(iF)) max(tt(iF)) max(tt(iF)) min(tt(iF))], ymax*[-1 -1 1 1], ...
+                    [0.85 0.92 1], 'edgecolor', 'none'); end
+            hd = plot(tt(s), rec(r).d(s), 'k-', 'linewidth', 1.5);
+            hp = plot(tt(s), rec(r).prem(s), '-', 'color', [0 0.6 0]);
+            hr = plot(tt(s), rec(r).refsyn(s), '-', 'color', [0.3 0.3 1]);
+            hf = plot(tt(s), p1(s), '-', 'color', [0.85 0.1 0.1], 'linewidth', 1);
+            ylim(ymax*[-1 1]); ylabel(sta{pick(q)});
+            if q == 1
+                title(sprintf('%s, %s (\\Delta_0 = %.0f km)', wn{wv}, rec(r).id, rec(r).Del0));
+                if wv == 1
+                    legend([hd hp hr hf], {'data (PA5)', 'PREM', 'reference (step 1)', 'final model'}, ...
+                        'location', 'northwest', 'fontsize', 7);
+                end
             end
+            if q == numel(pick), xlabel('Time since origin (s); orange: overtone window, blue: fundamental window'); end
         end
-        if q == numel(pick), xlabel('Time since origin (s); orange: overtone window, blue: fundamental window'); end
     end
+    print(fig, '-dpng', '-r130', fullfile(outdir, sprintf('fig4_waveform_fits_event%d.png', e0)));
 end
-print(fig, '-dpng', '-r130', fullfile(outdir, 'fig4_waveform_fits.png'));
 
-%% 5) path correction and time shifts
-% Rayleigh fundamental mode: path delay of the data relative to the
-% reference (true: MINEOS PA5 - reference over the distance to the array
-% center) and the correction fitted from the data (path_precorrect.m).
+%% 5) path delays and time shifts
+% left: path delay of the data relative to the reference spectra
+% (MINEOS true - reference phase velocity over the distance to the array
+% center), which the nuisance model (tau_n and B_n(w)) has to absorb;
+% right: posterior tau_n vs that delay at 40 s
 fig = figure('position', [50 50 1200 420]);
 subplot(1, 2, 1); hold on; box on;
-if ~isempty(pc)
-    for r = find(wave == 2)'
-        h1 = plot(1./fb, pc.true_delay{r}(:, 1), 'k-');
-        h2 = plot(1./fb, pc.tau{r}(:, 1), 'r--');
-    end
-    legend([h1 h2], {'true path delay', 'correction from the data'}, 'location', 'southwest');
+for r = 1:nrec
+    for n = 1:nm, plot(1./fb, pd.true_delay{r}(:, n), '-', 'color', mcol(n,:)); end
 end
 set(gca, 'xscale', 'log'); xlim([1/fb(end) 1/fb(1)]); xlabel('Period (s)'); ylabel('delay (s)');
-title('Rayleigh mode 0: path delay vs reference');
-% posterior time shifts vs the remaining (uncorrected) path delay at 40 s
+title('Path delay of the data relative to Uref (colours: branches)');
 subplot(1, 2, 2); hold on; box on;
-T_ = cat3('tau'); [~, i40] = min(abs(1./fb - 40));
-if ~isempty(pc)
-    for n = 1:nm
-        res = cellfun(@(td, tc) td(i40, n) - tc(i40, n), pc.true_delay, pc.tau)';
-        he = errorbar(res, mean(T_(:, n, :), 3), 2*std(T_(:, n, :), 0, 3), 'o');
-        set(he, 'color', mcol(n,:), 'markerfacecolor', mcol(n,:), 'markersize', 3);
-    end
-    lim = [-40 40]; plot(lim, lim, 'k--'); xlim(lim); ylim(lim); axis square;
-    legend('mode 0', 'mode 1', 'mode 2', 'location', 'northwest');
+T_ = cat3('tau'); [~, i40] = min(abs(1./fb - 40)); hh = zeros(1, nm);
+for n = 1:nm
+    td = cellfun(@(x) x(i40, n), pd.true_delay)';
+    he = errorbar(td, mean(T_(:, n, :), 3), 2*std(T_(:, n, :), 0, 3), 'o');
+    set(he, 'color', mcol(n,:), 'markerfacecolor', mcol(n,:), 'markersize', 3); hh(n) = he;
 end
-xlabel('true remaining path delay at 40 s (s)'); ylabel('posterior \tau_n (s)');
+lim = [-40 40]; plot(lim, lim, 'k--'); xlim(lim); ylim(lim); axis square;
+legend(hh, arrayfun(@(n) sprintf('branch %d', n), 0:nm-1, 'uniformoutput', false), 'location', 'northwest', 'fontsize', 7);
+xlabel('path delay at 40 s (s)'); ylabel('posterior \tau_n (s)');
 title('Time shifts (Love + Rayleigh)');
 print(fig, '-dpng', '-r130', fullfile(outdir, 'fig5_path_nuisance.png'));
 

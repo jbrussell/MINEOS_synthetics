@@ -1,40 +1,38 @@
-% SETUP_LR  Configuration, NoMelt geometry, real events, MINEOS dispersion
-% and idagrn6 synthetic data for the joint radially anisotropic Love +
-% Rayleigh multimode array waveform inversion (recovery test of PA5 with a
-% PREM reference model).
+% SUB_SETUP_RECORDS  (drivee script, called by D3_step2_waveform_inv.m and
+% D4_step2_plot_results.m) Configuration, NoMelt geometry, real events,
+% MINEOS dispersion and idagrn6 data for the step-2 multimode array
+% waveform inversion. Needs opt from parameters_RL.m and the MINEOS/idagrn6
+% results cached by D2_step2_prep_mineos_idagrn.m (opt.prepfile).
 %
 % Model: Vsv(z) and xi(z) = (Vsh/Vsv)^2 are independent transdimensional
 % cubic B-spline profiles between the Moho (7 km below the seafloor) and
 % 350 km (no discontinuities), with interior control points kx <= kv. The
 % bottom end values (350 km) are tied to the reference model.
-% Vsh = Vsv*sqrt(xi). Vp, density, eta, the water, the crust and the
-% structure below 350 km are held at the reference model.
+% Vsh = Vsv*sqrt(xi). Vpv, Vph and density follow Vsv and Vsh with the
+% Vpv/Vsv, Vph/Vsh and rho/Vsv ratios of the reference model; eta, the
+% water, the crust and the structure below 350 km are held at the
+% reference model.
 %
-% Reference ("input") model: PREM below the Moho, with the NoMelt (PA5)
-% water, sediments and crust (mineos_tools/make_ref_card.m).
-% True model: PA5 (Gaherty et al., 1996), pa5_5km.card.
+% Reference model: the isotropic step-1 model (D1), which has a lid and a
+% low-velocity zone. True model: PA5 (Gaherty et al., 1996).
 %
-% Dispersion: MINEOS. Phase velocities of branches n = 0..2 are the MINEOS
-% reference values plus the MINEOS Vsv and Vsh kernels times the model
-% perturbation (mineos_dispersion.m); Rayleigh waves are radially
-% anisotropic (they see Vsh through the MINEOS kernels).
+% Dispersion: MINEOS. Phase velocities of branches n = 0..opt.nm-1 are the
+% MINEOS reference values plus the MINEOS kernels times the model
+% perturbation (mineos_dispersion.m, mineos_lin_setup.m); Rayleigh waves
+% are radially anisotropic (they see Vsh through the MINEOS kernels).
 %
-% Data: idagrn6 synthetics of the true model (all mode branches in the
-% table, opt.nbranch_data) for 15 real 2012 Pacific-rim earthquakes
-% (events_nomelt_2012.cmt, Global CMT) at the 16 NoMelt OBSs, transverse
-% (Love) and vertical (Rayleigh) displacement, band-passed (fc), plus
-% band-limited noise. Reference spectra Uref: idagrn6_mask single-branch
-% synthetics (n = 0..2) of the reference model, processed the same way.
-% Everything from MINEOS and idagrn6 is computed once by
-% prep_mineos_idagrn.m and cached in opt.prepfile.
+% Data: idagrn6 seismograms of the true model with branches
+% 0..opt.nbranch_data-1, 15 real 2012 Pacific-rim earthquakes
+% (events_nomelt_2012.cmt, Global CMT), 16 NoMelt OBSs, transverse (Love)
+% and vertical (Rayleigh) displacement, band-passed (fc), normalized by
+% each record's peak, plus band-limited noise. Reference spectra Uref:
+% idagrn6_mask single-branch seismograms (n = 0..opt.nm-1) of the
+% reference model, processed the same way.
 %
-% Path correction: the source-to-array path is PA5 in the data but PREM in
-% Uref, which delays the fundamental Rayleigh wave by up to ~100 s at 16 s
-% (many cycles). Before the inversion, the array-average path phase and
-% amplitude of each record (fundamental and overtone windows) are measured
-% from the data and folded into Uref (path_precorrect.m), so the nuisance
-% model only has to absorb the residual. The in-array moveout, which
-% carries the information on the local structure, is not changed.
+% Windows: from the group velocities of the reference model (MINEOS):
+% overtone window from Delta/(max U of branches 1..nm-1 + 0.6) to
+% Delta/(max U0 + 0.2), fundamental-mode window from there to
+% Delta/(min U0 - 0.35) + 60 s, for each station's epicentral distance.
 %
 % Nuisance model for each record and mode (event_G_spec): a smooth complex
 % excitation/path correction B_n(w) on opt.spec_K hat functions in log w
@@ -45,15 +43,12 @@
 % modelled with an exponential (AR(1)) covariance with a level sigma and
 % correlation r for each of the 4 window types (Love/Rayleigh x
 % overtone/fundamental), all sampled hierarchically. Fixed seed.
-%
-% Optional overrides: define a struct OPT before calling.
 
 if ~exist('opt', 'var'), opt = struct(); end
 og = @(f, d) optget(opt, f, d);
 rng(3);
 outdir = og('outdir', 'figs');
 if ~exist(outdir, 'dir'), mkdir(outdir); end
-addpath(fullfile(fileparts(mfilename('fullpath')), 'mineos_tools'));
 
 %% ---- MCMC settings ----
 mc.nit   = og('nit', 8000);  mc.burn = og('burn', 3000);  mc.thin = 5;
@@ -89,7 +84,7 @@ cfg.Tdisp = Tdisp;
 % bottom end values tied to the reference model at zmax
 [~, ib_] = max(cfg.lin.z);
 cfg.vbot = cfg.lin.vsv0(ib_); cfg.xbot = (cfg.lin.vsh0(ib_)/cfg.lin.vsv0(ib_))^2;
-CrefL = P.phv_ref_T; CrefR = P.phv_ref_S;     % reference (PREM) dispersion
+CrefL = P.phv_ref_T; CrefR = P.phv_ref_S;     % reference (step-1 model) dispersion
 CtrueL = P.phv_true_T; CtrueR = P.phv_true_S; % true (PA5) dispersion, MINEOS
 % true and reference profiles (below the seafloor) for plotting
 zplot = (0:2:400)';
@@ -119,7 +114,7 @@ cfg.xy = og('aperture', 1) * [(lon - lon0)*111.195*cosd(lat0), (lat - lat0)*111.
 Nst = numel(sta);
 
 %% ---- time / frequency ----
-cfg.dt = P.dt; cfg.N = 512;
+cfg.dt = P.dt; cfg.N = og('N', 800);
 f = (0:cfg.N-1)'/(cfg.N*cfg.dt);
 cfg.ib = find(f > fc(1) & f < fc(4));
 fb = f(cfg.ib); cfg.w = 2*pi*fb;
@@ -178,6 +173,18 @@ for wv = 1:2
         rec(r).clean = clean(idx) / rec(r).scale;
         for n = 1:nm, rec(r).Uref{n} = rec(r).Uref{n} / rec(r).scale; end
         rec(r).Dj = Dj;
+        % for the waveform figures: the reference prediction (sum of the
+        % modeled branches, no nuisance correction) and PREM (all branches)
+        Y = zeros(cfg.N, Nst);
+        for n = 1:nm, Y(cfg.ib, :) = Y(cfg.ib, :) + rec(r).Uref{n}; end
+        u = 2*real(ifft(Y)); rec(r).refsyn = u(idx);
+        if isfield(P, ['u_prem_' uname{wv}])
+            X = fft(P.(['u_prem_' uname{wv}]){e}(it, :) .* segtap);
+            Y = zeros(cfg.N, Nst); Y(cfg.ib, :) = X(cfg.ib, :) .* taper;
+            u = 2*real(ifft(Y)); rec(r).prem = u(idx) / rec(r).scale;
+        else
+            rec(r).prem = NaN(size(idx));
+        end
     end
 end
 nrec = numel(rec);
@@ -208,34 +215,14 @@ fprintf('band-limited noise: empirical lag-1 correlation per window %s\n', mat2s
 fprintf('%d stations, %d events, %d records, %d data samples\n', Nst, nev, nrec, ...
     sum(arrayfun(@(x) numel(x.d), rec)));
 
-%% ---- path correction of the reference spectra (from the data) ----
-
-if og('path_correct', true)
-    [rec, pc] = path_precorrect(rec, cfg, nm, og('pc', struct()));
-    % compare with the true path delay (array center, MINEOS PA5 - reference)
-    for r = 1:nrec
-        Ct = Ctrue_f{rec(r).wave}; Cr = Cref_f{rec(r).wave};
-        pc.true_delay{r} = rec(r).Del0 * (1./Ct - 1./Cr);     % [Nf x nm] (s)
-        pc.err(r) = sqrt(mean((pc.tau{r}(taper > 0.5, 1) - pc.true_delay{r}(taper > 0.5, 1)).^2));
-    end
-    pc.dropped = {};
-    for r = find(~pc.ok)
-        pc.dropped{end+1} = sprintf('%s %s', wname{rec(r).wave}, rec(r).id);
-    end
-    fprintf('path correction (Rayleigh mode 0): rms error vs true path delay %s s\n', ...
-        mat2str(round(pc.err(wave == 2 & pc.ok')*10)/10));
-    if ~isempty(pc.dropped)
-        fprintf('dropped (phase unwrapping failed, low coherence): %s\n', strjoin(pc.dropped, ', '));
-    end
-    keep = find(pc.ok);
-    for f = {'tau', 'tau_meas', 'coh', 'amp', 'true_delay'}, pc.(f{1}) = pc.(f{1})(keep); end
-    pc.err = pc.err(keep);
-    rec = rec(keep); nrec = numel(rec); wave = [rec.wave]';
-else
-    pc = [];
+%% ---- path delay of the data relative to the reference (diagnostic) ----
+% MINEOS true - reference phase velocities over the distance to the array
+% center: the part of tau_n(w) the nuisance model has to absorb
+pd.true_delay = cell(1, nrec);
+for r = 1:nrec
+    pd.true_delay{r} = rec(r).Del0 * (1./Ctrue_f{rec(r).wave} - 1./Cref_f{rec(r).wave});   % [Nf x nm] (s)
 end
 % There is no "true" nuisance model for idagrn data, so the log-likelihood
 % of the true structure is evaluated with nuisance parameters fitted to it
-% (fit_true_LR.m, called by the drivers); NaN until then.
+% (fit_nuisance_LR.m, called by D3); NaN until then.
 Ltrue = NaN;
-tru.tau = []; tru.dth = []; tru.dth1 = [];

@@ -18,7 +18,10 @@ function P = prep_mineos_idagrn(opt)
 %     events_nomelt_2012.cmt: the full PA5 synthetics (all branches in the
 %     table: the "data") and single-branch synthetics of the reference model
 %     for branches 0..nm-1 (idagrn6_mask: the reference spectra Uref),
-%     transverse (T) and vertical (Z) components, displacement.
+%     transverse (T) and vertical (Z) components, displacement;
+%  5. (opt.prem_synth = 1) full synthetics of the PREM card (opt.premref,
+%     made by make_ref_card.m, same branches as the data), for comparison
+%     in the waveform figures.
 %
 % Steps 2-4 for the true model are skipped when opt.P_true (a previous
 % output) is given; only the reference part is then recomputed.
@@ -29,7 +32,8 @@ function P = prep_mineos_idagrn(opt)
 % opt fields (all optional): prepfile, mdir (path to run_MINEOS), trueid
 % ('pa5_5km'), premid ('prem_35'), refid ('prem_nomelt'), ref_card, zmoho
 % (12 km below sea level), maxF (70 mHz), nbranch_data (8), nm (3), Tdisp,
-% dt (4 s), len_hr (1 h), eventfile, stationfile, P_true
+% dt (4 s), len_hr (1 h), eventfile, stationfile, P_true, prem_synth (0),
+% premref ('prem_nomelt')
 %
 % jbrussell 11/2026
 
@@ -41,8 +45,7 @@ if exist(prepfile, 'file') == 2
     fprintf('loaded %s\n', prepfile);
     return
 end
-here = fileparts(mfilename('fullpath'));
-addpath(fullfile(here, 'mineos_tools'));
+here = fileparts(fileparts(mfilename('fullpath')));   % package folder
 P.mdir = og('mdir', fullfile(here, '..', 'run_MINEOS'));
 addpath(fullfile(P.mdir, 'functions'));
 P.trueid = og('trueid', 'pa5_5km');
@@ -102,6 +105,20 @@ for TY = 'TS'
     D = idagrn_synth(P.mdir, P.refid, TY, P.maxF, P.nm, P.ev, P.sta, P.len_hr, P.dt, 0:P.nm-1);
     P.(['u_ref_', TY]) = D.u;                        % {nev x nm}
     fprintf('idagrn %c done (%.0f s)\n', TY, toc);
+end
+
+% 5. PREM synthetics (for the waveform figures)
+if og('prem_synth', 0)
+    premref = og('premref', 'prem_nomelt');
+    if exist(fullfile(P.mdir, 'CARDS', [premref, '.card']), 'file') ~= 2
+        make_ref_card(P.mdir, premref, P.premid, P.trueid, P.zmoho);
+    end
+    for TY = 'TS'
+        mineos_modes(P.mdir, premref, TY, P.nbranch_data, P.maxF, P.Tdisp, []);
+        D = idagrn_synth(P.mdir, premref, TY, P.maxF, P.nbranch_data, P.ev, P.sta, P.len_hr, P.dt, []);
+        P.(['u_prem_', TY]) = D.u;
+        fprintf('PREM idagrn %c done (%.0f s)\n', TY, toc);
+    end
 end
 
 tmpf = sprintf('prep_%d.mat', round(1e6*rand));

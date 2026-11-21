@@ -6,11 +6,16 @@ function lin = mineos_lin_setup(card, KT, KS, cT, cS, zw, zmin, zmax)
 % sea level), the Love (toroidal) and Rayleigh (spheroidal) phase
 % velocities of branches n = 0..nm-1 at the dispersion nodes are
 %
-%   c_n(T) = c_ref,n(T) + sum_nodes [ Gvsv_n(T, node) dVsv + Gvsh_n(T, node) dVsh ]
+%   c_n(T) = c_ref,n(T) + sum_nodes [ Gsv_n(T, node) dVsv + Gsh_n(T, node) dVsh ]
 %
-% with dVsv, dVsh in km/s and G = K .* dr * 1000 (K: MINEOS kernels from
-% mineos_modes.m, dr: node weights in m). Vp, density and eta are held at
-% the reference values. Used by mineos_dispersion.m.
+% Vpv, Vph and density follow Vsv and Vsh with the ratios of the reference
+% card (Vpv/Vsv, Vph/Vsh and rho/Vsv held fixed), so the effective kernels
+% are
+%   Gsv = Gvsv + (Vpv/Vsv)_0 Gvpv + (rho/Vsv)_0 Grho
+%   Gsh = Gvsh + (Vph/Vsh)_0 Gvph
+% with G = K .* dr * 1000 (K: MINEOS kernels from mineos_modes.m, dr: node
+% weights in m; velocities in km/s, density in g/cm^3). eta is held at the
+% reference. Used by mineos_dispersion.m.
 %
 % card   - reference card (read_model_card.m)
 % KT, KS - {nm} kernels of branches 0..nm-1 (mineos_modes.m out.K)
@@ -19,9 +24,9 @@ function lin = mineos_lin_setup(card, KT, KS, cT, cS, zw, zmin, zmax)
 %
 % lin.z     : depths below the seafloor of the model nodes [Nn x 1]
 % lin.vsv0, lin.vsh0 : reference values at the nodes (km/s)
-% lin.GL{n}, lin.GR{n} : {nm} [Nper*2 ... ] see below
-%   lin.GL{n} = [Gvsv Gvsh] [Nper x 2Nn] (Love), lin.GR{n} (Rayleigh)
+% lin.GL{n}, lin.GR{n} : [Nper x 2Nn] = [Gsv Gsh] (Love, Rayleigh)
 % lin.cL, lin.cR : reference phase velocities [Nper x nm]
+% lin.rpv, lin.rph, lin.rrho : the ratios used for the scaling
 %
 % Nodes: the card nodes with zmin <= z - zw <= zmax, excluding the
 % crust-side node at the Moho (the model starts at the mantle side).
@@ -41,19 +46,24 @@ lin.idx = in(:);
 lin.z = zsf(in);
 lin.vsv0 = card.vsv(in)/1000;
 lin.vsh0 = card.vsh(in)/1000;
+lin.rpv = card.vpv(in) ./ card.vsv(in);
+lin.rph = card.vph(in) ./ card.vsh(in);
+lin.rrho = card.rho(in) ./ card.vsv(in);              % (g/cm^3) per (km/s)
 nm = size(cS, 2);
 for n = 1:nm
-    lin.GL{n} = node_G(KT{n}, in, nnode, dr);
-    lin.GR{n} = node_G(KS{n}, in, nnode, dr);
+    lin.GL{n} = node_G(KT{n}, in, nnode, dr, lin);
+    lin.GR{n} = node_G(KS{n}, in, nnode, dr, lin);
 end
 lin.cL = cT; lin.cR = cS;
 end
 
-function G = node_G(K, in, nnode, dr)
-% [Nper x 2Nn] = [dc/dVsv dc/dVsh] (km/s per km/s) at the nodes in
+function G = node_G(K, in, nnode, dr, lin)
+% [Nper x 2Nn] = [dc/dVsv dc/dVsh] (km/s per km/s) at the nodes in, with
+% Vp and density scaled to Vs
 iK = in - (nnode - numel(K.rad));                    % toroidal kernels: top nodes only
-Gv = (K.vsv(iK, :) .* dr(in) * 1000)';
-Gh = (K.vsh(iK, :) .* dr(in) * 1000)';
-Gv(isnan(Gv)) = 0; Gh(isnan(Gh)) = 0;
-G = [Gv, Gh];
+g = @(f) (K.(f)(iK, :) .* dr(in) * 1000)';
+Gsv = g('vsv') + g('vpv') .* lin.rpv' + g('rho') .* lin.rrho';
+Gsh = g('vsh') + g('vph') .* lin.rph';
+Gsv(isnan(Gsv)) = 0; Gsh(isnan(Gsh)) = 0;
+G = [Gsv, Gsh];
 end
