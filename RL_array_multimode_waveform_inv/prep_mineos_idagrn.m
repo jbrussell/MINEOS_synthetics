@@ -77,7 +77,7 @@ P.card_true = read_model_card(fullfile(P.mdir, 'CARDS', [P.trueid, '.card']));
 Pt = og('P_true', []);
 tic;
 for TY = 'TS'
-    if isempty(Pt)
+    if isempty(Pt) || size(Pt.(['phv_true_', TY]), 2) < P.nm
         o = mineos_modes(P.mdir, P.trueid, TY, P.nbranch_data, P.maxF, P.Tdisp, []);
         P.(['phv_true_', TY]) = o.phv(:, 1:P.nm);
     else

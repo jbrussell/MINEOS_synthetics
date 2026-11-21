@@ -17,7 +17,7 @@ function out = mineos_modes(mdir, cardid, TYPE, nbranch, maxF, periods, kbranche
 % kbranches - branches for which to compute kernels (e.g. 0:2), [] = none
 %
 % out.phv, out.grv : [Nper x nb] phase/group velocity (km/s) of branches
-%                    0..nb-1 (nb = max(kbranches)+1, at least 3), elastic
+%                    0..nb-1 (nb = max(nbranch, max(kbranches)+1, 3)), elastic
 %                    (column 6 and 7 of the .q file); NaN where the branch
 %                    does not exist
 % out.K{ib}        : kernels of branch kbranches(ib), fields vsv, vsh, vpv,
@@ -51,7 +51,7 @@ parameter_FRECHET;
 if TYPE == 'S', TYPEID = param.STYPEID; else, TYPEID = param.TTYPEID; end
 out.qfile = [CARDTABLE, param.CARDID, '.', TYPEID, '.q'];
 out.table = [CARDTABLE, param.CARDID, '.', TYPEID, '.table'];
-nb = max([3, max(kbranches)+1]);
+nb = max([3, max(kbranches)+1, nbranch]);           % all branches in the table
 out.phv = nan(numel(periods), nb); out.grv = out.phv;
 for n = 0:nb-1
     try
