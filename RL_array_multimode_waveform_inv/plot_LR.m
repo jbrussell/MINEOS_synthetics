@@ -17,7 +17,7 @@ V.vsv = cat2('vsv'); V.vsh = cat2('vsh'); V.xi = cat2('xi');
 CLs = cat3('CL'); CRs = cat3('CR');
 ns = size(V.vsv, 2);
 ccol = lines(max(nc, 7));
-mcol = [0 0.45 0.74; 0.85 0.33 0.10; 0.47 0.67 0.19];
+mcol = [0 0.45 0.74; 0.85 0.33 0.10; 0.47 0.67 0.19; lines(max(nm-3, 1))];
 in = zplot >= cfg.moho & zplot < cfg.zmax;
 names = {'vsv', 'vsh', 'xi'}; labs = {'V_{SV} (km/s)', 'V_{SH} (km/s)', '\xi = (V_{SH}/V_{SV})^2'};
 truv = {tru.vsv, tru.vsh, tru.xi};
