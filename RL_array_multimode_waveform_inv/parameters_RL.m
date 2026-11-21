@@ -51,6 +51,13 @@ opt = opt_defaults(opt, struct( ...
     'nuisance', 'marginal', ...          % tau_n(w), dth_n(w), B_n(w): 'marginal' (integrated out,
     ...                                  %   linearized) or 'sample' (tau, dth sampled; plain only)
     'relin',    1, ...                   % relinearize tau, dth and B every relin iterations (1: per proposal)
+    'eta_free', false, ...               % eta: false = held at the reference model; true = a free
+    ...                                  %   B-spline profile (prior U[etamin, etamax], default 0.80-1.05)
+    'update_ref', 'burnin', ...          % 'burnin': recompute the reference (MINEOS + idagrn6) once at the
+    ...                                  %   end of burn-in from the mean model of all chains; 'none': keep step 1
+    'upd_frac', 0.2, ...                 % fraction of the burn-in (its end) averaged for the update
+    'upd_ngn',  10, ...                  % Gauss-Newton steps per state to move tau, dth, B to the new reference
+    'ref_prep', '', ...                  % optional prep file of another starting reference (D6)
     'spec_Kt',  3, 'tau_prior', 15, 'dtau_prior', 10, ...   % tau_n(w): Legendre terms, prior std (s)
     'N',        800, ...                 % samples per record (N*dt = 3200 s: earliest overtone to slowest fundamental)
     'noise',    0.03, ...                % noise std, fraction of each record's peak

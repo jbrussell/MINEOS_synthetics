@@ -4,6 +4,25 @@
 % True model: PA5; reference model: refp (the step-1 isotropic model).
 if ~exist('tag', 'var'), tag = '_plain'; end
 load(['setup' tag '.mat']);
+% reference updated at the end of burn-in (D3, opt.update_ref = 'burnin'):
+% the post-burn-in samples use the updated reference spectra and MINEOS
+% linearization, so the final waveforms, the path delays and log L(true)
+% are evaluated with it; the "reference" waveforms and curves stay those of
+% the step-1 model
+upd = [];
+if exist(['refupd' tag '.mat'], 'file') == 2
+    upd = load(['refupd' tag '.mat']); upd = upd.U;
+    Pu_ = load(upd.prepfile); Pu_ = Pu_.P;
+    refsyn0_ = {rec.refsyn};
+    [rec, cfg, Cu_f_] = apply_reference(rec, cfg, Pu_, Tdisp, fb);
+    [rec.refsyn] = refsyn0_{:};
+    for r = 1:numel(rec)
+        pd.true_delay{r} = rec(r).Del0 * (1./Ctrue_f{rec(r).wave} - 1./Cu_f_{rec(r).wave});
+    end
+    Ltrue_setup = Ltrue; Ltrue = upd.Ltrue;
+    upd.xi = (upd.vsh./upd.vsv).^2;
+    clear Pu_ refsyn0_ Cu_f_
+end
 if ~exist(outdir, 'dir'), mkdir(outdir); end
 if exist('OCTAVE_VERSION', 'builtin'), set(0, 'defaultfigurevisible', 'off'); end
 nc = mc.nchains; nrec = numel(rec); wave = [rec.wave]';
@@ -23,14 +42,22 @@ in = zplot >= cfg.moho & zplot < cfg.zmax;
 names = {'vsv', 'vsh', 'xi'}; labs = {'V_{SV} (km/s)', 'V_{SH} (km/s)', '\xi = (V_{SH}/V_{SV})^2'};
 truv = {tru.vsv, tru.vsh, tru.xi};
 refv = {refp.vsv, refp.vsh, refp.xi};
+eta_ = isfield(mc, 'eta_free') && mc.eta_free;   % eta a model parameter
+if eta_
+    V.eta = cat2('eta'); names{4} = 'eta'; labs{4} = '\eta'; truv{4} = tru.eta; refv{4} = refp.eta;
+end
 
 % ---------------- summary statistics ----------------
 fid = fopen(fullfile(outdir, 'summary.txt'), 'w');
 for fo = [1 fid]
     fprintf(fo, 'Run %s: %d chains/ensembles, %d saved samples\n', tag, nc, ns);
+    if ~isempty(upd)
+        fprintf(fo, 'reference updated at the end of burn-in (%s, mean of %d late burn-in samples); log L(true) %.1f -> %.1f\n', ...
+            upd.refid, upd.nsamples, Ltrue_setup, Ltrue);
+    end
 end
 Rz = struct();
-for q = 1:3
+for q = 1:numel(names)
     X = V.(names{q});
     R = NaN(numel(zplot), 1);
     for iz = find(in)'
@@ -109,7 +136,13 @@ for q = 1:3
     plot(vb([1 end]), cfg.zmax*[1 1], 'k:');
     xlim(vb([1 end])); ylim([0 400]); xlabel(labs{q}); ylabel('Depth (km)');
     title(sprintf('Posterior %s', labs{q}));
-    if q == 1, legend([h1 h4 h2 h3(1)], {'true (PA5)', 'reference (step 1)', 'posterior mean', '5-95%'}, 'location', 'southwest'); end
+    hh = [h1 h4 h2 h3(1)]; ll = {'true (PA5)', 'reference (step 1)', 'posterior mean', '5-95%'};
+    if ~isempty(upd)
+        im_ = zplot >= cfg.zmin & zplot <= cfg.zmax;
+        hh(end+1) = plot(upd.(names{q})(im_), zplot(im_), '-.', 'color', [0.8 0.4 0], 'linewidth', 1.2); %#ok<SAGROW>
+        ll{end+1} = 'updated reference (end of burn-in)'; %#ok<SAGROW>
+    end
+    if q == 1, legend(hh, ll, 'location', 'southwest'); end
 end
 print(fig, '-dpng', '-r130', fullfile(outdir, 'fig1_posteriors.png'));
 
@@ -283,6 +316,25 @@ for q = 1:3
     title(sprintf('%d posterior samples (blue: mean, red: PA5)', numel(pickS)));
 end
 print(fig, '-dpng', '-r130', fullfile(outdir, 'fig8_samples.png'));
+
+%% 9) eta posterior (only when eta is a model parameter)
+if eta_
+    fig = figure('position', [50 50 600 560]); hold on; box on;
+    X = V.eta; vb = 0.78:0.005:1.07; dv = vb(2) - vb(1);
+    H = zeros(numel(zplot), numel(vb));
+    for iz = 1:numel(zplot)
+        ib = min(max(round((X(iz,:) - vb(1))/dv) + 1, 1), numel(vb));
+        H(iz,:) = accumarray(ib(:), 1, [numel(vb) 1])' / ns;
+    end
+    imagesc(vb, zplot, H); colormap(flipud(gray)); caxis([0 0.25]); set(gca, 'ydir', 'reverse');
+    h1 = plot(tru.eta, zplot, 'r-', 'linewidth', 2);
+    h4 = plot(refp.eta, zplot, '-', 'color', [0 0.6 0], 'linewidth', 1.2);
+    h2 = plot(mean(X, 2), zplot, 'b-', 'linewidth', 1.5);
+    h3 = plot(prctile_(X, 5), zplot, 'b--', prctile_(X, 95), zplot, 'b--');
+    xlim(vb([1 end])); ylim([0 400]); xlabel('\eta'); ylabel('Depth (km)'); title('Posterior \eta');
+    legend([h1 h4 h2 h3(1)], {'true (PA5)', 'reference', 'posterior mean', '5-95%'}, 'location', 'southwest');
+    print(fig, '-dpng', '-r130', fullfile(outdir, 'fig9_eta.png'));
+end
 
 %% 7) parallel-tempering diagnostics
 if ~isempty(infc{1}) && numel(infc{1}.T) > 1

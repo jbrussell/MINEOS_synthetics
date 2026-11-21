@@ -6,16 +6,22 @@ function lin = mineos_lin_setup(card, KT, KS, cT, cS, zw, zmin, zmax)
 % sea level), the Love (toroidal) and Rayleigh (spheroidal) phase
 % velocities of branches n = 0..nm-1 at the dispersion nodes are
 %
-%   c_n(T) = c_ref,n(T) + sum_nodes [ Gsv_n(T, node) dVsv + Gsh_n(T, node) dVsh ]
+%   c_n(T) = c_ref,n(T) + sum_nodes sum_X  G^X_n(T, node) dX(node),
+%   X = Vsv, Vsh, Vpv, Vph, rho, eta,
 %
-% Vpv, Vph and density follow Vsv and Vsh with the ratios of the reference
-% card (Vpv/Vsv, Vph/Vsh and rho/Vsv held fixed), so the effective kernels
-% are
-%   Gsv = Gvsv + (Vpv/Vsv)_0 Gvpv + (rho/Vsv)_0 Grho
-%   Gsh = Gvsh + (Vph/Vsh)_0 Gvph
-% with G = K .* dr * 1000 (K: MINEOS kernels from mineos_modes.m, dr: node
-% weights in m; velocities in km/s, density in g/cm^3). eta is held at the
-% reference. Used by mineos_dispersion.m.
+% with each parameter's own MINEOS kernel and its own perturbation
+% dX = X - X_ref (mineos_lin_disp.m). The kernels are
+%   G^X = K_X .* dr * 1000   for the velocities (km/s per km/s) and density
+%                            (km/s per g/cm^3),
+%   G^eta = K_eta .* dr      (km/s per unit eta),
+% (K: MINEOS kernels from mineos_modes.m, dr: node weights in m; MINEOS
+% units dc (km/s) = sum K .* dr (m) .* dX (m/s, kg/m^3; eta dimensionless)).
+% Love kernels of Vpv, Vph and eta are zero.
+%
+% The perturbations of Vpv, Vph and density follow those of Vsv and Vsh
+% through the reference ratios (Vpv/Vsv, Vph/Vsh and rho/Vsv held fixed;
+% lin.rpv, lin.rph, lin.rrho), and eta is the reference value unless it is
+% a model parameter (mc.eta_free); see mineos_lin_disp.m.
 %
 % card   - reference card (read_model_card.m)
 % KT, KS - {nm} kernels of branches 0..nm-1 (mineos_modes.m out.K)
@@ -23,10 +29,11 @@ function lin = mineos_lin_setup(card, KT, KS, cT, cS, zw, zmin, zmax)
 % zw     - water depth (km); zmin, zmax - depths below the seafloor (km)
 %
 % lin.z     : depths below the seafloor of the model nodes [Nn x 1]
-% lin.vsv0, lin.vsh0 : reference values at the nodes (km/s)
-% lin.GL{n}, lin.GR{n} : [Nper x 2Nn] = [Gsv Gsh] (Love, Rayleigh)
+% lin.vsv0, vsh0, vpv0, vph0 (km/s), rho0 (g/cm^3), eta0 : reference values
+% lin.KL{n}, lin.KR{n} : structs of [Nper x Nn] kernels G^X (fields vsv,
+%                        vsh, vpv, vph, rho, eta), Love and Rayleigh
 % lin.cL, lin.cR : reference phase velocities [Nper x nm]
-% lin.rpv, lin.rph, lin.rrho : the ratios used for the scaling
+% lin.rpv, lin.rph, lin.rrho : the ratios used for the Vp and rho scaling
 %
 % Nodes: the card nodes with zmin <= z - zw <= zmax, excluding the
 % crust-side node at the Moho (the model starts at the mantle side).
@@ -46,24 +53,33 @@ lin.idx = in(:);
 lin.z = zsf(in);
 lin.vsv0 = card.vsv(in)/1000;
 lin.vsh0 = card.vsh(in)/1000;
+lin.vpv0 = card.vpv(in)/1000;
+lin.vph0 = card.vph(in)/1000;
+lin.rho0 = card.rho(in)/1000;                        % g/cm^3
+lin.eta0 = card.eta(in);
 lin.rpv = card.vpv(in) ./ card.vsv(in);
 lin.rph = card.vph(in) ./ card.vsh(in);
 lin.rrho = card.rho(in) ./ card.vsv(in);              % (g/cm^3) per (km/s)
 nm = size(cS, 2);
 for n = 1:nm
-    lin.GL{n} = node_G(KT{n}, in, nnode, dr, lin);
-    lin.GR{n} = node_G(KS{n}, in, nnode, dr, lin);
+    lin.KL{n} = node_K(KT{n}, in, nnode, dr);
+    lin.KR{n} = node_K(KS{n}, in, nnode, dr);
 end
 lin.cL = cT; lin.cR = cS;
 end
 
-function G = node_G(K, in, nnode, dr, lin)
-% [Nper x 2Nn] = [dc/dVsv dc/dVsh] (km/s per km/s) at the nodes in, with
-% Vp and density scaled to Vs
+function G = node_K(K, in, nnode, dr)
+% per-parameter kernels [Nper x Nn] at the nodes in (NaN -> 0)
 iK = in - (nnode - numel(K.rad));                    % toroidal kernels: top nodes only
-g = @(f) (K.(f)(iK, :) .* dr(in) * 1000)';
-Gsv = g('vsv') + g('vpv') .* lin.rpv' + g('rho') .* lin.rrho';
-Gsh = g('vsh') + g('vph') .* lin.rph';
-Gsv(isnan(Gsv)) = 0; Gsh(isnan(Gsh)) = 0;
-G = [Gsv, Gsh];
+f = {'vsv', 'vsh', 'vpv', 'vph', 'rho', 'eta'};
+sc = [1000 1000 1000 1000 1000 1];                   % card units -> km/s, g/cm^3; eta dimensionless
+for i = 1:numel(f)
+    if isfield(K, f{i})
+        g = (K.(f{i})(iK, :) .* dr(in) * sc(i))';
+    else
+        g = zeros(size(K.vsv, 2), numel(in));
+    end
+    g(isnan(g)) = 0;
+    G.(f{i}) = g;
+end
 end

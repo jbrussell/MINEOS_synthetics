@@ -6,7 +6,7 @@
 %
 %   >> opt.sampler = 'pt'; D4_step2_plot_results
 %
-% Previous: D3_step2_waveform_inv.m
+% Previous: D3_step2_waveform_inv.m. Next: D5_step2_check_linearization.m
 
 parameters_RL;
 tag = opt.tag;

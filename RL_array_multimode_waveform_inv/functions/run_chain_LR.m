@@ -53,21 +53,21 @@ st0.dth = st.dthc(:,:,1); st0.tau = st.tauc(:,:,1);
 
 nsave = floor((mc.nit - mc.burn)/mc.thin);
 sv.st0 = st0;
-sv.vsv = zeros(numel(zplot), nsave); sv.vsh = sv.vsv; sv.xi = sv.vsv;
+sv.vsv = zeros(numel(zplot), nsave); sv.vsh = sv.vsv; sv.xi = sv.vsv; sv.eta = sv.vsv;
 sv.CL = zeros(numel(Tdisp), nm, nsave); sv.CR = sv.CL;
 sv.kv = zeros(nsave, 1); sv.kx = sv.kv; sv.sig = zeros(nsave, 4); sv.rho = sv.sig;
 sv.tau = zeros(nrec, nm, nsave); sv.dth = sv.tau;
 sv.tauc = zeros(nrec, nm, Kt, nsave);   % all time-shift coefficients
 sv.dthc = zeros(nrec, nm, Ka, nsave);   % all arrival-angle coefficients
 sv.L = zeros(mc.nit, 1);
-acc = zeros(2, 4, 2);                   % [vsv; xi] x [b d m v] x [tried acc]
+acc = zeros(3, 4, 2);                   % [vsv; xi; eta] x [b d m v] x [tried acc]
 accn = [0 0]; isv = 0; tic;
 fprintf('chain %d: start with %d interior Vsv and %d xi control points\n', ic, numel(m.V.zc), numel(m.X.zc));
 
 for it = 1:mc.nit
     % ---------- structural move ----------
     [mn, okp, set, mv] = lr_common('propose', st.m, cfg, mc, 1);
-    is = 1 + strcmp(set, 'xi');
+    is = find(strcmp(set, {'vsv', 'xi', 'eta'}));
     if okp
         acc(is, mv, 1) = acc(is, mv, 1) + 1;
         % xi changes Vsh, which both Love and Rayleigh waves see: recompute both
@@ -112,7 +112,7 @@ for it = 1:mc.nit
     if it > mc.burn && mod(it - mc.burn, mc.thin) == 0
         isv = isv + 1;
         p = lr_common('profiles', st, zplot, cfg);
-        sv.vsv(:, isv) = p(:,1); sv.vsh(:, isv) = p(:,2); sv.xi(:, isv) = p(:,3);
+        sv.vsv(:, isv) = p(:,1); sv.vsh(:, isv) = p(:,2); sv.xi(:, isv) = p(:,3); sv.eta(:, isv) = p(:,4);
         sv.CL(:,:,isv) = st.CL; sv.CR(:,:,isv) = st.CR;
         sv.kv(isv) = numel(st.m.V.zc); sv.kx(isv) = numel(st.m.X.zc);
         sv.sig(isv,:) = st.sig; sv.rho(isv,:) = st.rho; sv.tau(:,:,isv) = st.tauc(:,:,1);
@@ -129,4 +129,7 @@ st = rmfield(st, 'M'); st.dth = st.dthc(:,:,1); st.tau = st.tauc(:,:,1);
 fprintf('chain %d done: acceptance (b/d/m/v) Vsv %s %%, xi %s %%, nuisance %.0f%%\n', ic, ...
     mat2str(round(100*squeeze(acc(1,:,2)./max(acc(1,:,1),1)))), ...
     mat2str(round(100*squeeze(acc(2,:,2)./max(acc(2,:,1),1)))), 100*accn(2)/accn(1));
+if any(acc(3,:,1))
+    fprintf('chain %d: eta acceptance (b/d/m/v) %s %%\n', ic, mat2str(round(100*squeeze(acc(3,:,2)./max(acc(3,:,1),1)))));
+end
 end

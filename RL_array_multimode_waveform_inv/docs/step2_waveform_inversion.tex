@@ -182,12 +182,13 @@ full PREM synthetic (all 16 branches) divided by $s_r$.
 \subsection{Transdimensional B-spline profiles}
 $z$ is depth below the seafloor (the water depth is $z_w$). The inverted
 depth range is $z_{\min}=7$~km (the Moho) to $z_{\max}=350$~km. Each
-profile $p\in\{\vsv,\xi\}$ is described by:
+profile $p\in\{\vsv,\xi\}$, and $p=\eta$ when $\eta$ is a model parameter
+(Section~\ref{sec:derived}), is described by:
 \begin{itemize}
 \item $k_p$ interior control points $(z^p_i,v^p_i)$, $i=1,\dots,k_p$, with $z_{\min}<z^p_i<z_{\max}$;
 \item a free top end value $v^p_{\rm top}$ at $z_{\min}$;
 \item a bottom end value $v^p_{\rm bot}$ at $z_{\max}$, \emph{fixed} to the
-  reference model there ($\xi_{\rm bot}=1$).
+  reference model there (e.g.\ $\xi_{\rm bot}=1$).
 \end{itemize}
 Sorted by depth, the $n_p=k_p+2$ control points $\mathbf{P}_l=(Z_l,V_l)$,
 $l=1,\dots,n_p$, define a clamped parametric B-spline curve of degree
@@ -205,11 +206,12 @@ interpolation. Clamping makes the profile pass through the end values.
 Adding or removing a control point changes the curve only locally.
 
 The model is
-$\mathbf{m}=\{k_v,\{z^v_i,v^v_i\},v^v_{\rm top};\;k_x,\{z^x_i,v^x_i\},v^x_{\rm top}\}$.
-It gives $\vsv(z)$ and $\xi(z)$ on $[z_{\min},z_{\max}]$. Outside this range
+$\mathbf{m}=\{k_v,\{z^v_i,v^v_i\},v^v_{\rm top};\;k_x,\{z^x_i,v^x_i\},v^x_{\rm top}\}$,
+plus $\{k_e,\{z^e_i,v^e_i\},v^e_{\rm top}\}$ for $\eta$ when it is free.
+It gives $\vsv(z)$, $\xi(z)$ (and $\eta(z)$) on $[z_{\min},z_{\max}]$. Outside this range
 (water, crust, $z>350$~km) the model is the reference model.
 
-\subsection{Derived parameters}
+\subsection{Derived parameters}\label{sec:derived}
 \begin{equation}
   \vsh(z)=\vsv(z)\sqrt{\xi(z)} .
 \end{equation}
@@ -220,40 +222,59 @@ ratios of the reference model (superscript 0):
   \vpv=R_{pv}\,\vsv,\quad \vph=R_{ph}\,\vsh,\quad \rho=R_\rho\,\vsv,\qquad
   R_{pv}=\frac{\vpv^0}{\vsv^0},\;R_{ph}=\frac{\vph^0}{\vsh^0},\;R_\rho=\frac{\rho^0}{\vsv^0}.
 \end{equation}
-The anisotropic parameter $\eta$ is held at the reference model.
+The anisotropic parameter $\eta$ (the fifth Love parameter,
+$\eta=F/(A-2L)$) is held at the reference model by default,
+$\eta=\eta^0$ (\texttt{opt.eta\_free = false}). With
+\texttt{opt.eta\_free = true} it is a third transdimensional B-spline
+profile $\eta(z)$ (Section~\ref{sec:prior}).
 
 \subsection{Dispersion}\label{sec:disp}
 $c^w_n(T;\mathbf{m})$ is the phase velocity of branch $n$ of wave type $w$
 at period $T$. It is evaluated at $N_T=10$ dispersion nodes $T_\ell$,
 log-spaced from $0.95\times17$ to $1.02\times112$~s, by linearizing about
-the reference model with MINEOS kernels:
+the reference model with the MINEOS kernels of every parameter:
 \begin{equation}\label{eq:disp}
-  c^w_n(T_\ell;\mathbf{m})=c^{w,\rm ref}_n(T_\ell)+\sum_{i\in\mathcal{N}}
-  \Big[G^{w,sv}_{n,\ell i}\,\delta\vsv(z_i)+G^{w,sh}_{n,\ell i}\,\delta\vsh(z_i)\Big].
+  c^w_n(T_\ell;\mathbf{m})=c^{w,\rm ref}_n(T_\ell)+\sum_{i\in\mathcal{N}}\;
+  \sum_{X\in\mathcal{X}}G^{w,X}_{n,\ell i}\,\delta X(z_i),\qquad
+  \mathcal{X}=\{\vsv,\vsh,\vpv,\vph,\rho,\eta\}.
 \end{equation}
 The terms are:
 \begin{itemize}
 \item $\mathcal{N}$: the reference card nodes with
   $z_{\min}\le z_i\le z_{\max}$ (only the mantle-side node at the Moho);
 \item $c^{w,\rm ref}_n$: the MINEOS phase velocity of the reference model;
-\item $\delta\vsv(z_i)=\vsv(z_i;\mathbf{m})-\vsv^0(z_i)$, and likewise
-  $\delta\vsh$, in km/s.
+\item $\delta X(z_i)=X(z_i;\mathbf{m})-X^0(z_i)$: the perturbation of
+  parameter $X$ from the reference model at node $i$, in km/s for the
+  velocities, g/cm$^3$ for $\rho$ and dimensionless for $\eta$. The
+  perturbations follow from the model through Eq.~\eqref{eq:scaling}:
+  \begin{gather*}
+   \delta\vsv=\vsv(\mathbf{m})-\vsv^0,\qquad \delta\vsh=\vsv(\mathbf{m})\sqrt{\xi(\mathbf{m})}-\vsh^0,\\
+   \delta\vpv=R_{pv}\vsv(\mathbf{m})-\vpv^0,\qquad \delta\vph=R_{ph}\vsh(\mathbf{m})-\vph^0,\qquad
+   \delta\rho=R_\rho\vsv(\mathbf{m})-\rho^0,
+  \end{gather*}
+  and $\delta\eta=\eta(\mathbf{m})-\eta^0$, which is zero unless $\eta$ is
+  free;
+\item $G^{w,X}_{n,\ell i}$: the kernel of parameter $X$,
+  \begin{equation}
+   G^{w,X}_{n,\ell i}=K^{w,n}_{X}(T_\ell,r_i)\,\Delta r_i\cdot10^3\quad(X\ne\eta),\qquad
+   G^{w,\eta}_{n,\ell i}=K^{w,n}_{\eta}(T_\ell,r_i)\,\Delta r_i .
+  \end{equation}
 \end{itemize}
-With the scaling of Eq.~\eqref{eq:scaling}, the effective kernels are
-\begin{align}
-  G^{w,sv}_{n,\ell i}&=\Big[K^{w,n}_{\vsv}(T_\ell,r_i)+R_{pv,i}K^{w,n}_{\vpv}(T_\ell,r_i)+R_{\rho,i}K^{w,n}_{\rho}(T_\ell,r_i)\Big]\,\Delta r_i\cdot10^3,\\
-  G^{w,sh}_{n,\ell i}&=\Big[K^{w,n}_{\vsh}(T_\ell,r_i)+R_{ph,i}K^{w,n}_{\vph}(T_\ell,r_i)\Big]\,\Delta r_i\cdot10^3 .
-\end{align}
 $K^{w,n}_{X}(T,r)$ is the MINEOS Fréchet kernel of phase velocity with
 respect to parameter $X$ at radius $r$, in the units where
 $\delta c\,[\text{km/s}]=\sum_iK_X(r_i)\,\Delta r_i[\text{m}]\,\delta X$, with
-$\delta X$ in m/s or kg/m$^3$. $\Delta r_i$ is the node weight (the
-centered difference of node radii, in m). The factor $10^3$ converts to
-km/s and g/cm$^3$.
+$\delta X$ in m/s, kg/m$^3$ or dimensionless ($\eta$). $\Delta r_i$ is the
+node weight (the centered difference of node radii, in m). The factor
+$10^3$ converts to km/s and g/cm$^3$. Because
+$\delta\vpv=R_{pv}\delta\vsv$, $\delta\vph=R_{ph}\delta\vsh$ and
+$\delta\rho=R_\rho\delta\vsv$, Eq.~\eqref{eq:disp} is identical to
+grouping the Vp and density kernels with the shear kernels (verified to
+$10^{-14}$~km/s).
 
-Love waves (toroidal modes) depend only on $\vsh$ and $\rho$ in practice.
-Rayleigh waves depend on both $\vsv$ and $\vsh$, so both wave types
-constrain $\xi$. The phase velocities are interpolated from the nodes
+Love waves (toroidal modes) depend on $\vsh$, $\vsv$ and $\rho$; their
+$\vpv$, $\vph$ and $\eta$ kernels are zero. Rayleigh waves depend on all
+six parameters, so both wave types constrain $\xi$, and only Rayleigh waves
+constrain $\eta$. The phase velocities are interpolated from the nodes
 $T_\ell$ to the band frequencies with a monotone cubic (PCHIP) interpolant
 in $\ln T$. A frequency where branch $n$ has no node on either side is
 masked: $\chi^w_n(\omega)=0$ there and 1 elsewhere. A model is rejected
@@ -491,12 +512,14 @@ in the summaries; idagrn data have no ``true'' nuisance parameters.
 
 \begin{itemize}
 \item \textbf{Numbers of control points:} uniform on the set
-  $\{(k_v,k_x):0\le k_x\le k_v\le k_{\max}\}$, with $k_{\max}=15$.
-  $\xi$ never has more interior control points than $\vsv$.
+  $\{(k_v,k_x):0\le k_x\le k_v\le k_{\max}\}$, with $k_{\max}=15$
+  (with free $\eta$: $\{(k_v,k_x,k_e):0\le k_x,k_e\le k_v\le k_{\max}\}$).
+  $\xi$ and $\eta$ never have more interior control points than $\vsv$.
 \item \textbf{Control depths:} independent, uniform on $(z_{\min},z_{\max})$.
 \item \textbf{Values:} $\vsv$ values (interior and top) uniform on
-  $[4.0,5.0]$~km/s; $\xi$ values uniform on $[0.90,1.20]$; bottom values
-  fixed to the reference.
+  $[4.0,5.0]$~km/s; $\xi$ values uniform on $[0.90,1.20]$; $\eta$ values
+  (if free) uniform on $[0.80,1.05]$ (\texttt{opt.etamin},
+  \texttt{opt.etamax}); bottom values fixed to the reference.
 \item \textbf{Noise:} $\ln\sigma_q$ uniform (scale-invariant; implied by
   the symmetric proposal in $\ln\sigma_q$ with acceptance on the
   likelihood ratio alone). $r_q$ uniform on $[0,r_{\max})$, with $r_{\max}=0.98$.
@@ -517,18 +540,19 @@ and $T=1$ is the posterior.
   $(i-1)\bmod n_{\rm relin}=0$): apply Eq.~\eqref{eq:relin} to every record
   and update $\ln\mathcal{L}$.
 \item \textbf{Structural move.} With probability $p_\xi=0.4$ the move acts
-  on $\xi$, otherwise on $\vsv$. One of four move types is chosen with
+  on $\xi$, with probability $p_\eta=0.2$ on $\eta$ (only if it is free),
+  otherwise on $\vsv$. One of four move types is chosen with
   equal probability:
   \begin{enumerate}
   \item \emph{birth}: add a control point with depth and value drawn from
-    the prior (rejected if $k=k_{\max}$, or if it would give $k_x>k_v$);
+    the prior (rejected if $k=k_{\max}$, or if it would give $k_x>k_v$ or $k_e>k_v$);
   \item \emph{death}: delete a uniformly chosen interior point (rejected if
-    $k=0$, or if it would give $k_v<k_x$);
+    $k=0$, or if it would give $k_v<k_x$ or $k_v<k_e$);
   \item \emph{move}: $z_i\leftarrow z_i+s_z T^{1/4}\varepsilon$, with
     $s_z=10$~km;
   \item \emph{value}: one of the $k$ interior values or the top value,
     chosen uniformly, $v\leftarrow v+s_vT^{1/4}\varepsilon$, with
-    $s_v=0.03$~km/s for $\vsv$ and $0.01$ for $\xi$.
+    $s_v=0.03$~km/s for $\vsv$ and $0.01$ for $\xi$ and $\eta$.
   \end{enumerate}
   Here $\varepsilon\sim\mathcal{N}(0,1)$. A proposal outside the prior
   bounds is rejected. Otherwise the dispersion (Eq.~\ref{eq:disp}), the
@@ -578,12 +602,82 @@ enters the acceptance ratio. Proposals perturb one coefficient by
 $0.4$~s or $0.25^\circ$ times $\varepsilon$.
 
 %======================================================================
+\section{Updating the reference model}\label{sec:refupd}
+%======================================================================
+
+The reference spectra $U^{\rm ref}_{rjn}$, the reference phase velocities
+$c^{w,\rm ref}_n$ and the kernels $G^{w,X}$ of Eq.~\eqref{eq:disp} belong
+to one reference model. A reference far from the solution makes the
+linearized dispersion inaccurate.
+
+\subsection{At the end of burn-in (default)}
+With \texttt{opt.update\_ref = 'burnin'} the run has three phases:
+\begin{enumerate}
+\item \emph{Burn-in} ($N_{\rm burn}$ iterations) with the step-1 reference.
+  The $T=1$ samples of the last fraction $f_{\rm upd}=0.2$
+  (\texttt{opt.upd\_frac}) of the burn-in are kept.
+\item \emph{Update}, once, after every chain or ensemble has finished its
+  burn-in. Let $\bar\vsv(z)$ and $\bar\vsh(z)$ (and $\bar\eta(z)$) be the
+  means of these samples over all chains. The new reference card has
+  \begin{equation}
+   \vsv^{0\prime}=\bar\vsv,\;\; \vsh^{0\prime}=\bar\vsh,\;\;
+   \vpv^{0\prime}=R_{pv}\bar\vsv,\;\; \vph^{0\prime}=R_{ph}\bar\vsh,\;\;
+   \rho^{0\prime}=R_\rho\bar\vsv\quad\text{on }[z_{\min},z_{\max}],
+  \end{equation}
+  with $R$ the ratios of the old reference, and $\eta^{0\prime}=\bar\eta$
+  if $\eta$ is free. Everything else is unchanged. MINEOS and
+  \texttt{idagrn6\_mask} are rerun for it, giving new $U^{\rm ref}$,
+  $c^{\rm ref}$ and kernels. The data, windows and normalizations $s_r$
+  are kept, so log-likelihoods before and after are evaluated on the same
+  data. New initial linearization points $\bm\ell^{(0)}$ are fitted as in
+  Section~\ref{sec:relin}, and $\ln\mathcal{L}^{\rm true}$ is recomputed.
+\item \emph{Sampling} ($N_{\rm it}-N_{\rm burn}$ iterations). Every chain
+  and temperature continues from its own last state $(\mathbf{m},\bm\sigma,\mathbf{r})$.
+  Its linearization points are moved to the new reference by
+  \texttt{opt.upd\_ngn} $=10$ Gauss--Newton steps from $\bm\ell^{(0)}$.
+  The reference is then fixed for the rest of the run.
+\end{enumerate}
+All chains share one updated reference, so they sample the same target
+and $\hat R$ and the parallel-tempering swaps remain valid. Updating
+repeatedly \emph{during} sampling would change the target as the chain
+moves, so the reference is updated only at the end of burn-in. With
+\texttt{opt.update\_ref = 'none'} the step-1 reference is used
+throughout.
+
+\subsection{Checking the linearization (D5)}
+\texttt{D5\_step2\_check\_linearization.m} evaluates, by full MINEOS and
+by Eq.~\eqref{eq:disp} about the run's (post-burn-in) reference:
+\begin{itemize}
+\item the posterior mean model, and
+\item the true model projected on the parameterization (PA5 $\vsv$,
+  $\vsh$ on $[z_{\min},z_{\max}]$, Vp and $\rho$ scaled, the reference
+  elsewhere).
+\end{itemize}
+It reports the per-branch rms of four differences:
+\begin{itemize}
+\item the linearization error at the posterior mean;
+\item the linearization error at the projected truth;
+\item MINEOS(projected truth) $-$ MINEOS(PA5): the part of the true
+  dispersion the parameterization cannot represent, such as PA5 below
+  350~km, its Vp/Vs and $\rho$/Vs ratios and $\eta$;
+\item MINEOS(posterior mean) $-$ MINEOS(PA5).
+\end{itemize}
+A reference update can reduce the first two, not the third.
+
+\subsection{Outer iterations (D6, optional)}
+\texttt{D6\_step2\_update\_reference\_and\_rerun.m} builds a new reference
+from the posterior mean of a finished run, in the same way as the
+end-of-burn-in update, and reruns the whole inversion about it. The data
+and sampler settings are unchanged, and the tag is \texttt{\_it2}. It can
+be repeated until the posterior mean stops changing.
+
+%======================================================================
 \section{Outputs and diagnostics}\label{sec:out}
 %======================================================================
 
 After burn-in every 5th iteration is saved (thinning). Each sample stores:
 \begin{itemize}
-\item $\vsv$, $\vsh$ and $\xi$ on a 2-km depth grid (0--400~km);
+\item $\vsv$, $\vsh$, $\xi$ and $\eta$ on a 2-km depth grid (0--400~km);
 \item the dispersion curves $c^w_n(T_\ell)$;
 \item $k_v$, $k_x$, $\bm\sigma$ and $\mathbf{r}$;
 \item the conditional posterior means of the nuisance coefficients,
@@ -614,10 +708,10 @@ The waveform figures show, for each record:
 \section{Approximations and remarks}
 %======================================================================
 \begin{itemize}
-\item The dispersion is linearized about the step-1 reference
-  (Eq.~\ref{eq:disp}); MINEOS is not rerun inside the sampler. The
-  optional \texttt{update\_reference.m} reruns MINEOS and \texttt{idagrn6}
-  for a new reference (e.g.\ a posterior mean).
+\item The dispersion is linearized about a reference model
+  (Eq.~\ref{eq:disp}). MINEOS and \texttt{idagrn6} are rerun only when the
+  reference is updated (Section~\ref{sec:refupd}), never for individual
+  proposals.
 \item The array is treated as flat and the wavefield as locally plane
   across it. Amplitude variations across the array come only from
   $U^{\rm ref}$.
@@ -669,12 +763,14 @@ k_v,k_x,k_{\max} & numbers of interior control points of $\vsv$ and $\xi$; maxim
 v^p_{\rm top},v^p_{\rm bot} & end values at $z_{\min}$ (free) and $z_{\max}$ (fixed)\\
 N_{l,\varrho}(s),\;\varrho & B-spline basis functions; degree ($\le3$)\\
 R_{pv},R_{ph},R_\rho & reference-model ratios $\vpv/\vsv$, $\vph/\vsh$, $\rho/\vsv$\\
+\eta,\;k_e,\;(z^e_i,v^e_i) & anisotropic parameter $F/(A-2L)$; its interior control points (if free)\\
+\mathcal{X},\;\delta X,\;X^0 & the six TI parameters; perturbation of $X$ from the reference; reference value\\
 T_\ell,\;N_T & dispersion-node periods; their number (10)\\
 c^w_n(T;\mathbf{m}),\;c^{w,\rm ref}_n & model and reference phase velocities (km/s)\\
 \mathcal{N} & card nodes in the inverted depth range\\
 K^{w,n}_X(T,r) & MINEOS Fréchet kernel of phase velocity w.r.t.\ parameter $X$\\
 \Delta r_i & node weight (m)\\
-G^{w,sv},G^{w,sh} & effective $\vsv$, $\vsh$ kernels including the Vp and $\rho$ scaling\\
+G^{w,X} & kernel of parameter $X$ at the dispersion nodes and model nodes\\
 \chi^w_n(\omega) & mask: 1 where branch $n$ exists in the band\\
 B_{rn}(\omega),\;\beta_{rnk},\;\Phi_k,\;K & spectral correction; its coefficients; hat functions in $\ln\omega$; their number (3)\\
 \tau_{rn}(\omega),\;t_{rna},\;K_\tau & time shift (s); Legendre coefficients; number of terms (3)\\
@@ -697,7 +793,8 @@ n_{\rm relin} & iterations between relinearizations (default 1)\\
 \Delta_\tau^{\max},\Delta_\theta^{\max} & maximum relinearization steps (2 s, 3$^\circ$)\\
 T,\;T_k,\;T_{\max},\;K_T & temperature; ladder; maximum; number of temperatures\\
 \pi_T & tempered posterior\\
-p_\xi,\;s_z,\;s_v & probability of a $\xi$ move (0.4); depth step (10 km); value steps\\
+p_\xi,\;p_\eta,\;s_z,\;s_v & probabilities of a $\xi$ (0.4) and an $\eta$ move (0.2, if free); depth step (10 km); value steps\\
+N_{\rm burn},\;f_{\rm upd} & burn-in iterations; fraction of the burn-in averaged for the reference update (0.2)\\
 \varepsilon & standard normal random number\\
 \alpha,\;\alpha_{\rm swap} & Metropolis acceptance probabilities\\
 N_c,\;N_{\rm ens},\;N_{\rm it} & number of chains, ensembles, iterations\\

@@ -60,6 +60,13 @@ mc.kxmin = 0;  mc.kxmax = og('kxmax', 15);   % interior xi control points
 mc.vsmin = 4.0; mc.vsmax = 5.0;              % U prior on Vsv (km/s)
 mc.ximin = 0.90; mc.ximax = 1.20;            % U prior on xi
 mc.p_xi  = 0.4;                              % fraction of moves on xi
+% eta (opt.eta_free): held at the reference model by default; if free, a
+% third transdimensional B-spline profile (ke <= kv, bottom tied to the
+% reference, U prior), updated in a fraction p_eta of the moves
+mc.eta_free = og('eta_free', false);
+mc.kemin = 0; mc.kemax = og('kemax', 15);
+mc.etamin = og('etamin', 0.80); mc.etamax = og('etamax', 1.05);
+mc.p_eta = og('p_eta', 0.2); mc.step_eta = og('step_eta', 0.01);
 mc.step_vs = 0.03; mc.step_xi = 0.01; mc.step_z = 10;
 mc.step_tau = 0.4; mc.step_dth = 0.25; mc.step_lsig = 0.05; mc.step_rho = 0.02;
 mc.rhomax = 0.98;                            % U[0, rhomax] prior on correlation
@@ -91,6 +98,7 @@ cfg.Tdisp = Tdisp;
 % bottom end values tied to the reference model at zmax
 [~, ib_] = max(cfg.lin.z);
 cfg.vbot = cfg.lin.vsv0(ib_); cfg.xbot = (cfg.lin.vsh0(ib_)/cfg.lin.vsv0(ib_))^2;
+cfg.ebot = cfg.lin.eta0(ib_);
 CrefL = P.phv_ref_T; CrefR = P.phv_ref_S;     % reference (step-1 model) dispersion
 CtrueL = P.phv_true_T; CtrueR = P.phv_true_S; % true (PA5) dispersion, MINEOS
 % true and reference profiles (below the seafloor) for plotting
@@ -100,15 +108,15 @@ tru.vsv = card_prof(P.card_true, 'vsv'); tru.vsh = card_prof(P.card_true, 'vsh')
 tru.xi = (tru.vsh ./ tru.vsv).^2;
 refp.vsv = card_prof(P.card_ref, 'vsv'); refp.vsh = card_prof(P.card_ref, 'vsh');
 refp.xi = (refp.vsh ./ refp.vsv).^2;
-cfg.refp = struct('z', zplot, 'vsv', refp.vsv, 'vsh', refp.vsh);
+tru.eta = card_at_depth(P.card_true, 'eta', zplot + cfg.zw);      % dimensionless
+refp.eta = card_at_depth(P.card_ref, 'eta', zplot + cfg.zw);
+cfg.refp = struct('z', zplot, 'vsv', refp.vsv, 'vsh', refp.vsh, 'eta', refp.eta);
 % linearized MINEOS dispersion of the true model's Vsv, Vsh between zmin
 % and zmax (the rest of the model at the reference): how well the
 % parameterization and the linearization can reproduce the true dispersion
 mt.vsv = card_at_depth(P.card_true, 'vsv', cfg.lin.z + cfg.zw)/1000;   % mantle side at the Moho
 mt.vsh = card_at_depth(P.card_true, 'vsh', cfg.lin.z + cfg.zw)/1000;
-dm_ = [mt.vsv - cfg.lin.vsv0; mt.vsh - cfg.lin.vsh0];
-ClinL = CrefL; ClinR = CrefR;
-for n = 1:nm, ClinL(:,n) = ClinL(:,n) + cfg.lin.GL{n}*dm_; ClinR(:,n) = ClinR(:,n) + cfg.lin.GR{n}*dm_; end
+[ClinL, ClinR] = mineos_lin_disp(cfg.lin, mt.vsv, mt.vsh, [], 'both');   % eta at the reference
 fprintf('true - reference phase velocity (rms, km/s) Love %s Rayleigh %s\n', ...
     mat2str(round(sqrt(mean((CtrueL - CrefL).^2))*1000)/1000), mat2str(round(sqrt(mean((CtrueR - CrefR).^2))*1000)/1000));
 fprintf('linearized PA5 - true PA5 (rms, km/s)      Love %s Rayleigh %s\n', ...
@@ -154,13 +162,6 @@ for wv = 1:2
         t  = (0:cfg.N-1)'*cfg.dt + rec(r).tred;
         it = round((t - P.t(1))/cfg.dt) + 1;          % samples of the idagrn traces
         if it(end) > numel(P.t), error('idagrn records too short: increase opt.len_hr'); end
-        % reference spectra (single-branch idagrn6 synthetics of the reference model)
-        Uref = cell(1, nm);
-        for n = 1:nm
-            X = fft(P.(['u_ref_' uname{wv}]){e, n}(it, :) .* segtap);
-            Uref{n} = X(cfg.ib, :) .* taper;
-        end
-        rec(r).Uref = Uref; rec(r).cref = Cref_f{wv};
         % data: full idagrn6 synthetics of the true model, same processing
         X = fft(P.(['u_true_' uname{wv}]){e}(it, :) .* segtap);
         Y = zeros(cfg.N, Nst); Y(cfg.ib, :) = X(cfg.ib, :) .* taper;
@@ -174,17 +175,13 @@ for wv = 1:2
         end
         rec(r).idx = idx; rec(r).wt = wt;
         rec(r).first = [true; diff(idx) ~= 1 | diff(wt) ~= 0];   % segment starts
-        % normalize each record (data and reference spectra) by its peak
-        % amplitude in the windows, as is usual with real data
+        % normalize each record (data and, in apply_reference.m, the
+        % reference spectra) by its peak amplitude in the windows, as is
+        % usual with real data
         rec(r).scale = max(abs(clean(idx)));
         rec(r).clean = clean(idx) / rec(r).scale;
-        for n = 1:nm, rec(r).Uref{n} = rec(r).Uref{n} / rec(r).scale; end
         rec(r).Dj = Dj;
-        % for the waveform figures: the reference prediction (sum of the
-        % modeled branches, no nuisance correction) and PREM (all branches)
-        Y = zeros(cfg.N, Nst);
-        for n = 1:nm, Y(cfg.ib, :) = Y(cfg.ib, :) + rec(r).Uref{n}; end
-        u = 2*real(ifft(Y)); rec(r).refsyn = u(idx);
+        % for the waveform figures: PREM (all branches, no nuisance correction)
         if isfield(P, ['u_prem_' uname{wv}])
             X = fft(P.(['u_prem_' uname{wv}]){e}(it, :) .* segtap);
             Y = zeros(cfg.N, Nst); Y(cfg.ib, :) = X(cfg.ib, :) .* taper;
@@ -194,6 +191,10 @@ for wv = 1:2
         end
     end
 end
+% reference spectra Uref (single-branch idagrn6 synthetics of the
+% reference model, processed like the data), reference phase velocities and
+% the MINEOS linearization (apply_reference.m)
+[rec, cfg] = apply_reference(rec, cfg, P, Tdisp, fb);
 nrec = numel(rec);
 wave = [rec.wave]';
 [cfg.Phi, cfg.Psi, cfg.Psit] = spec_basis(cfg.w, mc.spec_K, mc.spec_Ka, mc.spec_Kt);

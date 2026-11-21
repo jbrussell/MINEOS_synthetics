@@ -39,6 +39,8 @@ calling a driver).
 | `D2_step2_prep_mineos_idagrn.m` | MINEOS tables, dispersion and kernels; idagrn6 data (PA5, branches 0–15), reference spectra (step-1 model, branches 0–7) and PREM seismograms; cached in `prep_step2.mat` | ~10 min |
 | `D3_step2_waveform_inv.m` | the waveform inversion with the plain (`opt.sampler = 'plain'`) or parallel-tempering (`'pt'`) sampler | hours |
 | `D4_step2_plot_results.m` | figures and `summary.txt` in `figs_<sampler>/`; compares the two samplers if both were run (`figs_compare.png`) | 1 min |
+| `D5_step2_check_linearization.m` | full MINEOS vs the linearized dispersion at the posterior mean and at the (projected) truth: linearization error vs what the parameterization cannot represent (`d5_linearization.txt`, `fig10_linearization.png`) | ~5 min |
+| `D6_step2_update_reference_and_rerun.m` | optional outer iteration: new reference from the posterior mean of a run (MINEOS + idagrn6), then D3/D4 again about it (tag `<tag>_it2`) | ~10 min + D3 |
 
 ```
 >> D1_step1_rayleigh_isotropic_inv
@@ -52,6 +54,13 @@ $ ENSEMBLES="2" octave-cli --eval "opt.sampler='pt'; D3_step2_waveform_inv" &
 With parallel processes, create the setup first (with `CHAINS="[]"` or
 `ENSEMBLES="[]"`: Gauss–Newton fits of the nuisance parameters at the
 reference and at the true dispersion), then start the chains/ensembles.
+Start all of them at once: with the end-of-burn-in reference update (the
+default) each process waits after its burn-in until all chains/ensembles
+have finished theirs; the first process to see all burn-in files runs
+MINEOS + idagrn6 for the new reference (~10 min) and the others then
+continue with it. MINEOS/idagrn6 runs are serialized through the lock
+directory `../run_MINEOS/.prep_lock` (remove it by hand if a process died
+while holding it).
 
 **Naming:** `D#_*.m` are the drivers, run in that order;
 `parameters_RL.m` holds the settings for all of them. Everything else is in
@@ -81,7 +90,8 @@ A full description with equations and notation: `docs/step2_waveform_inversion.t
 | data | idagrn6 seismograms of PA5, **branches 0–15**, transverse (Love) and vertical (Rayleigh) displacement, 17–112 s, normalized by each record's peak, 3% band-limited noise |
 | modeled | **branches 0–7** |
 | reference spectra | idagrn6_mask single-branch seismograms of the step-1 model |
-| dispersion | MINEOS phase velocities of the step-1 model + MINEOS kernels × model perturbation, with Vp and ρ scaled to Vs (`functions/mineos_lin_setup.m`) |
+| dispersion | MINEOS phase velocities of the reference + Σ over Vsv, Vsh, Vpv, Vph, ρ, η of each parameter's MINEOS kernel × its perturbation; Vpv, Vph and ρ follow Vsv, Vsh with the reference ratios, η is the reference's unless `opt.eta_free` (`functions/mineos_lin_setup.m`, `mineos_lin_disp.m`) |
+| reference update | by default the reference (spectra, phase velocities, kernels) is recomputed once at the end of burn-in from the mean model of all chains, then held fixed (`opt.update_ref`) |
 | windows | from the step-1 model's MINEOS group velocities: overtone window from Δ/(max U of branches 1–7 + 0.6 km/s) to Δ/(max U₀ + 0.2), fundamental window from there to Δ/(min U₀ − 0.35) + 60 s |
 | model | Vsv and ξ as transdimensional cubic B-splines from the Moho (7 km below the seafloor) to 350 km, bottom tied to the reference |
 | nuisance | per record and branch: smooth spectral correction B_n(ω), frequency-dependent time shift τ_n(ω) and arrival angle δθ_n(ω) (see below) |
@@ -109,6 +119,8 @@ reference misses is sampled differently at each period.
 | | `'sample'` | τ and δθ sampled by Metropolis with the exact waveforms, B integrated out (plain sampler only) |
 | `opt.relin` | 1 (default) | the linearization points of τ, δθ and B of every state are moved to their conditional posterior mean (one Gauss–Newton step, clamped to ±2 s / ±3°) every `relin` iterations, i.e. before every proposal by default; larger values are cheaper and less accurate. Cost: one rebuild of the waveform derivatives and one likelihood per record, about the cost of a structural proposal, so `relin` = 1 roughly doubles the time per iteration (the posterior mean used for the update is cached from the last likelihood evaluation) |
 | `opt.spec_Kt` | 3 | number of τ_n(ω) terms |
+| `opt.update_ref` | `'burnin'` (default) / `'none'` | recompute the reference model (idagrn6_mask spectra, MINEOS phase velocities and kernels) once at the end of burn-in, from the mean Vsv, Vsh (and η) of the last `opt.upd_frac` (0.2) of the burn-in of all chains, and hold it fixed afterwards; `'none'`: the step-1 reference throughout. The data, windows and normalizations never change |
+| `opt.eta_free` | `false` (default) / `true` | η held at the reference model, or a third transdimensional B-spline profile (k_η ≤ k_V, prior U[`opt.etamin`, `opt.etamax`] = U[0.80, 1.05], bottom tied to the reference, a fraction `opt.p_eta` = 0.2 of the moves). Only Rayleigh waves are sensitive to η |
 | `opt.tau_prior`, `opt.dtau_prior` | 15 s, 10 s | prior std of the constant term and of the higher τ terms |
 
 The initial linearization points come from a Gauss–Newton fit at the
@@ -135,11 +147,12 @@ RESULTS_PLACEHOLDER
 | `prep_mineos_idagrn.m` | MINEOS and idagrn6 runs of step 2 (cached) |
 | `mineos_modes.m`, `idagrn_synth.m` | MINEOS tables/dispersion/kernels of any branch; idagrn6 full or single-branch seismograms |
 | `make_ref_card.m`, `isotropic_card.m`, `card_at_depth.m` | cards: PREM under the PA5 crust, isotropic version, values at depth |
-| `mineos_lin_setup.m`, `mineos_dispersion.m` | MINEOS dispersion of a model, Vp and ρ scaled to Vs |
+| `mineos_lin_setup.m`, `mineos_lin_disp.m`, `mineos_dispersion.m` | linearized MINEOS dispersion: per-parameter kernels; c for given Vsv, Vsh, η node profiles (Vp, ρ scaled to Vs); c of a model |
+| `apply_reference.m`, `ref_card_update.m`, `mineos_lock.m` | install a reference model (spectra, kernels) with the data and windows unchanged; card from Vsv/Vsh(/η) profiles with Vp and ρ scaled; serialize MINEOS runs |
 | `run_pt_LR.m` (plain and PT, marginalized nuisance), `run_chain_LR.m` (sampled nuisance), `lr_common.m` | samplers |
 | `spec_refine.m`, `nuis_relin.m`, `nuis_zero.m`, `spec_layout.m`, `spec_basis.m` | nuisance linearization points, Gauss–Newton / relinearization step, parameter layout and frequency bases |
 | `event_G_spec.m`, `event_loglike_ar.m`, … | waveform operator and likelihood (from `nomelt_LR4`) |
 | `fit_nuisance_LR.m` | best nuisance fit for a fixed structure (log L of the truth) |
-| `update_reference.m` | optional further iteration: reference card from a posterior mean, MINEOS + idagrn6 rerun |
+| `update_reference.m` | new reference card from Vsv/Vsh(/η) profiles (e.g. a posterior mean), MINEOS + idagrn6 rerun (end-of-burn-in update, D6) |
 | `compare_runs.m` | posteriors of several runs in one figure |
 | `read_cmtsolution.m`, `gc_dist_az.m`, `tukeywin_.m`, … | helpers |

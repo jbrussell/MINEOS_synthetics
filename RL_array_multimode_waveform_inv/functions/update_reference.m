@@ -1,43 +1,42 @@
-function P = update_reference(tag, prepfile_new, refid_new)
-% P = update_reference(tag, prepfile_new, refid_new)
+function P = update_reference(vsv, vsh, zp, cfg, opt, refid_new, prepfile_new, eta)
+% P = update_reference(vsv, vsh, zp, cfg, opt, refid_new, prepfile_new, eta)
 %
-% Iterated reference model: build a new reference card from the posterior
-% mean of a finished run (setup<tag>.mat and chain<tag>_XX.mat) and rerun
-% MINEOS and idagrn6 for it (prep_mineos_idagrn.m with opt.ref_card; the
-% true-model data are reused). The next stage then uses
-%   - reference spectra Uref (idagrn6_mask branches) and the path-
-%     correction reference of the updated model, and
-%   - MINEOS phase velocities and kernels linearized about it,
-% which removes most of the linearization error and the branch mismatch
-% (e.g. the near-crossing of the Love fundamental and first overtone in
-% PA5-like lithosphere) of a reference far from the truth.
+% New reference model for the step-2 waveform inversion: the current
+% reference card (cfg.card_ref) with Vsv and Vsh between cfg.zmin and
+% cfg.zmax replaced by the profiles vsv(zp), vsh(zp) (km/s, zp in km below
+% the seafloor; e.g. a posterior mean), and Vpv, Vph and density scaled
+% with the reference ratios (ref_card_update.m); eta(zp) replaces eta if
+% given (when eta is a model parameter). MINEOS (mode tables,
+% phase/group velocities and kernels of branches 0..nm-1) and idagrn6_mask
+% (single-branch reference synthetics) are rerun for it with
+% prep_mineos_idagrn.m; the true-model data and the PREM synthetics of
+% opt.prepfile are reused, not recomputed. The result is cached in
+% prepfile_new (CARDS/<refid_new>.card); install it with apply_reference.m.
 %
-% The new card is the current reference card with Vsv and Vsh at the nodes
-% between cfg.zmin and cfg.zmax (below the seafloor) replaced by the
-% posterior mean; Vp, density, eta and everything outside that depth range
-% are unchanged.
+% The MINEOS and idagrn6 runs share scratch files in opt.mdir, so they are
+% serialized between processes (mineos_lock.m).
 %
-%   P = update_reference('_s1', 'prep_s2.mat', 'RLinv_ref_s2')
-%
-% jbrussell 11/2026
-S = load(['setup' tag '.mat'], 'cfg', 'mc', 'zplot', 'opt');
-cfg = S.cfg; mc = S.mc; zplot = S.zplot; opt = S.opt;
-V = 0; Vh = 0; ns = 0;
-for ic = 1:mc.nchains
-    D = load(sprintf('chain%s_%02d.mat', tag, ic));
-    V = V + sum(D.sv.vsv, 2); Vh = Vh + sum(D.sv.vsh, 2); ns = ns + size(D.sv.vsv, 2);
+% Used at the end of burn-in by D3_step2_waveform_inv.m
+% (opt.update_ref = 'burnin') and by D6_step2_update_reference_and_rerun.m.
+if exist(prepfile_new, 'file') == 2
+    P = load(prepfile_new); P = P.P; fprintf('loaded %s\n', prepfile_new); return
 end
-vsv = V/ns; vsh = Vh/ns;
-Pold = prep_mineos_idagrn(opt);
-c = Pold.card_ref;
-zsf = c.z - cfg.zw;
-in = find(zsf >= cfg.zmin - 1e-6 & zsf <= cfg.zmax + 1e-6 & c.vsv > 0);
-% mantle side at the Moho: the crust-side node keeps its value
-atm = in(abs(zsf(in) - cfg.zmin) < 1e-6);
-if numel(atm) > 1, in = setdiff(in, atm(2:end)); end
-im = zplot >= cfg.zmin;                          % mantle samples only
-c.vsv(in) = 1000*interp1(zplot(im), vsv(im), zsf(in), 'linear', 'extrap');
-c.vsh(in) = 1000*interp1(zplot(im), vsh(im), zsf(in), 'linear', 'extrap');
-o = opt; o.prepfile = prepfile_new; o.refid = refid_new; o.ref_card = c; o.P_true = Pold;
-P = prep_mineos_idagrn(o);
+Pold = prep_mineos_idagrn(opt);                 % cached: true data, PREM synthetics
+if nargin < 8, eta = []; end
+c = ref_card_update(cfg.card_ref, cfg.zw, cfg.zmin, cfg.zmax, zp, vsv, vsh, eta);
+o = opt; o.prepfile = prepfile_new; o.refid = refid_new; o.ref_card = c;
+o.P_true = Pold; o.prem_synth = 0;
+mineos_lock(opt.mdir, 'acquire');
+try
+    P = prep_mineos_idagrn(o);
+catch err
+    mineos_lock(opt.mdir, 'release'); rethrow(err);
 end
+mineos_lock(opt.mdir, 'release');
+for TY = 'TS'                                    % PREM synthetics for the figures
+    f = ['u_prem_' TY];
+    if isfield(Pold, f), P.(f) = Pold.(f); end
+end
+save(prepfile_new, 'P');
+end
+
