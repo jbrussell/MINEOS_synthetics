@@ -47,11 +47,15 @@ opt = opt_defaults(opt, struct( ...
     'dt',           4, 'len_hr', 1.25, ...
     'prem_synth',   1, ...               % PREM synthetics for the waveform figures
     ... % ---- step 2: inversion (D3) ----
-    'sampler',  'plain', ...             % 'plain' (rjMcMC chains) or 'pt' (parallel tempering)
+    'sampler',  'plain', ...             % 'plain' (independent rjMcMC chains) or 'pt' (parallel tempering)
+    'nuisance', 'marginal', ...          % tau_n(w), dth_n(w), B_n(w): 'marginal' (integrated out,
+    ...                                  %   linearized) or 'sample' (tau, dth sampled; plain only)
+    'relin',    1, ...                   % relinearize tau, dth and B every relin iterations (1: per proposal)
+    'spec_Kt',  3, 'tau_prior', 15, 'dtau_prior', 10, ...   % tau_n(w): Legendre terms, prior std (s)
     'N',        800, ...                 % samples per record (N*dt = 3200 s: earliest overtone to slowest fundamental)
     'noise',    0.03, ...                % noise std, fraction of each record's peak
     'nchains',  4, 'nit', 3000, 'burn', 1500, ...           % plain sampler
-    'nens',     2, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750, 'pilot_nit', 600 ... % PT
+    'nens',     2, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750 ... % parallel tempering
     ));
 if ~isfield(opt, 'tag'), opt.tag = ['_' opt.sampler]; end
 if ~isfield(opt, 'outdir'), opt.outdir = ['figs' opt.tag]; end

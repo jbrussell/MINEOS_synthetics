@@ -35,9 +35,12 @@
 % Delta/(min U0 - 0.35) + 60 s, for each station's epicentral distance.
 %
 % Nuisance model for each record and mode (event_G_spec): a smooth complex
-% excitation/path correction B_n(w) on opt.spec_K hat functions in log w
-% (marginalized), a time shift tau_n and a frequency-dependent arrival
-% angle dth_n(w) on opt.spec_Ka Legendre terms in normalized log w.
+% excitation/path correction B_n(w) on opt.spec_K hat functions in log w,
+% a frequency-dependent time shift tau_n(w) on opt.spec_Kt Legendre terms
+% and a frequency-dependent arrival angle dth_n(w) on opt.spec_Ka Legendre
+% terms in normalized log w. By default (opt.nuisance = 'marginal') all
+% three are integrated out (B exactly, tau and dth by linearization about
+% points that are updated every opt.relin iterations; nuis_relin.m).
 %
 % Noise: band-limited (white noise through the processing band-pass),
 % modelled with an exponential (AR(1)) covariance with a level sigma and
@@ -64,7 +67,11 @@ mc.tau_prior = og('tau_prior', 15); mc.dth_prior = 5; mc.sb = og('sb', 0.4);
 % spectral nuisance model (event_G_spec)
 mc.spec_K  = og('spec_K', 3);                % hat functions for B_n(w)
 mc.spec_Ka = og('spec_Ka', 2);               % Legendre terms for dth_n(w)
-mc.dthp = [mc.dth_prior, og('dth1_prior', 5)*ones(1, mc.spec_Ka - 1)];  % prior std (deg)
+mc.spec_Kt = og('spec_Kt', 3);               % Legendre terms for tau_n(w)
+mc.dthp = [mc.dth_prior, og('dth1_prior', 5)*ones(1, mc.spec_Ka - 1)];   % prior std (deg)
+mc.taup = [mc.tau_prior, og('dtau_prior', 10)*ones(1, mc.spec_Kt - 1)];  % prior std (s)
+mc.relin = og('relin', 1);                   % relinearize tau, dth, B every relin iterations
+mc.max_dtau = 2; mc.max_dth = 3;             % max step of a relinearization (s, deg)
 mc.nchains = og('nchains', 6);
 
 %% ---- MINEOS and idagrn6 (cached) ----
@@ -189,7 +196,7 @@ for wv = 1:2
 end
 nrec = numel(rec);
 wave = [rec.wave]';
-[cfg.Phi, cfg.Psi] = spec_basis(cfg.w, mc.spec_K, mc.spec_Ka);
+[cfg.Phi, cfg.Psi, cfg.Psit] = spec_basis(cfg.w, mc.spec_K, mc.spec_Ka, mc.spec_Kt);
 
 %% ---- noise ----
 % band-limited noise: white noise through the processing band-pass with a

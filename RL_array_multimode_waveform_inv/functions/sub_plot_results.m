@@ -175,8 +175,8 @@ print(fig, '-dpng', '-r130', fullfile(outdir, 'fig3_dispersion_fits.png'));
 % PREM: idagrn6 seismograms of PREM (all branches, no nuisance correction);
 % reference: sum of the reference branches 0..nm-1 (idagrn6_mask, no
 % nuisance correction); final: the waveform operator for the final state
-% of chain/ensemble 1 (structure, tau_n, dth_n(w) and the best-fitting
-% B_n(w)). All processed like the data (band-pass, record normalization).
+% of chain/ensemble 1 (structure, posterior-mean tau_n(w) and dth_n(w) of
+% the last samples, and the best-fitting B_n(w)). All processed like the data (band-pass, record normalization).
 pick = [1 6 11 16];
 for e0 = unique([1 min(8, max([rec.event]))])
     fig = figure('position', [50 50 1500 950]);
@@ -184,9 +184,9 @@ for e0 = unique([1 min(8, max([rec.event]))])
         r = find([rec.event]' == e0 & wave == wv);
         if isempty(r), continue; end
         s1 = stc{1};
-        K = size(cfg.Phi, 2); Ka = size(cfg.Psi, 2);
+        K = size(cfg.Phi, 2); Ka = size(cfg.Psi, 2); Kt = size(cfg.Psit, 2);
         mu_b = repmat([1; 0], nm*K, 1); sb2 = mc.sb^2*ones(2*nm*K, 1);
-        G1 = event_G_spec(rec(r), s1.Cf{wv}, struct('tau0', s1.tau(r,:), ...
+        G1 = event_G_spec(rec(r), s1.Cf{wv}, struct('tau0', reshape(s1.tauc(r,:,1:Kt), nm, Kt), ...
             'dth0', reshape(s1.dthc(r,:,1:Ka), nm, Ka), 'b0', ones(nm, K)), cfg, [], [], true);
         [~, b1] = event_loglike_ar(rec(r).d, G1, rec(r).wt, rec(r).first, s1.sig, s1.rho, mu_b, sb2);
         p1 = G1*b1;
@@ -285,7 +285,7 @@ end
 print(fig, '-dpng', '-r130', fullfile(outdir, 'fig8_samples.png'));
 
 %% 7) parallel-tempering diagnostics
-if ~isempty(infc{1})
+if ~isempty(infc{1}) && numel(infc{1}.T) > 1
     fig = figure('position', [50 50 1100 360]);
     subplot(1, 3, 1); hold on; box on;
     for ic = 1:nc
