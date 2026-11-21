@@ -627,12 +627,6 @@ The waveform figures show, for each record:
 \item The time shifts $\tau_n(\omega)$ and arrival angles
   $\delta\theta_n(\omega)$ are common to all stations of a record. Their
   variation across the array is described by the structure only.
-\item \emph{Implementation note.} In the current code a $\xi$ move
-  recomputes the Love dispersion and the Love records only. The Rayleigh
-  dispersion keeps its previous value until the next $\vsv$ move, although
-  Rayleigh waves are sensitive to $\vsh$ through Eq.~\eqref{eq:disp}.
-  The scheme described above (recomputing both wave types) is the
-  intended one.
 \end{itemize}
 
 %======================================================================

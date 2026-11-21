@@ -83,7 +83,8 @@ for it = 1:pt.nit
         is = 1 + strcmp(set, 'xi');
         if okp
             if k == 1, info.acc(is, mv, 1) = info.acc(is, mv, 1) + 1; end
-            if is == 2, which = 'love'; rr = find(wave == 1)'; else, which = 'both'; rr = 1:nrec; end
+            % xi changes Vsh, which both Love and Rayleigh waves see: recompute both
+            which = 'both'; rr = 1:nrec;
             [Sn, ok] = lr_common('disp', s, mn, cfg, Tdisp, fb, nm, which);
             if ok
                 Gn = s.G; Ln = s.Le;
