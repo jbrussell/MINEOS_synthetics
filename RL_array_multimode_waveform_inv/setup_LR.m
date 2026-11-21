@@ -84,7 +84,7 @@ cfg.zw = max(P.card_true.z(P.card_true.vsv == 0 & P.card_true.z < 20));   % wate
 cfg.moho = 7; cfg.zmin = 7; cfg.zmax = 350;
 cfg.lin = mineos_lin_setup(P.card_ref, P.K_ref_T, P.K_ref_S, P.phv_ref_T, P.phv_ref_S, ...
                            cfg.zw, cfg.zmin, cfg.zmax);
-cfg.need = true(numel(Tdisp), nm);
+cfg.need = isfinite(P.phv_ref_T) & isfinite(P.phv_ref_S);   % branch exists at the node
 cfg.Tdisp = Tdisp;
 % bottom end values tied to the reference model at zmax
 [~, ib_] = max(cfg.lin.z);
