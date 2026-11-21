@@ -139,7 +139,65 @@ low-dimensional, tempering-friendly posterior. The Laplace approximation is
 accurate when it is taken about the current conditional mode, hence the
 relinearization.
 
-RESULTS_PLACEHOLDER
+## Results (PA5 recovery test)
+
+Figures and summaries in `results/` (`plain/`: the run below;
+`baseline_plain/`: the earlier constant-τ run with sampled nuisance
+parameters). Both runs: 4 independent chains × 3000 iterations (1500 burn-in),
+split windows, step-1 reference throughout, η at the reference. The
+parallel-tempering run is pending.
+
+| | baseline (τ_n constant, τ and δθ sampled) | marginalized nuisance, τ_n(ω) (Kt = 3), relinearized every iteration |
+|---|---|---|
+| R-hat median Vsv / Vsh / ξ | 327 / 8.2 / 3.3 | **4.3 / 4.2 / 2.0** |
+| log L of the chains (each vs log L of PA5 with fitted nuisance parameters) | 386k–392k vs 368k | 400.4k–400.8k vs 385k |
+| truth inside 5–95%: Vsv / Vsh / ξ | 65 / 50 / 50 % | 73 / 53 / 38 % |
+| mean abs. error Vsv / Vsh (km/s), ξ | 0.19 / 0.27, 0.051 | 0.15 / 0.21, 0.072 |
+| σ / σ_true (L ovt, L fund, R ovt, R fund) | 1.47 1.57 1.19 1.42 | 1.41 1.14 1.15 1.02 |
+| ξ 7–60 / 60–160 / 160–250 / 250–350 km (true 1.08 / 1.06 / 1.00 / 1.00) | 1.14 / 1.09 / 1.02 / 0.92 | 1.01 / 1.14 / 0.98 / 0.91 |
+| time per iteration (4 chains on 4 cores) | ~1.8 s | ~3.3 s (4.3 s with other jobs sharing the CPU); relinearization is about half of it |
+
+What the second run shows:
+
+- **Convergence.** Marginalizing τ_n(ω), δθ_n(ω) and B_n(ω) with
+  relinearization improved the mixing a lot (the four chains now reach the
+  same log-likelihood, 400.4k–400.8k, and R-hat drops by one to two orders
+  of magnitude), but it is still not converged (R-hat 2–4).
+- **Fit vs truth.** The waveforms are fit closely
+  (`results/plain/fig4_waveform_fits_event1.png`: data, PREM, step-1
+  reference and final model) and the noise levels are close to the true
+  ones, yet the chains reach a log-likelihood ~15k **above** that of the
+  true structure. Within this forward model the truth is not the best fit:
+  the structure absorbs forward-model errors. The posterior Vsv oscillates
+  with depth and ξ sits on the prior bounds (~1.2 at 60–160 km, 0.90 below
+  250 km), and the truth is outside much of the 5–95% range.
+- **Why (D5, `results/plain/d5_linearization.txt`).** Full MINEOS vs the
+  linearized dispersion, rms per branch (km/s):
+
+  | | Love n = 0 | Love n ≥ 1 | Rayleigh n = 0 | Rayleigh n ≥ 1 |
+  |---|---|---|---|---|
+  | linearization error at the posterior mean | 0.050 | 0.008–0.040 | 0.014 | 0.013–0.030 |
+  | linearization error at the (projected) truth | 0.010 | 0.004–0.040 | 0.020 | 0.006–0.008 |
+  | not representable (projected truth − PA5) | 0.001 | 0.017–0.030 | 0.027 | 0.051–0.065 |
+  | … after adding PA5's η | 0.001 | 0.017–0.030 | 0.025 | 0.022–0.042 |
+  | … and PA5's Vp and ρ (no ratio scaling) | 0.003 | 0.011–0.023 | 0.003 | 0.009–0.017 |
+  | … and PA5 below 350 km | 0.002 | 0.003–0.007 | 0.003 | 0.002–0.005 |
+
+  The largest errors are not linearization errors but structure the model
+  cannot represent: **η** for the Rayleigh overtones, the **Vp/Vs and ρ/Vs
+  scaling** for the Rayleigh fundamental mode, and **PA5 below 350 km** for
+  the overtones of both. These are comparable to the phase-velocity signal
+  of the radial anisotropy itself, so the sampler bends Vsv and ξ to
+  compensate (e.g. the deep ξ at the lower bound).
+- **D6 not run.** An outer iteration would remove the linearization error
+  at the posterior mean (up to 0.05 km/s for the Love fundamental mode) but
+  not the unrepresentable part, and the posterior is not converged. More
+  useful next steps: `opt.eta_free = true` (η is the largest missing term
+  for the Rayleigh overtones), a deeper model (`cfg.zmax`) and, for the
+  Rayleigh fundamental mode, Vp and ρ not tied to Vs. The new defaults
+  (single surface-wave window, end-of-burn-in reference update) also apply
+  to the next run.
+
 
 ## Files in `./functions`
 

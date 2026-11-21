@@ -21,13 +21,18 @@
 %                  true dispersion the parameterization cannot represent
 %                  (PA5 below 350 km, its Vp/Vs and rho/Vs ratios, eta)
 %   E_mean       = MINEOS(posterior mean) - MINEOS(PA5)
+% and E_param is split by adding the true model step by step to the
+% projected truth (cumulative, MINEOS - PA5 after each step):
+%   + eta: PA5 eta between the Moho and 350 km
+%   + Vp, rho: PA5 Vpv, Vph and density there (instead of the scaling)
+%   + below 350 km: PA5 below 350 km (what remains is the crust/water)
 % Updating the reference (end of burn-in, D6) can reduce E_lin, not E_param.
 % MINEOS labels branches by their order at each frequency; near an
 % osculation (e.g. Love n = 0 and 1 in an oceanic lid) the labels of the
 % linearized and the MINEOS dispersion can differ.
 %
 % Output in opt.outdir: d5_linearization.txt, fig10_linearization.png,
-% d5<tag>.mat. Run after D3/D4. Takes ~5 min (4 MINEOS runs).
+% d5<tag>.mat. Run after D3/D4. Takes ~5 min (10 MINEOS runs).
 % Previous: D4_step2_plot_results.m. Next (optional):
 % D6_step2_update_reference_and_rerun.m
 
@@ -51,7 +56,8 @@ else
     Pr = prep_mineos_idagrn(optS);
     refname = sprintf('reference %s', optS.refid);
 end
-[rec, cfg] = apply_reference(rec, cfg, Pr, Tdisp, fb); clear Pr
+[rec, cfg] = apply_reference(rec, cfg, Pr, Tdisp, fb);
+card_true = Pr.card_true; clear Pr
 eta_ = isfield(mc, 'eta_free') && mc.eta_free;
 
 %% posterior mean
@@ -93,6 +99,41 @@ for k = 1:2
 end
 Ctr = {CtrueL, CtrueR};
 
+%% split of E_param: add the true model step by step (cumulative)
+zsf = cfg.card_ref.z - cfg.zw;
+tr_eta = card_at_depth(card_true, 'eta', zplot + cfg.zw);
+cA = ref_card_update(cfg.card_ref, cfg.zw, cfg.zmin, cfg.zmax, zplot, tru.vsv, tru.vsh, tr_eta);   % + eta
+in = find(zsf >= cfg.zmin - 1e-6 & zsf <= cfg.zmax + 1e-6 & cfg.card_ref.vsv > 0);
+atm = in(abs(zsf(in) - cfg.zmin) < 1e-6); if numel(atm) > 1, in = setdiff(in, atm(2:end)); end
+% true values at reference-card nodes, keeping discontinuities: of a node
+% pair at one depth (card order: deeper side first) the first takes the
+% value below, the second the value above
+zc_ = cfg.card_ref.z(:); nn_ = numel(zc_);
+up_ = [false; zc_(2:end) == zc_(1:end-1)];             % upper node of a pair
+tv_ = @(f, ii) arrayfun(@(i) card_at_depth(card_true, f, zc_(i), ifelse_side(up_(i))), ii(:));
+cB = cA;                                                                   % + true Vp, rho
+for f_ = {'vpv', 'vph', 'rho'}, cB.(f_{1})(in) = tv_(f_{1}, in); end
+cC = cB; deep = find(zsf > cfg.zmax + 1e-6);                               % + true below 350 km
+for f_ = {'vsv', 'vsh', 'vpv', 'vph', 'rho', 'eta'}, cC.(f_{1})(deep) = tv_(f_{1}, deep); end
+dcards = {cA, cB, cC}; dname = {'+ eta', '+ Vp, rho', '+ below 350 km'};
+Cdec = cell(3, 2);
+for k = 1:3
+    id_ = sprintf('RLinv_d5_dec%d%s', k, tag);
+    write_MINEOS_mod(dcards{k}, fullfile(opt.mdir, 'CARDS', [id_ '.card']));
+    copyfile(fullfile(opt.mdir, 'CARDS', [opt.premid '.qmod']), fullfile(opt.mdir, 'CARDS', [id_ '.qmod']));
+    mineos_lock(opt.mdir, 'acquire');
+    try
+        for wv = 1:2
+            TY = 'TS'; o = mineos_modes(opt.mdir, id_, TY(wv), nm, opt.maxF, Tdisp, []);
+            Cdec{k, wv} = o.phv(:, 1:nm);
+        end
+    catch err
+        mineos_lock(opt.mdir, 'release'); rethrow(err);
+    end
+    mineos_lock(opt.mdir, 'release');
+    fprintf('E_param split %s: MINEOS done\n', dname{k});
+end
+
 %% errors
 rmsn = @(X) sqrt(mean(X.^2, 1, 'omitnan'));
 if exist('OCTAVE_VERSION', 'builtin')
@@ -107,6 +148,7 @@ for wv = 1:2
     E.lin_true{wv} = rmsn(msk(Clin{2,wv} - Cmin{2,wv}));
     E.param{wv}    = rmsn(msk(Cmin{2,wv} - Ctr{wv}));
     E.mean{wv}     = rmsn(msk(Cmin{1,wv} - Ctr{wv}));
+    for k = 1:3, E.dec{k, wv} = rmsn(msk(Cdec{k,wv} - Ctr{wv})); end
 end
 fid = fopen(fullfile(outdir, 'd5_linearization.txt'), 'w');
 for fo = [1 fid]
@@ -119,10 +161,14 @@ for fo = [1 fid]
         fprintf(fo, '  E_lin(true)  linearized - MINEOS, projected truth   %s\n', mat2str(round(E.lin_true{wv}*1000)/1000));
         fprintf(fo, '  E_param      MINEOS: projected truth - PA5          %s\n', mat2str(round(E.param{wv}*1000)/1000));
         fprintf(fo, '  E_mean       MINEOS: posterior mean - PA5           %s\n', mat2str(round(E.mean{wv}*1000)/1000));
+        fprintf(fo, '  split of E_param (MINEOS - PA5, cumulative):\n');
+        for k = 1:3
+            fprintf(fo, '    %-16s                                 %s\n', dname{k}, mat2str(round(E.dec{k,wv}*1000)/1000));
+        end
     end
 end
 fclose(fid);
-save(fullfile(outdir, ['d5' tag '.mat']), 'Clin', 'Cmin', 'Ctr', 'E', 'pm', 'tr', 'Tdisp', 'refname');
+save(fullfile(outdir, ['d5' tag '.mat']), 'Clin', 'Cmin', 'Ctr', 'Cdec', 'E', 'pm', 'tr', 'Tdisp', 'refname');
 
 %% figure: differences vs period per branch
 fig = figure('position', [50 50 1400 650]);

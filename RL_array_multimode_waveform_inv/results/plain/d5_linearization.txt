@@ -1,0 +1,20 @@
+Run _plain, reference RLinv_step1; posterior mean of 1200 samples; eta at the reference
+rms phase-velocity differences (km/s) per branch n = 0..7
+Love
+  E_lin(mean)  linearized - MINEOS, posterior mean   [0.05 0.028 0.04 0.038 0.009 0.017 0.008 0.008]
+  E_lin(true)  linearized - MINEOS, projected truth   [0.01 0.04 0.015 0.011 0.005 0.004 0.004 0.006]
+  E_param      MINEOS: projected truth - PA5          [0.001 0.02 0.02 0.018 0.018 0.017 0.019 0.03]
+  E_mean       MINEOS: posterior mean - PA5           [0.062 0.038 0.015 0.032 0.037 0.037 0.032 0.04]
+  split of E_param (MINEOS - PA5, cumulative):
+    + eta                                            [0.001 0.02 0.02 0.018 0.018 0.017 0.019 0.03]
+    + Vp, rho                                        [0.003 0.011 0.015 0.015 0.017 0.017 0.018 0.023]
+    + below 350 km                                   [0.002 0.003 0.004 0.005 0.005 0.005 0.006 0.007]
+Rayleigh
+  E_lin(mean)  linearized - MINEOS, posterior mean   [0.014 0.03 0.02 0.021 0.018 0.021 0.013 0.015]
+  E_lin(true)  linearized - MINEOS, projected truth   [0.02 0.007 0.008 0.007 0.006 0.006 0.008 0.007]
+  E_param      MINEOS: projected truth - PA5          [0.027 0.051 0.065 0.064 0.06 0.056 0.055 0.064]
+  E_mean       MINEOS: posterior mean - PA5           [0.023 0.072 0.075 0.048 0.033 0.034 0.035 0.034]
+  split of E_param (MINEOS - PA5, cumulative):
+    + eta                                            [0.025 0.028 0.028 0.024 0.022 0.022 0.026 0.042]
+    + Vp, rho                                        [0.003 0.009 0.014 0.016 0.017 0.017 0.017 0.017]
+    + below 350 km                                   [0.003 0.002 0.004 0.005 0.005 0.005 0.005 0.005]
