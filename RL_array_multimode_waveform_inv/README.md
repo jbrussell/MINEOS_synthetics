@@ -73,6 +73,8 @@ be run on their own.
 
 ## Step 2: multimode waveform inversion
 
+A full description with equations and notation: `docs/step2_waveform_inversion.tex` (PDF alongside).
+
 | | |
 |---|---|
 | events | 15 real 2012 Pacific-rim events, Mw 6.4–7.8, 33–86° (`events_nomelt_2012.cmt`) |
