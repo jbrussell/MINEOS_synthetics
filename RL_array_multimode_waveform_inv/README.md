@@ -50,8 +50,8 @@ $ ENSEMBLES="2" octave-cli --eval "opt.sampler='pt'; D3_step2_waveform_inv" &
 ```
 
 With parallel processes, create the setup first (with `CHAINS="[]"` or
-`ENSEMBLES="[]"`, which also runs the PT pilot chain), then start the
-chains/ensembles.
+`ENSEMBLES="[]"`: Gauss–Newton fits of the nuisance parameters at the
+reference and at the true dispersion), then start the chains/ensembles.
 
 **Naming:** `D#_*.m` are the drivers, run in that order;
 `parameters_RL.m` holds the settings for all of them. Everything else is in
@@ -82,11 +82,46 @@ be run on their own.
 | dispersion | MINEOS phase velocities of the step-1 model + MINEOS kernels × model perturbation, with Vp and ρ scaled to Vs (`functions/mineos_lin_setup.m`) |
 | windows | from the step-1 model's MINEOS group velocities: overtone window from Δ/(max U of branches 1–7 + 0.6 km/s) to Δ/(max U₀ + 0.2), fundamental window from there to Δ/(min U₀ − 0.35) + 60 s |
 | model | Vsv and ξ as transdimensional cubic B-splines from the Moho (7 km below the seafloor) to 350 km, bottom tied to the reference |
-| nuisance | per record and branch: smooth spectral correction B_n(ω) (marginalized), time shift τ_n, frequency-dependent arrival angle δθ_n(ω) |
+| nuisance | per record and branch: smooth spectral correction B_n(ω), frequency-dependent time shift τ_n(ω) and arrival angle δθ_n(ω) (see below) |
 | noise | AR(1)-correlated, σ and r per window type, sampled hierarchically |
 
 There is no path correction: the step-1 reference already predicts the
 fundamental-mode Rayleigh path within the range the time shifts absorb.
+
+### Nuisance parameters
+
+For each record j and modeled branch n the predicted spectrum is
+
+U_jn(ω) = B_n(ω) · U_ref,jn(ω) · exp(−iω τ_n(ω)) · exp(−iω [Δ/c_n(ω) − Δ/c_ref,n(ω)]) (+ the δθ_n(ω) term),
+
+with B on 3 hat functions, τ_n(ω) on `opt.spec_Kt` Legendre terms in
+frequency (default 3: constant + linear + quadratic; Kt = 1 is a constant
+shift) and δθ_n(ω) on 2 Legendre terms. A frequency-dependent τ_n absorbs
+what a constant shift cannot: the overtone path delays relative to the
+reference are frequency dependent, because the 3-D/1-D structure the
+reference misses is sampled differently at each period.
+
+| option | values | meaning |
+|---|---|---|
+| `opt.nuisance` | `'marginal'` (default) | B, τ and δθ integrated out (Laplace approximation about a linearization point); only Vsv, ξ and the noise are sampled. Works with both samplers. |
+| | `'sample'` | τ and δθ sampled by Metropolis with the exact waveforms, B integrated out (plain sampler only) |
+| `opt.relin` | 1 (default) | the linearization points of τ, δθ and B of every state are moved to their conditional posterior mean (one Gauss–Newton step, clamped to ±2 s / ±3°) every `relin` iterations, i.e. before every proposal by default; larger values are cheaper and less accurate |
+| `opt.spec_Kt` | 3 | number of τ_n(ω) terms |
+| `opt.tau_prior`, `opt.dtau_prior` | 15 s, 10 s | prior std of the constant term and of the higher τ terms |
+
+The initial linearization points come from a Gauss–Newton fit at the
+reference dispersion with *continuation* (`functions/spec_refine.m`): a
+constant τ_n first, then all terms. Freeing all terms at once lets
+overlapping branches trade delays and ends in poorer minima (at the true
+structure, median χ² of the Love fundamental windows 2.0 without and 1.13
+with the continuation).
+
+Why marginalize: sampling τ and δθ (9 × 8 × 30 extra parameters) mixes
+slowly and couples to the structure, so different chains settle in
+different (τ, structure) combinations; integrating them out leaves a
+low-dimensional, tempering-friendly posterior. The Laplace approximation is
+accurate when it is taken about the current conditional mode, hence the
+relinearization.
 
 RESULTS_PLACEHOLDER
 
@@ -99,7 +134,8 @@ RESULTS_PLACEHOLDER
 | `mineos_modes.m`, `idagrn_synth.m` | MINEOS tables/dispersion/kernels of any branch; idagrn6 full or single-branch seismograms |
 | `make_ref_card.m`, `isotropic_card.m`, `card_at_depth.m` | cards: PREM under the PA5 crust, isotropic version, values at depth |
 | `mineos_lin_setup.m`, `mineos_dispersion.m` | MINEOS dispersion of a model, Vp and ρ scaled to Vs |
-| `run_chain_LR.m`, `run_pt_LR.m`, `pt_pilot_LR.m`, `spec_refine.m`, `lr_common.m` | samplers |
+| `run_pt_LR.m` (plain and PT, marginalized nuisance), `run_chain_LR.m` (sampled nuisance), `lr_common.m` | samplers |
+| `spec_refine.m`, `nuis_relin.m`, `nuis_zero.m`, `spec_layout.m`, `spec_basis.m` | nuisance linearization points, Gauss–Newton / relinearization step, parameter layout and frequency bases |
 | `event_G_spec.m`, `event_loglike_ar.m`, … | waveform operator and likelihood (from `nomelt_LR4`) |
 | `fit_nuisance_LR.m` | best nuisance fit for a fixed structure (log L of the truth) |
 | `update_reference.m` | optional further iteration: reference card from a posterior mean, MINEOS + idagrn6 rerun |
