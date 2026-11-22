@@ -244,7 +244,8 @@ for e0 = unique([1 min(8, max([rec.event]))])
             if any(iF), patch([min(tt(iF)) max(tt(iF)) max(tt(iF)) min(tt(iF))], ymax*[-1 -1 1 1], ...
                     [0.85 0.92 1], 'edgecolor', 'none'); end
             hd = plot(tt(s), rec(r).d(s), 'k-', 'linewidth', 1.5);
-            hp = plot(tt(s), rec(r).start(s), '-', 'color', [0 0.6 0]);
+            if isfield(rec, 'start'), hp = plot(tt(s), rec(r).start(s), '-', 'color', [0 0.6 0]);
+            else, hp = plot(NaN, NaN, '-', 'color', [0 0.6 0]); end    % setup made without step-1 start synthetics
             hr = plot(tt(s), rec(r).refsyn(s), '-', 'color', [0.3 0.3 1]);
             hf = plot(tt(s), p1(s), '-', 'color', [0.85 0.1 0.1], 'linewidth', 1);
             ylim(ymax*[-1 1]); ylabel(sta{pick(q)});
