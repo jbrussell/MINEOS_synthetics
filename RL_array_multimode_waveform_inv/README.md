@@ -13,7 +13,8 @@ reference model whose mode branches resemble the data's:
    phase velocities (20–100 s, MINEOS) are inverted for an isotropic Vs
    model (ξ = 1) with the linearized MINEOS inversion of
    `../run_MINEOS/c2_RLphv_inv_vsvh_vpvh_rho_eta.m`, starting from an
-   isotropic PREM. The result has a lid and a low-velocity zone.
+   isotropic PREM or (`opt.s1_start_model = 'true_smooth'`) an isotropic
+   PA5 without its lid/LVZ and with PA5's Vp/Vs, ρ/Vs and η.
 2. **Multimode waveform inversion** (`D2`–`D4`): Love + Rayleigh
    waveforms (17–112 s) are inverted for Vsv, Vsh and ξ with rjMcMC,
    using the step-1 model as the reference for the per-branch spectra,
@@ -72,11 +73,26 @@ be run on their own.
 
 - Data: MINEOS phase velocities of PA5, fundamental-mode Rayleigh,
   12 periods at 20–100 s, uncertainty 0.5%.
-- Start: PREM below the PA5 Moho (12 km below sea level) with the PA5
-  water, sediments and crust above it, made isotropic (Voigt average,
-  η = 1; `functions/make_ref_card.m`, `functions/isotropic_card.m`).
+- Start (`opt.s1_start_model`):
+  - `'prem'` (default): PREM below the PA5 Moho (12 km below sea level)
+    with the PA5 water, sediments and crust above it, made isotropic
+    (Voigt average, η = 1; `functions/make_ref_card.m`,
+    `functions/isotropic_card.m`).
+  - `'true_smooth'`: PA5 made isotropic (Voigt average) with its lid/LVZ
+    structure averaged away: below the Moho the isotropic Vs is smoothed
+    with a Gaussian (σ = `opt.s1_smooth_sig` = 60 km, over the mantle
+    above the 410 only) and tapered back into PA5 between 200 and 300 km
+    (`opt.s1_smooth_blend`), so there is no lid and no sharp LVZ (Vs falls
+    smoothly from 4.59 km/s below the Moho to 4.39 km/s at 166 km). Vpv/Vsv,
+    Vph/Vsh, ρ/Vsv, η and Q (`opt.ref_qmod`) are those of PA5 at every node,
+    and they are imposed exactly on the step-1 result, so the step-2
+    reference has PA5's Vp/Vs, ρ/Vs and η (and PA5 below 300 km): with
+    the true Vsv and Vsh it would reproduce PA5 exactly
+    (`functions/smooth_lid_lvz_card.m`). Because ρ/Vs jumps at PA5's
+    discontinuities (68.5 and 166 km) and Vs is smooth there, the reference
+    density has small jumps at those depths.
 - Inversion: `run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Eta.m` (the engine of
-  `c2`) with Rayleigh data only, ξ damped to 1 (ε_ξ = 100), η damped to 1,
+  `c2`) with Rayleigh data only, ξ damped to 1 (ε_ξ = 100), η damped to the start,
   smoothing broken only at the crustal discontinuities, MINEOS phase
   velocities and kernels recalculated after each of 4 iterations.
 

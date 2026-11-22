@@ -5,7 +5,9 @@
 % Step 1 (D1): fundamental-mode Rayleigh phase velocities (MINEOS, 20-100 s)
 %   -> isotropic Vsv model (xi = 1), linearized inversion as in
 %   ../run_MINEOS/c2_RLphv_inv_vsvh_vpvh_rho_eta.m. True model PA5, starting
-%   model isotropic PREM (with the PA5 water/sediments/crust).
+%   model isotropic PREM (with the PA5 water/sediments/crust), or, with
+%   opt.s1_start_model = 'true_smooth', isotropic PA5 without its lid/LVZ
+%   structure and with the PA5 Vp/Vs, rho/Vs and eta.
 % Step 2 (D2-D4): multimode Love + Rayleigh array waveform inversion
 %   (rjMcMC) for Vsv, Vsh and xi, with the step-1 model as the reference.
 %   Data: idagrn6 seismograms of PA5 with branches 0..nbranch_data-1;
@@ -30,7 +32,16 @@ opt = opt_defaults(opt, struct( ...
     ... % ---- step 1: isotropic Rayleigh inversion (D1) ----
     's1_periods',   logspace(log10(20), log10(100), 12), ...   % (s)
     's1_cstd',      0.005, ...           % data uncertainty (fraction of c)
-    's1_start',     'RLinv_prem_iso', ...% isotropic PREM starting card (written to CARDS)
+    's1_start_model', 'prem', ...        % starting model of step 1 (and the source of the Vp/Vs, rho/Vs
+    ...                                  %   and eta of the step-2 reference): 'prem' = isotropic PREM below
+    ...                                  %   the PA5 Moho; 'true_smooth' = isotropic PA5 with the lid/LVZ
+    ...                                  %   smoothed away (Gaussian, s1_smooth_sig km, tapered into PA5 over
+    ...                                  %   s1_smooth_blend km) and the Vp/Vs, rho/Vs, eta and Q of PA5
+    's1_smooth_sig', 60, 's1_smooth_blend', [200 300], ...
+    'ref_qmod',     '', ...              % Q (.qmod) of the step-1 and step-2 reference cards ('' = premid,
+    ...                                  %   or trueid with s1_start_model = 'true_smooth')
+    's1_start',     '', ...              % starting card (written to CARDS; '' = RLinv_prem_iso or
+    ...                                  %   RLinv_true_smooth, by s1_start_model)
     's1_work',      'RLinv_s1_work', ... % card used for the MINEOS recalculations
     's1_final',     'RLinv_step1', ...   % step-1 model (written to CARDS): the step-2 reference
     's1_file',      'step1_result.mat', ...
@@ -68,6 +79,12 @@ opt = opt_defaults(opt, struct( ...
     'nchains',  4, 'nit', 3000, 'burn', 1500, ...           % plain sampler
     'nens',     2, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750 ... % parallel tempering
     ));
+if isempty(opt.s1_start)
+    if strcmp(opt.s1_start_model, 'true_smooth'), opt.s1_start = 'RLinv_true_smooth'; else, opt.s1_start = 'RLinv_prem_iso'; end
+end
+if isempty(opt.ref_qmod)
+    if strcmp(opt.s1_start_model, 'true_smooth'), opt.ref_qmod = opt.trueid; else, opt.ref_qmod = opt.premid; end
+end
 if ~isfield(opt, 'tag'), opt.tag = ['_' opt.sampler]; end
 if ~isfield(opt, 'outdir'), opt.outdir = ['figs' opt.tag]; end
 clear here_ mdir_

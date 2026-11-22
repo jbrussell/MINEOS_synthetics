@@ -50,6 +50,7 @@ P.mdir = og('mdir', fullfile(here, '..', 'run_MINEOS'));
 addpath(fullfile(P.mdir, 'functions'));
 P.trueid = og('trueid', 'pa5_5km');
 P.premid = og('premid', 'prem_35');
+P.ref_qmod = og('ref_qmod', P.premid);       % Q of the reference card
 P.refid  = og('refid', 'prem_nomelt');
 P.zmoho  = og('zmoho', 12);
 P.maxF   = og('maxF', 70);
@@ -71,7 +72,7 @@ if isempty(rc)
     P.card_ref = make_ref_card(P.mdir, P.refid, P.premid, P.trueid, P.zmoho);
 else
     write_MINEOS_mod(rc, fullfile(P.mdir, 'CARDS', [P.refid, '.card']));
-    copyfile(fullfile(P.mdir, 'CARDS', [P.premid, '.qmod']), fullfile(P.mdir, 'CARDS', [P.refid, '.qmod']));
+    copyfile(fullfile(P.mdir, 'CARDS', [P.ref_qmod, '.qmod']), fullfile(P.mdir, 'CARDS', [P.refid, '.qmod']));
     P.card_ref = read_model_card(fullfile(P.mdir, 'CARDS', [P.refid, '.card']));
 end
 P.card_true = read_model_card(fullfile(P.mdir, 'CARDS', [P.trueid, '.card']));

@@ -83,7 +83,7 @@ for k = 1:2
     [Clin{k,1}, Clin{k,2}] = mineos_lin_disp(cfg.lin, vsv_n, vsh_n, eta_n, 'both');
     card = ref_card_update(cfg.card_ref, cfg.zw, cfg.zmin, cfg.zmax, zplot, M.vsv, M.vsh, M.eta);
     write_MINEOS_mod(card, fullfile(opt.mdir, 'CARDS', [cardid{k} '.card']));
-    copyfile(fullfile(opt.mdir, 'CARDS', [opt.premid '.qmod']), fullfile(opt.mdir, 'CARDS', [cardid{k} '.qmod']));
+    copyfile(fullfile(opt.mdir, 'CARDS', [optget(opt, 'ref_qmod', opt.premid) '.qmod']), fullfile(opt.mdir, 'CARDS', [cardid{k} '.qmod']));
     mineos_lock(opt.mdir, 'acquire');
     try
         for wv = 1:2
@@ -120,7 +120,7 @@ Cdec = cell(3, 2);
 for k = 1:3
     id_ = sprintf('RLinv_d5_dec%d%s', k, tag);
     write_MINEOS_mod(dcards{k}, fullfile(opt.mdir, 'CARDS', [id_ '.card']));
-    copyfile(fullfile(opt.mdir, 'CARDS', [opt.premid '.qmod']), fullfile(opt.mdir, 'CARDS', [id_ '.qmod']));
+    copyfile(fullfile(opt.mdir, 'CARDS', [optget(opt, 'ref_qmod', opt.premid) '.qmod']), fullfile(opt.mdir, 'CARDS', [id_ '.qmod']));
     mineos_lock(opt.mdir, 'acquire');
     try
         for wv = 1:2
