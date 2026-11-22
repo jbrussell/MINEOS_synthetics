@@ -121,6 +121,6 @@ if og('prem_synth', 0)
     end
 end
 
-tmpf = sprintf('prep_%d.mat', round(1e6*rand));
+tmpf = tmp_name('prep');
 save(tmpf, 'P'); movefile(tmpf, prepfile);
 end

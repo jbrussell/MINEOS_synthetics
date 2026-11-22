@@ -84,7 +84,7 @@ else
     % to it (idagrn data have no "true" nuisance parameters)
     Ltrue = fit_nuisance_LR(rec, Ctrue_f, sig_true, rho_emp, cfg, mc, nm);
     fprintf('logL of the true structure (fitted nuisance, sigma_true): %.1f\n', Ltrue);
-    tmpf = sprintf('setup_%d.mat', round(1e6*rand));
+    tmpf = tmp_name('setup');
     save(tmpf, 'tru', 'refp', 'cfg', 'mc', 'Tdisp', 'CtrueL', 'CtrueR', 'CrefL', 'CrefR', 'ClinL', 'ClinR', ...
          'zplot', 'sig_true', 'rho_emp', 'rec', 'sta', 'Ltrue', 'fb', 'nm', 'outdir', 'tag', 'pd', ...
          'opt', 'ev', 'lin0', 'pt');
@@ -169,7 +169,7 @@ elseif ~isempty(runs)
                 U.Ltrue = fit_nuisance_LR(rec_u, Ctrue_f, sig_true, rho_emp, cfg_u, mc, nm);
                 fprintf('logL of the true structure with the updated reference: %.1f (was %.1f)\n', U.Ltrue, Ltrue);
             end
-            tmpf = sprintf('refupd_%d.mat', round(1e6*rand)); save(tmpf, 'U'); movefile(tmpf, updf);
+            tmpf = tmp_name('refupd'); save(tmpf, 'U'); movefile(tmpf, updf);
             rmdir(lockd); clear Pu rec_u cfg_u Cu_f B
         else
             fprintf('waiting for the burn-in of all chains/ensembles and the reference update (%s)\n', updf);
