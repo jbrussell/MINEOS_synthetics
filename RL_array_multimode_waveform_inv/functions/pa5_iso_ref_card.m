@@ -16,7 +16,7 @@ function c = pa5_iso_ref_card(ct, zmoho, zlin)
 %     unchanged above the Moho and below zlin.
 % With the true Vsv and Vsh in place of the line, the model is ct.
 %
-% Used by D2_step2_prep_mineos_idagrn.m with opt.ref_model = 'pa5_iso'.
+% Used by D1_step1_rayleigh_isotropic_inv.m (opt.s1_start_model = 'pa5_iso') as the step-1 starting model.
 z = ct.z(:);
 vs_iso = sqrt((2*ct.vsv.^2 + ct.vsh.^2)/3);
 % mantle side of the Moho: the deeper node of the pair at zmoho

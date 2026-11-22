@@ -203,13 +203,14 @@ for wv = 1:2
         rec(r).scale = max(abs(clean(idx)));
         rec(r).clean = clean(idx) / rec(r).scale;
         rec(r).Dj = Dj;
-        % for the waveform figures: PREM (all branches, no nuisance correction)
-        if isfield(P, ['u_prem_' uname{wv}])
-            X = fft(P.(['u_prem_' uname{wv}]){e}(it, :) .* segtap);
+        % for the waveform figures: the step-1 starting model (all branches,
+        % no nuisance correction)
+        if isfield(P, ['u_start_' uname{wv}])
+            X = fft(P.(['u_start_' uname{wv}]){e}(it, :) .* segtap);
             Y = zeros(cfg.N, Nst); Y(cfg.ib, :) = X(cfg.ib, :) .* taper;
-            u = 2*real(ifft(Y)); rec(r).prem = u(idx) / rec(r).scale;
+            u = 2*real(ifft(Y)); rec(r).start = u(idx) / rec(r).scale;
         else
-            rec(r).prem = NaN(size(idx));
+            rec(r).start = NaN(size(idx));
         end
     end
 end

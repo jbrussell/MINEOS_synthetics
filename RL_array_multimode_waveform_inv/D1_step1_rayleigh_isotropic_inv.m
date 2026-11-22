@@ -5,13 +5,21 @@
 % inversion engine of ../run_MINEOS/c2_RLphv_inv_vsvh_vpvh_rho_eta.m
 % (run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Eta.m):
 %   - data: MINEOS phase velocities of the true model (PA5), branch 0
-%   - starting model: isotropic PREM (Voigt average) below the PA5 Moho, PA5
-%     water/sediments/crust above it
-%   - xi held at 1 (eps_xi large, starting xi = 1), eta held at 1
-%   - Vpv/Vsv, Vph/Vsh and rho/Vsv held at the starting-model ratios
+%   - starting model (opt.s1_start_model):
+%       'pa5_iso' (default) isotropic PA5 without its lid/LVZ: between the
+%                 Moho and opt.s1_zlin (250 km below sea level) Vs is a
+%                 straight line between the Voigt Vs of PA5 at those depths;
+%                 Vpv/Vsv, Vph/Vsh, rho/Vsv, eta and Q of PA5 at every node;
+%                 PA5 elsewhere (functions/pa5_iso_ref_card.m)
+%       'prem'    isotropic PREM (Voigt average) below the PA5 Moho, PA5
+%                 water/sediments/crust above it, eta = 1
+%   - xi held at 1 (eps_xi large, starting xi = 1), eta held at the start
+%   - Vpv/Vsv, Vph/Vsh and rho/Vsv held at the starting-model ratios; with
+%     'pa5_iso' these ratios and eta are imposed exactly on the result, so
+%     the step-2 reference has PA5's Vp/Vs, rho/Vs and eta
 %   - MINEOS phase velocities and kernels recalculated after every iteration
 % The result (CARDS/<opt.s1_final>.card) is the reference model of step 2:
-% an isotropic model with a lid and a low-velocity zone instead of PREM.
+% an isotropic model with a lid and a low-velocity zone.
 %
 % Run from this folder. Needs the MINEOS binaries (../FORTRAN/bin).
 % Output: opt.s1_file (step1_result.mat), figs_step1/.
@@ -27,11 +35,18 @@ if ~exist('figs_step1', 'dir'), mkdir('figs_step1'); end
 
 %% models
 card_prem = make_ref_card(mdir, opt.premref, opt.premid, opt.trueid, opt.zmoho);  % anisotropic PREM + PA5 crust
-card_start = isotropic_card(card_prem);
+card_true = read_model_card(fullfile(mdir, 'CARDS', [opt.trueid '.card']));
+pa5iso = strcmp(opt.s1_start_model, 'pa5_iso');
+if pa5iso
+    card_start = pa5_iso_ref_card(card_true, opt.zmoho, opt.s1_zlin);
+    start_lbl = 'start (isotropic PA5, no lid/LVZ)';
+else
+    card_start = isotropic_card(card_prem);
+    start_lbl = 'start (isotropic PREM)';
+end
 fstart = fullfile(mdir, 'CARDS', [opt.s1_start '.card']);
 write_MINEOS_mod(card_start, fstart);
-copyfile(fullfile(mdir, 'CARDS', [opt.premid '.qmod']), fullfile(mdir, 'CARDS', [opt.s1_start '.qmod']));
-card_true = read_model_card(fullfile(mdir, 'CARDS', [opt.trueid '.card']));
+copyfile(fullfile(mdir, 'CARDS', [opt.ref_qmod '.qmod']), fullfile(mdir, 'CARDS', [opt.s1_start '.qmod']));
 
 %% data: fundamental-mode Rayleigh phase velocities of the true model
 periods = opt.s1_periods(:);
@@ -53,8 +68,23 @@ cstart = unc.cstart;
 cd(here);
 
 %% step-1 model: the reference of step 2
+if pa5iso
+    % impose the starting (= PA5) Vp/Vs, rho/Vs and eta exactly (the
+    % inversion holds them with finite weights only); Vsh = Vsv (xi = 1)
+    so_ = card_start.vsv > 0;
+    card_final.vsh(so_) = card_final.vsv(so_);
+    card_final.vpv(so_) = card_start.vpv(so_)./card_start.vsv(so_).*card_final.vsv(so_);
+    card_final.vph(so_) = card_start.vph(so_)./card_start.vsh(so_).*card_final.vsh(so_);
+    card_final.rho(so_) = card_start.rho(so_)./card_start.vsv(so_).*card_final.vsv(so_);
+    card_final.eta = card_start.eta;
+    cd(mdir);                                  % phase velocities of the final card
+    write_MINEOS_mod(card_final, fullfile('CARDS', [opt.s1_work '.card']));
+    copyfile(fullfile('CARDS', [opt.ref_qmod '.qmod']), fullfile('CARDS', [opt.s1_work '.qmod']));
+    cpre = run_mineos_phv_kernels(opt.s1_work, 'R', periods, 0, 0);
+    cd(here);
+end
 write_MINEOS_mod(card_final, fullfile(mdir, 'CARDS', [opt.s1_final '.card']));
-copyfile(fullfile(mdir, 'CARDS', [opt.premid '.qmod']), fullfile(mdir, 'CARDS', [opt.s1_final '.qmod']));
+copyfile(fullfile(mdir, 'CARDS', [opt.ref_qmod '.qmod']), fullfile(mdir, 'CARDS', [opt.s1_final '.qmod']));
 fprintf('Rayleigh fundamental mode, reduced chi^2: start %.1f, final %.2f\n', ...
     mean(((cobs - cstart)./cstd).^2), mean(((cobs - cpre)./cstd).^2));
 save(opt.s1_file, 'card_prem', 'card_start', 'card_final', 'card_true', 'cobs', 'cstd', ...
@@ -72,7 +102,7 @@ h3 = plot(cp(card_prem, 'vsv'), zp, '-', 'color', [0 0.6 0], 'linewidth', 1);
 h4 = plot(cp(card_start, 'vsv'), zp, 'g-', 'linewidth', 1.5);
 h5 = plot(cp(card_final, 'vsv'), zp, 'b-', 'linewidth', 2);
 set(gca, 'ydir', 'reverse'); ylim([0 400]); xlim([3.9 5]); xlabel('V_S (km/s)'); ylabel('Depth below seafloor (km)');
-legend([h1 h2 h3 h4 h5], {'PA5 V_{SV}', 'PA5 V_{SH}', 'PREM V_{SV}', 'start (isotropic PREM)', 'step 1 (isotropic)'}, ...
+legend([h1 h2 h3 h4 h5], {'PA5 V_{SV}', 'PA5 V_{SH}', 'PREM V_{SV}', start_lbl, 'step 1 (isotropic)'}, ...
     'location', 'southwest', 'fontsize', 8);
 title('Step 1: isotropic V_S from Rayleigh n = 0');
 subplot(1, 3, 2); hold on; box on;

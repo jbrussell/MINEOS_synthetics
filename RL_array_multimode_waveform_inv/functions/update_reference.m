@@ -21,11 +21,11 @@ function P = update_reference(vsv, vsh, zp, cfg, opt, refid_new, prepfile_new, e
 if exist(prepfile_new, 'file') == 2
     P = load(prepfile_new); P = P.P; fprintf('loaded %s\n', prepfile_new); return
 end
-Pold = prep_mineos_idagrn(opt);                 % cached: true data, PREM synthetics
+Pold = prep_mineos_idagrn(opt);                 % cached: true data, step-1 start synthetics
 if nargin < 8, eta = []; end
 c = ref_card_update(cfg.card_ref, cfg.zw, cfg.zmin, cfg.zmax, zp, vsv, vsh, eta);
 o = opt; o.prepfile = prepfile_new; o.refid = refid_new; o.ref_card = c;
-o.P_true = Pold; o.prem_synth = 0;
+o.P_true = Pold; o.start_synth = 0;
 mineos_lock(opt.mdir, 'acquire');
 try
     P = prep_mineos_idagrn(o);
@@ -33,8 +33,8 @@ catch err
     mineos_lock(opt.mdir, 'release'); rethrow(err);
 end
 mineos_lock(opt.mdir, 'release');
-for TY = 'TS'                                    % PREM synthetics for the figures
-    f = ['u_prem_' TY];
+for TY = 'TS'                                    % step-1 start synthetics for the figures
+    f = ['u_start_' TY];
     if isfield(Pold, f), P.(f) = Pold.(f); end
 end
 save(prepfile_new, 'P');

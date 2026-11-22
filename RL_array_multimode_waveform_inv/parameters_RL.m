@@ -5,10 +5,11 @@
 % Step 1 (D1): fundamental-mode Rayleigh phase velocities (MINEOS, 20-100 s)
 %   -> isotropic Vsv model (xi = 1), linearized inversion as in
 %   ../run_MINEOS/c2_RLphv_inv_vsvh_vpvh_rho_eta.m. True model PA5, starting
-%   model isotropic PREM (with the PA5 water/sediments/crust).
+%   model an isotropic PA5 without its lid/LVZ (Vs linear in depth from the
+%   Moho to 250 km) with the Vp/Vs, rho/Vs, eta and Q of PA5
+%   (opt.s1_start_model = 'pa5_iso'), or isotropic PREM ('prem').
 % Step 2 (D2-D4): multimode Love + Rayleigh array waveform inversion
-%   (rjMcMC) for Vsv, Vsh and xi, with the step-1 model as the reference
-%   (or, with opt.ref_model = 'pa5_iso', an isotropic PA5 without lid/LVZ).
+%   (rjMcMC) for Vsv, Vsh and xi, with the step-1 model as the reference.
 %   Data: idagrn6 seismograms of PA5 with branches 0..nbranch_data-1;
 %   modeled: branches 0..nm-1.
 % In both steps Vpv, Vph and density follow Vsv and Vsh with the
@@ -31,7 +32,11 @@ opt = opt_defaults(opt, struct( ...
     ... % ---- step 1: isotropic Rayleigh inversion (D1) ----
     's1_periods',   logspace(log10(20), log10(100), 12), ...   % (s)
     's1_cstd',      0.005, ...           % data uncertainty (fraction of c)
-    's1_start',     'RLinv_prem_iso', ...% isotropic PREM starting card (written to CARDS)
+    's1_start_model', 'pa5_iso', ...     % starting model of step 1: 'pa5_iso' = isotropic PA5 without lid/LVZ
+    ...                                  %   (Vs linear in depth from the Moho to s1_zlin km, PA5 Vp/Vs, rho/Vs,
+    ...                                  %   eta and Q; functions/pa5_iso_ref_card.m); 'prem' = isotropic PREM
+    's1_zlin',      250, ...             % (km below sea level) 'pa5_iso': PA5 below this depth
+    's1_start',     '', ...              % starting card (written to CARDS; '' = RLinv_pa5iso or RLinv_prem_iso)
     's1_work',      'RLinv_s1_work', ... % card used for the MINEOS recalculations
     's1_final',     'RLinv_step1', ...   % step-1 model (written to CARDS): the step-2 reference
     's1_file',      'step1_result.mat', ...
@@ -41,18 +46,15 @@ opt = opt_defaults(opt, struct( ...
     's1_nit',       4, ...               % iterations (MINEOS recalculated after each)
     ... % ---- step 2: MINEOS + idagrn6 (D2) ----
     'prepfile',     'prep_step2.mat', ...
-    'ref_model',    'step1', ...         % reference model of step 2: 'step1' = the step-1 result (D1);
-    ...                                  %   'pa5_iso' = isotropic PA5 without lid/LVZ: Vs linear in depth
-    ...                                  %   from the Moho to ref_zlin km, PA5 Vp/Vs, rho/Vs, eta and Q
-    ...                                  %   (functions/pa5_iso_ref_card.m; D1 not needed)
-    'ref_zlin',     250, ...             % (km below sea level) 'pa5_iso': PA5 below this depth
-    'refid',        '', ...              % reference card of step 2 ('' = s1_final, or RLinv_pa5iso)
-    'ref_qmod',     '', ...              % Q (.qmod) of the reference card ('' = premid, trueid for 'pa5_iso')
+    'refid',        'RLinv_step1', ...   % reference card of step 2 (= s1_final)
+    'ref_qmod',     '', ...              % Q (.qmod) of the step-1 and step-2 cards ('' = trueid for
+    ...                                  %   s1_start_model = 'pa5_iso', premid for 'prem')
     'nbranch_data', 16, ...              % branches 0..15 in the PA5 data
     'nm',           8, ...               % branches 0..7 modeled
     'maxF',         70, ...              % mode tables up to (mHz)
     'dt',           4, 'len_hr', 1.25, ...
-    'prem_synth',   1, ...               % PREM synthetics for the waveform figures
+    'start_synth',  1, ...               % idagrn6 seismograms of the step-1 starting model (all branches)
+    ...                                  %   for the waveform figures and record sections
     ... % ---- step 2: inversion (D3) ----
     'sampler',  'plain', ...             % 'plain' (independent rjMcMC chains) or 'pt' (parallel tempering)
     'nuisance', 'marginal', ...          % tau_n(w), dth_n(w), B_n(w): 'marginal' (integrated out,
@@ -75,9 +77,9 @@ opt = opt_defaults(opt, struct( ...
     'nchains',  4, 'nit', 3000, 'burn', 1500, ...           % plain sampler
     'nens',     2, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750 ... % parallel tempering
     ));
-pa5iso_ = strcmp(opt.ref_model, 'pa5_iso');
-if ~pa5iso_ && ~strcmp(opt.ref_model, 'step1'), error('opt.ref_model must be ''step1'' or ''pa5_iso'''); end
-if isempty(opt.refid), if pa5iso_, opt.refid = 'RLinv_pa5iso'; else, opt.refid = opt.s1_final; end, end
+pa5iso_ = strcmp(opt.s1_start_model, 'pa5_iso');
+if ~pa5iso_ && ~strcmp(opt.s1_start_model, 'prem'), error('opt.s1_start_model must be ''pa5_iso'' or ''prem'''); end
+if isempty(opt.s1_start), if pa5iso_, opt.s1_start = 'RLinv_pa5iso'; else, opt.s1_start = 'RLinv_prem_iso'; end, end
 if isempty(opt.ref_qmod), if pa5iso_, opt.ref_qmod = opt.trueid; else, opt.ref_qmod = opt.premid; end, end
 clear pa5iso_
 if ~isfield(opt, 'tag'), opt.tag = ['_' opt.sampler]; end

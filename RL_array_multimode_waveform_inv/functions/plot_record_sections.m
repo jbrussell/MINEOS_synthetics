@@ -3,7 +3,8 @@ function plot_record_sections(P, outdir, fc, U_start)
 %
 % Record sections of the full mode-sum idagrn6 synthetics of the step-2
 % prep structure P (prep_mineos_idagrn.m): the PA5 "data" (all branches
-% 0..P.nbranch_data-1) and, if present, PREM (same branches), transverse
+% 0..P.nbranch_data-1) and, if present, the step-1 starting model (same
+% branches; P.u_start_*), transverse
 % (Love, T) and vertical (Rayleigh, Z) displacement, band-passed to the
 % inversion band fc = [f1 f2 f3 f4] Hz (cosine taper; default
 % [1/112 1/100 1/20 1/17]). The lines mark the overtone and fundamental-
@@ -18,7 +19,7 @@ function plot_record_sections(P, outdir, fc, U_start)
 %                                   distance, each trace normalized
 %   record_section_events_<T|Z>.png one panel per event (16 stations vs
 %                                   distance), normalized per event; PA5
-%                                   black, PREM red
+%                                   black, step-1 start red
 if nargin < 3 || isempty(fc), fc = [1/112 1/100 1/20 1/17]; end
 if nargin < 4, U_start = []; end
 if ~exist(outdir, 'dir'), mkdir(outdir); end
@@ -40,7 +41,7 @@ for wv = 1:2
     for e = 1:nev
         D(e, :) = gc_dist_az(P.sta.lat, P.sta.lon, P.ev(e).lat*ones(nst, 1), P.ev(e).lon*ones(nst, 1))';
         Ut{e} = bp(P.(['u_true_' ty{wv}]){e});
-        if isfield(P, ['u_prem_' ty{wv}]), Up{e} = bp(P.(['u_prem_' ty{wv}]){e}); end
+        if isfield(P, ['u_start_' ty{wv}]), Up{e} = bp(P.(['u_start_' ty{wv}]){e}); end
     end
     % ---- all events in one record section ----
     fig = figure('position', [50 50 1100 1300]); hold on; box on;
@@ -86,10 +87,10 @@ for wv = 1:2
     end
     if exist('OCTAVE_VERSION', 'builtin')
         axes('position', [0 0.965 1 0.03], 'visible', 'off');
-        text(0.5, 0.5, sprintf('%s full mode sums, %g-%g s: PA5 (black, branches 0-%d), PREM (red); blue: window bounds', ...
+        text(0.5, 0.5, sprintf('%s full mode sums, %g-%g s: PA5 (black, branches 0-%d), step-1 start (red); blue: window bounds', ...
             wname{wv}, round(1/fc(4)), round(1/fc(1)), P.nbranch_data - 1), 'horizontalalignment', 'center');
     else
-        sgtitle(sprintf('%s full mode sums, %g-%g s: PA5 (black, branches 0-%d), PREM (red); blue: window bounds', ...
+        sgtitle(sprintf('%s full mode sums, %g-%g s: PA5 (black, branches 0-%d), step-1 start (red); blue: window bounds', ...
             wname{wv}, round(1/fc(4)), round(1/fc(1)), P.nbranch_data - 1));
     end
     print(fig, '-dpng', '-r130', fullfile(outdir, ['record_section_events_' comp{wv} '.png']));
