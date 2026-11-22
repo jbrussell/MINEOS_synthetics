@@ -37,6 +37,8 @@ for k = 1:numel(f)
     card.(f{k}) = [v; top; ct.(f{k})(it)];
 end
 card.z = 6371 - card.rad/1000;
+ws_ = warning;                                  % write_MINEOS_mod turns all warnings on
 write_MINEOS_mod(card, fullfile(mdir, 'CARDS', [refid, '.card']));
+warning(ws_);
 copyfile(fullfile(mdir, 'CARDS', [premid, '.qmod']), fullfile(mdir, 'CARDS', [refid, '.qmod']));
 end

@@ -71,7 +71,9 @@ rc = og('ref_card', []);
 if isempty(rc)
     P.card_ref = make_ref_card(P.mdir, P.refid, P.premid, P.trueid, P.zmoho);
 else
+    ws_ = warning;                              % write_MINEOS_mod turns all warnings on
     write_MINEOS_mod(rc, fullfile(P.mdir, 'CARDS', [P.refid, '.card']));
+    warning(ws_);
     copyfile(fullfile(P.mdir, 'CARDS', [P.ref_qmod, '.qmod']), fullfile(P.mdir, 'CARDS', [P.refid, '.qmod']));
     P.card_ref = read_model_card(fullfile(P.mdir, 'CARDS', [P.refid, '.card']));
 end
