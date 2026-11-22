@@ -12,17 +12,20 @@ load(['setup' tag '.mat']);
 upd = [];
 if exist(['refupd' tag '.mat'], 'file') == 2
     upd = load(['refupd' tag '.mat']); upd = upd.U;
-    Pu_ = load(upd.prepfile); Pu_ = Pu_.P;
-    refsyn0_ = {rec.refsyn};
-    [rec, cfg, Cu_f_] = apply_reference(rec, cfg, Pu_, Tdisp, fb);
-    [rec.refsyn] = refsyn0_{:};
-    for r = 1:numel(rec)
-        pd.true_delay{r} = rec(r).Del0 * (1./Ctrue_f{rec(r).wave} - 1./Cu_f_{rec(r).wave});
+    upd_plot = ~(isfield(upd, 'reverted') && upd.reverted);
+    if upd_plot                  % (a rejected update leaves the setup's reference)
+        Pu_ = load(upd.prepfile); Pu_ = Pu_.P;
+        refsyn0_ = {rec.refsyn};
+        [rec, cfg, Cu_f_] = apply_reference(rec, cfg, Pu_, Tdisp, fb);
+        [rec.refsyn] = refsyn0_{:};
+        Ctrue_f_ = {disp_to_band(CtrueL, Tdisp, fb), disp_to_band(CtrueR, Tdisp, fb)};
+        for r = 1:numel(rec)
+            pd.true_delay{r} = rec(r).Del0 * (1./Ctrue_f_{rec(r).wave} - 1./Cu_f_{rec(r).wave});
+        end
+        clear Pu_ refsyn0_ Cu_f_ Ctrue_f_
     end
     Ltrue_setup = Ltrue; Ltrue = upd.Ltrue;
     upd.xi = (upd.vsh./upd.vsv).^2;
-    if isfield(upd, 'reverted') && upd.reverted, upd_plot = false; else, upd_plot = true; end
-    clear Pu_ refsyn0_ Cu_f_
 end
 if ~exist(outdir, 'dir'), mkdir(outdir); end
 if exist('OCTAVE_VERSION', 'builtin'), set(0, 'defaultfigurevisible', 'off'); end

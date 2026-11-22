@@ -144,8 +144,9 @@ relinearization.
 Figures and summaries in `results/` (`plain/`: the run below;
 `baseline_plain/`: the earlier constant-τ run with sampled nuisance
 parameters). Both runs: 4 independent chains × 3000 iterations (1500 burn-in),
-split windows, step-1 reference throughout, η at the reference. The
-parallel-tempering run is pending.
+split windows, step-1 reference throughout, η at the reference. The runs
+with the new defaults (single window, end-of-burn-in reference update) and
+parallel tempering are in the next subsection.
 
 | | baseline (τ_n constant, τ and δθ sampled) | marginalized nuisance, τ_n(ω) (Kt = 3), relinearized every iteration |
 |---|---|---|
@@ -198,6 +199,65 @@ What the second run shows:
   (single surface-wave window, end-of-burn-in reference update) also apply
   to the next run.
 
+
+### Runs with the new defaults: plain vs parallel tempering
+
+`results/plainnew/` (4 plain chains × 3000 iterations, 1500 burn-in) and
+`results/ptnew/` (2 parallel-tempering ensembles of K = 4 temperatures up to
+T = 10, 1200 iterations, 600 burn-in), both with the single surface-wave
+window, the end-of-burn-in reference update and η fixed at the reference.
+`results/compare_plainnew_ptnew.png` compares the two posteriors. The
+log-likelihoods are not comparable with the split-window runs above: with
+the single window, the true structure has log L = 387.2k (385.1k with split
+windows).
+
+| | plain, split windows (above) | plain, new defaults | parallel tempering, new defaults |
+|---|---|---|---|
+| saved samples | 1200 | 1200 | 240 (2 ensembles, T = 1) |
+| R-hat median Vsv / Vsh / ξ | 4.3 / 4.2 / 2.0 | 4.6 / 3.7 / 3.4 | **1.27 / 1.36 / 1.15** |
+| R-hat max Vsv / Vsh / ξ | 162 / 12.6 / 9.0 | 362 / 29.7 / 28.9 | 10.5 / 6.8 / 2.4 |
+| log L of the chains vs log L of PA5 | 400.4k–400.8k vs 385.1k | 397.2k–399.0k vs 387.2k | 398.6k–398.9k vs 387.2k |
+| truth inside 5–95%: Vsv / Vsh / ξ | 73 / 53 / 38 % | 74 / 52 / 58 % | 70 / 54 / 73 % |
+| mean abs. error Vsv / Vsh (km/s), ξ | 0.15 / 0.21, 0.072 | 0.11 / 0.19, 0.058 | 0.10 / 0.19, 0.062 |
+| σ / σ_true (L ovt, L fund, R ovt, R fund) | 1.41 1.14 1.15 1.02 | 1.34 1.34 1.08 1.08 | 1.34 1.34 1.08 1.08 |
+| ξ 7–60 / 60–160 / 160–250 / 250–350 km (true 1.08 / 1.06 / 1.00 / 1.00) | 1.01 / 1.14 / 0.98 / 0.91 | 1.04 / 1.11 / 0.97 / 0.91 | 1.00 / 1.10 / 0.99 / 0.92 |
+| end-of-burn-in reference update | – | rejected (dL −5.6k … −8.8k) | rejected (dL −17.0k, −18.8k) |
+| time per iteration (6 processes on 4 cores) | – | ~6 s | ~15 s (4 temperatures) |
+
+- **Parallel tempering mixes much better.** Its two ensembles agree
+  (R-hat median 1.2–1.4, and both reach log L ≈ 398.7k), while the plain
+  chains still sit in different modes (R-hat 3–5; one chain has only 5
+  interior control points). Its posterior is also the best calibrated for ξ
+  (73% of the true profile inside the 5–95% range). But only 2 ensembles of
+  600 post-burn-in iterations were run, so its R-hat is a rough estimate;
+  swap acceptance between neighbouring temperatures was low (0–6%).
+- **Single window.** With the single window the fundamental and overtone
+  noise levels are tied per wave type (σ/σ_true 1.34 for Love, 1.08 for
+  Rayleigh). The models and errors are similar to the split-window run, a
+  little closer to the truth (mean error Vsv 0.10–0.11 vs 0.15 km/s).
+- **Both runs still fit the data ~11k better than the true structure**, with
+  ξ too high at 60–160 km and too low (0.91–0.92) below 250 km. D5 on both
+  runs (`results/*new/d5_linearization.txt`) gives the same split of the
+  phase-velocity errors as for the first run: the unrepresentable part
+  (η, Vp/ρ scaling, PA5 below 350 km; 0.02–0.065 km/s for the Rayleigh
+  overtones) is larger than the linearization error at the posterior mean
+  (0.009–0.06 km/s).
+- **Why the reference update was rejected** (`results/refupd_diagnostic.txt`).
+  The end-of-burn-in states fit 6–19k worse with the new reference. About
+  1.5–3k of that is a bias of the check itself (the same states re-scored
+  with the *old* reference through the same path lose that much, because
+  the nuisance linearization point is refitted from scratch); the rest is
+  real. With the new reference, even the true structure fits worse
+  (log L 374.7k–377.5k instead of 387.2k), and the mean model is further
+  from PA5 than the step-1 reference is (rms Vsh 0.16–0.18 vs 0.10 km/s).
+  The late burn-in mean is a model that partly compensates for the
+  unrepresentable structure, and reference spectra computed from it are a
+  worse description of the data than those of the step-1 model. The
+  safeguard worked as intended: both runs sampled with the step-1 reference.
+- **D6 not run**, for the same reason: it would rebuild the reference about
+  the same kind of compensating mean model. The useful next steps remain
+  `opt.eta_free = true`, a deeper model (`cfg.zmax`), and Vp and ρ not tied
+  to Vs, then more and longer parallel-tempering ensembles.
 
 ## Files in `./functions`
 

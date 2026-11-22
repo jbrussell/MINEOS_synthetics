@@ -1,0 +1,12 @@
+End-of-burn-in reference update of the runs _ptnew / _plainnew (both rejected)
+(single window, eta fixed; logL of PA5 with fitted nuisance, step-1 reference: 387188.7)
+
+safeguard dL of the end-of-burn-in states, new vs old reference (10 GN nuisance steps):
+  _ptnew    [-17027 -18768]          _plainnew [-6623 -5583 -6493 -8802]
+same states re-evaluated with the OLD reference through the same path (bias of the check):
+  _ptnew    10 GN steps [-1768 -3084], 40 GN steps [-1484 -2431]
+  new reference, 40 GN steps [-16266 -17299]
+logL of PA5 (true dispersion) with the updated reference:  _ptnew 377520.1   _plainnew 374662.7
+logL of the updated reference (mean) model itself, exact:  _ptnew 373204.2   _plainnew 372201.0
+rms distance to PA5, 40-350 km (km/s), Vsv / Vsh:
+  late burn-in mean _ptnew 0.080 / 0.161, _plainnew 0.123 / 0.181; step-1 reference 0.075 / 0.098

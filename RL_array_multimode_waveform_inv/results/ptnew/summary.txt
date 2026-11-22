@@ -1,0 +1,17 @@
+Run _ptnew: 2 chains/ensembles, 240 saved samples
+reference update at the end of burn-in REJECTED (end-of-burn-in states fit worse, dL = [-17027 -18768]): reference not updated
+vsv : R-hat median 1.27 max 10.53 | truth in 5-95%:  70% | mean|err| 0.101 | chain-mean spread 0.080 | 5-95 width 0.307
+vsh : R-hat median 1.36 max 6.79 | truth in 5-95%:  54% | mean|err| 0.186 | chain-mean spread 0.102 | 5-95 width 0.385
+xi  : R-hat median 1.15 max 2.39 | truth in 5-95%:  73% | mean|err| 0.062 | chain-mean spread 0.021 | 5-95 width 0.111
+Love phase velocity R-hat max per mode: [1.36 1.88 1.55 2.07 2.65 2.79 3.16 3.37]
+Rayleigh phase velocity R-hat max per mode: [5.18 2.19 2.4 2.42 2.76 2.06 3.47 2.71]
+posterior median logL per chain: [398612 398851] | true model 387188.7
+interior control points: Vsv median 14 (5-95%: 2-15); xi median 13 (5-95%: 2-14)
+single surface-wave window per wave type: noise slots (L, L, R, R) tied
+noise correlation r (L ovt, L fund, R ovt, R fund): posterior [0.67 0.67 0.66 0.66] +- [0.01 0.01 0 0] | empirical [0.67 0.67 0.67 0.67]
+noise sigma / sigma_true: [1.34 1.34 1.08 1.08]
+xi band averages (depth below seafloor): posterior mean [5-95%] | true | reference
+    7- 60 km: 1.004 [0.995-1.027] | 1.077 | 1.000
+   60-160 km: 1.098 [1.043-1.122] | 1.064 | 1.000
+  160-250 km: 0.986 [0.958-1.054] | 1.001 | 1.000
+  250-350 km: 0.923 [0.906-1.017] | 1.001 | 1.000
