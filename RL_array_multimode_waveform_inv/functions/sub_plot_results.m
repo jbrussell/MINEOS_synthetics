@@ -146,7 +146,7 @@ for q = 1:3
     plot(vb([1 end]), cfg.zmax*[1 1], 'k:');
     xlim(vb([1 end])); ylim([0 400]); xlabel(labs{q}); ylabel('Depth (km)');
     title(sprintf('Posterior %s', labs{q}));
-    hh = [h1 h4 h2 h3(1)]; ll = {'true (PA5)', 'reference (step 1)', 'posterior mean', '5-95%'};
+    hh = [h1 h4 h2 h3(1)]; ll = {'true (PA5)', 'reference', 'posterior mean', '5-95%'};
     if ~isempty(upd) && upd_plot
         im_ = zplot >= cfg.zmin & zplot <= cfg.zmax;
         hh(end+1) = plot(upd.(names{q})(im_), zplot(im_), '-.', 'color', [0.8 0.4 0], 'linewidth', 1.2); %#ok<SAGROW>
@@ -250,7 +250,7 @@ for e0 = unique([1 min(8, max([rec.event]))])
             if q == 1
                 title(sprintf('%s, %s (\\Delta_0 = %.0f km)', wn{wv}, rec(r).id, rec(r).Del0));
                 if wv == 1
-                    legend([hd hp hr hf], {'data (PA5)', 'PREM', 'reference (step 1)', 'final model'}, ...
+                    legend([hd hp hr hf], {'data (PA5)', 'PREM', 'reference', 'final model'}, ...
                         'location', 'northwest', 'fontsize', 7);
                 end
             end

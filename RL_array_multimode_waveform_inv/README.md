@@ -13,8 +13,7 @@ reference model whose mode branches resemble the data's:
    phase velocities (20–100 s, MINEOS) are inverted for an isotropic Vs
    model (ξ = 1) with the linearized MINEOS inversion of
    `../run_MINEOS/c2_RLphv_inv_vsvh_vpvh_rho_eta.m`, starting from an
-   isotropic PREM or (`opt.s1_start_model = 'true_smooth'`) an isotropic
-   PA5 without its lid/LVZ and with PA5's Vp/Vs, ρ/Vs and η.
+   isotropic PREM. The result has a lid and a low-velocity zone.
 2. **Multimode waveform inversion** (`D2`–`D4`): Love + Rayleigh
    waveforms (17–112 s) are inverted for Vsv, Vsh and ξ with rjMcMC,
    using the step-1 model as the reference for the per-branch spectra,
@@ -37,7 +36,7 @@ calling a driver).
 | Driver | What it does | Time (4 cores) |
 |---|---|---|
 | `D1_step1_rayleigh_isotropic_inv.m` | step 1: Rayleigh n = 0 phase velocities → isotropic Vs; writes the step-2 reference card `../run_MINEOS/CARDS/RLinv_step1.card` | ~5 min |
-| `D2_step2_prep_mineos_idagrn.m` | MINEOS tables, dispersion and kernels; idagrn6 data (PA5, branches 0–15), reference spectra (step-1 model, branches 0–7) and PREM seismograms; cached in `prep_step2.mat`; record sections of the full mode-sum synthetics (PA5 and PREM, T and Z, with the window bounds) in `figs_step2/` | ~10 min |
+| `D2_step2_prep_mineos_idagrn.m` | (reference: the step-1 model, or with `opt.ref_model = 'pa5_iso'` an isotropic PA5 without lid/LVZ) MINEOS tables, dispersion and kernels; idagrn6 data (PA5, branches 0–15), reference spectra (step-1 model, branches 0–7) and PREM seismograms; cached in `prep_step2.mat`; record sections of the full mode-sum synthetics (PA5 and PREM, T and Z, with the window bounds) in `figs_step2/` | ~10 min |
 | `D3_step2_waveform_inv.m` | the waveform inversion with the plain (`opt.sampler = 'plain'`) or parallel-tempering (`'pt'`) sampler | hours |
 | `D4_step2_plot_results.m` | figures and `summary.txt` in `figs_<sampler>/`; compares the two samplers if both were run (`figs_compare.png`) | 1 min |
 | `D5_step2_check_linearization.m` | full MINEOS vs the linearized dispersion at the posterior mean and at the (projected) truth: linearization error vs what the parameterization cannot represent (`d5_linearization.txt`, `fig10_linearization.png`) | ~5 min |
@@ -73,28 +72,35 @@ be run on their own.
 
 - Data: MINEOS phase velocities of PA5, fundamental-mode Rayleigh,
   12 periods at 20–100 s, uncertainty 0.5%.
-- Start (`opt.s1_start_model`):
-  - `'prem'` (default): PREM below the PA5 Moho (12 km below sea level)
-    with the PA5 water, sediments and crust above it, made isotropic
-    (Voigt average, η = 1; `functions/make_ref_card.m`,
-    `functions/isotropic_card.m`).
-  - `'true_smooth'`: PA5 made isotropic (Voigt average) with its lid/LVZ
-    structure averaged away: below the Moho the isotropic Vs is smoothed
-    with a Gaussian (σ = `opt.s1_smooth_sig` = 60 km, over the mantle
-    above the 410 only) and tapered back into PA5 between 200 and 300 km
-    (`opt.s1_smooth_blend`), so there is no lid and no sharp LVZ (Vs falls
-    smoothly from 4.59 km/s below the Moho to 4.39 km/s at 166 km). Vpv/Vsv,
-    Vph/Vsh, ρ/Vsv, η and Q (`opt.ref_qmod`) are those of PA5 at every node,
-    and they are imposed exactly on the step-1 result, so the step-2
-    reference has PA5's Vp/Vs, ρ/Vs and η (and PA5 below 300 km): with
-    the true Vsv and Vsh it would reproduce PA5 exactly
-    (`functions/smooth_lid_lvz_card.m`). Because ρ/Vs jumps at PA5's
-    discontinuities (68.5 and 166 km) and Vs is smooth there, the reference
-    density has small jumps at those depths.
+- Start: PREM below the PA5 Moho (12 km below sea level) with the PA5
+  water, sediments and crust above it, made isotropic (Voigt average,
+  η = 1; `functions/make_ref_card.m`, `functions/isotropic_card.m`).
 - Inversion: `run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Eta.m` (the engine of
-  `c2`) with Rayleigh data only, ξ damped to 1 (ε_ξ = 100), η damped to the start,
+  `c2`) with Rayleigh data only, ξ damped to 1 (ε_ξ = 100), η damped to 1,
   smoothing broken only at the crustal discontinuities, MINEOS phase
   velocities and kernels recalculated after each of 4 iterations.
+
+### Alternative reference: isotropic PA5 without lid/LVZ (`opt.ref_model = 'pa5_iso'`)
+
+Instead of the step-1 result, step 2 can use as its reference an isotropic
+PA5 without the lid/LVZ structure, built as the starting model of
+`SURF96_Rayl_1Dinv/test_kernel_inversion_vsvh_vpvh_rho_eta_PA5_twostage.m`
+(`functions/pa5_iso_ref_card.m`; D1 is then not needed):
+
+- between the Moho (12 km below sea level) and `opt.ref_zlin` = 250 km,
+  Vsv = Vsh = a straight line from the isotropic (Voigt) Vs of PA5 at the
+  Moho (4.72 km/s) to that at 250 km (4.47 km/s): no lid, no LVZ, no Vs
+  discontinuities;
+- there Vpv, Vph and ρ are this Vs times PA5's Vpv/Vsv, Vph/Vsh and ρ/Vsv,
+  so these ratios, and η and Q (`opt.ref_qmod`), are exactly PA5's at
+  every depth; PA5 itself above the Moho and below 250 km. With the true
+  Vsv and Vsh the reference becomes PA5, so η, the Vp/ρ scaling and the
+  structure below 350 km are no longer sources of error in step 2;
+- because Vs has no drop at 68.5 km while PA5's Vp/Vs and ρ/Vs jump up
+  there, the reference Vp and ρ jump up at 68.5 km (ρ by ~0.2 g/cm³) and
+  are higher than PA5's down to 250 km.
+
+![isotropic PA5 reference](figs_step2/pa5_iso_reference.png)
 
 ## Step 2: multimode waveform inversion
 
