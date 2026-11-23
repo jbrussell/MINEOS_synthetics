@@ -18,6 +18,8 @@
 if ~exist('opt', 'var'), opt = struct(); end
 here_ = fileparts(mfilename('fullpath'));
 addpath(fullfile(here_, 'functions'));
+addpath(fullfile(here_, 'functions', 'aswms'));                 % ASWMS-Q functions (A1-A3)
+addpath(fullfile(here_, 'functions', 'octave_shims'), '-end');  % only where a toolbox lacks them
 mdir_ = fullfile(here_, '..', 'run_MINEOS');
 addpath(fullfile(mdir_, 'functions'));
 opt = opt_defaults(opt, struct( ...
@@ -44,6 +46,21 @@ opt = opt_defaults(opt, struct( ...
                            'rhovs', 10, 'xi', 100, 'eta', 10), ...
     's1_z_dampbot', 300, 's1_zmax', 400, ...   % (km below sea level)
     's1_nit',       4, ...               % iterations (MINEOS recalculated after each)
+    ... % ---- data: ASWMS-Q event files (D0 synthetic only; A1-A3 for synthetic and real data) ----
+    'data_source',  'aswms', ...         % 'aswms': the data are read from the ASWMS-Q event files
+    ...                                  %   <aswms_dir>eventmat/<event id>_<component>.mat (A1-A3; for the
+    ...                                  %   synthetic test written from the SAC files of D0); 'internal': the
+    ...                                  %   previous behaviour (true-model synthetics computed in step 2, noise
+    ...                                  %   added to the processed records)
+    'aswms_dir',    ['ASWMS' filesep], ... % ASWMS-Q working directory (sacdata/, eventmat/, winpara/, branchmat/)
+    'aswms_components', {{'BHT', 'BHZ'}}, ... % channel names of the [Love Rayleigh] records (SAC KCMPNM)
+    'aswms_net',    'XX', ...            % network code of the synthetic SAC files
+    'aswms',        struct(), ...        % overrides of the ASWMS-Q parameters (aswms_parameters.m), e.g.
+    ...                                  %   struct('snr_tol', 3, 'maxdepth', 50, 'min_sta_num', 5)
+    'synth_len_hr', 2, ...               % D0: length of the synthetic SAC records (h; ASWMS-Q needs dist/2 km/s)
+    'synth_seed',   3, ...               % D0: random seed of the noise
+    'truthfile',    'synth_truth.mat', ... % D0: noise-free records, noise and true model (in aswms_dir)
+    'noise_guess',  0.03, ...            % real data: starting noise level (fraction of each record's peak)
     ... % ---- step 2: MINEOS + idagrn6 (D2) ----
     'prepfile',     'prep_step2.mat', ...
     'refid',        'RLinv_step1', ...   % reference card of step 2 (= s1_final)
@@ -78,9 +95,9 @@ opt = opt_defaults(opt, struct( ...
     'upd_ngn',  10, ...                  % Gauss-Newton steps per state to move tau, dth, B to the new reference
     'ref_prep', '', ...                  % optional prep file of another starting reference (D6)
     'spec_Kt',  3, 'tau_prior', 15, 'dtau_prior', 10, ...   % tau_n(w): Legendre terms, prior std (s)
-    'windows',  'auto', ...              % 'auto': window picked from the data per event (auto_win_select.m, the
-    ...                                  %   ASWMS-Q picker; options in 'autowin', e.g. struct('cycle_before', 2,
-    ...                                  %   'cycle_after', 5, 'min_groupv', 2, 'max_groupv', 5));
+    'windows',  'auto', ...              % 'auto': the window picked from the data per event by ASWMS-Q
+    ...                                  %   (A3_run_autowinpick.m: event.winpara of the event files; picker
+    ...                                  %   options through 'aswms', e.g. struct('cycle_before', 2, 'cycle_after', 5));
     ...                                  %   'fund': fundamental-mode window only, Delta/U_w to Delta/U_f + 60 s
     ...                                  %   (cuts the fast higher modes, incl. the unmodelled branches >= nm);
     ...                                  %   U_w = max fundamental-mode U of the reference + fund_margin
@@ -89,12 +106,12 @@ opt = opt_defaults(opt, struct( ...
     'smooth_sig', [0 0], ...             % smoothness prior: std of the curvature of [Vsv Vsh] (km/s/km^2),
     ...                                  %   one Gaussian term per smooth_len km (0 = off; see lr_common.m)
     'smooth_len', 10, ...
-    'autowin',  struct(), ...            % auto_win_select options ('auto' windows); empty = ASWMS-Q defaults
     'fund_margin', [0.4 0.2], ...        % 'fund' window start margin (km/s) [Love Rayleigh]
     'U_start',  [], ...                  % window start group velocity (km/s; scalar or [Love Rayleigh]);
     ...                                  %   [] = max U of branches 1..nm-1 of the reference + 0.6 km/s
     'N',        800, ...                 % samples per record (N*dt = 3200 s: earliest overtone to slowest fundamental)
-    'noise',    0.03, ...                % noise std, fraction of each record's peak
+    'noise',    0.03, ...                % synthetic noise std, fraction of the peak band-passed amplitude of each
+    ...                                  %   event and wave type (D0; 'internal': of each record's peak)
     'nchains',  4, 'nit', 3000, 'burn', 1500, ...           % plain sampler
     'nens',     2, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750 ... % parallel tempering
     ));

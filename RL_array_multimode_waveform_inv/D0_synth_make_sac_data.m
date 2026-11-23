@@ -1,0 +1,105 @@
+% D0_SYNTH_MAKE_SAC_DATA  Synthetic test only (pre-step): make the "data" as
+% SAC files, so that they go through the same data preparation as real data
+% (A1-A3, ASWMS-Q).
+%
+% For the true model (CARDS/<opt.trueid>.card, PA5) MINEOS mode tables of
+% branches 0..opt.nbranch_data-1 and idagrn6 full mode-sum seismograms
+% (transverse and vertical displacement) at the stations of
+% opt.stationfile for the events of opt.eventfile (Global CMT), opt.dt
+% sampling, opt.synth_len_hr hours from the centroid time. Noise is added:
+% white noise through the processing band-pass (opt.fc), with a standard
+% deviation of opt.noise times the peak band-passed amplitude of the event
+% and wave type (all stations).
+%
+% Output, in opt.aswms_dir (ASWMS-Q layout):
+%   sacdata/<event id>/<net>.<station>.<component>.sac
+%       components opt.aswms_components = {Love, Rayleigh} ('BHT', 'BHZ');
+%       origin (NZ* header) = centroid time, B = 0; EVLA, EVLO, EVDP (m),
+%       MAG (Mw), STLA, STLO, STEL (m), KSTNM, KCMPNM, KNETWK, DELTA
+%   sacdata/evlist.txt  (event ids)
+%   <opt.truthfile>     (synthetic test only, never read for real data):
+%       noise-free records and the noise, per wave type and event
+%       ([Nt x Nsta], station order of opt.stationfile), the true model id,
+%       branch count, noise level and times
+% Takes about 10 min (MINEOS + idagrn6).
+%
+% Next: A1_sac2eventmat.m, A2_cleanup_events.m, A3_run_autowinpick.m
+% (optional A3b_run_exam_winpara.m), then D2_step2_prep_mineos_idagrn.m.
+
+parameters_RL;
+wd = opt.aswms_dir; if wd(end) ~= '/' && wd(end) ~= filesep, wd = [wd filesep]; end
+sacdir = [wd 'sacdata' filesep];
+if ~exist(sacdir, 'dir'), mkdir(sacdir); end
+addpath(fullfile(opt.mdir, 'functions'));
+
+% stations and events
+fid = fopen(opt.stationfile); S = textscan(fid, '%s %f %f %f'); fclose(fid);
+sta = struct('name', {S{1}}, 'lat', S{2}, 'lon', S{3}, 'elev', S{4});
+ev = read_cmtsolution(opt.eventfile);
+nev = numel(ev); Nst = numel(sta.name);
+Tdisp = optget(opt, 'Tdisp', logspace(log10(0.95*17), log10(1.02*112), 10));
+
+% MINEOS + idagrn6 of the true model (all data branches)
+U = cell(2, nev); TYs = 'TS';
+tic;
+for wv = 1:2
+    TY = TYs(wv);
+    mineos_lock(opt.mdir, 'acquire');
+    try
+        mineos_modes(opt.mdir, opt.trueid, TY, opt.nbranch_data, opt.maxF, Tdisp, []);
+        D = idagrn_synth(opt.mdir, opt.trueid, TY, opt.maxF, opt.nbranch_data, ev, sta, ...
+                         opt.synth_len_hr, opt.dt, []);
+    catch err
+        mineos_lock(opt.mdir, 'release'); rethrow(err);
+    end
+    mineos_lock(opt.mdir, 'release');
+    U(wv, :) = D.u(:, 1)';
+    t = D.t;
+    fprintf('idagrn6 %c (true model %s, branches 0-%d): %.0f s\n', TY, opt.trueid, opt.nbranch_data - 1, toc);
+end
+
+% noise: white noise through the processing band-pass, std = opt.noise x
+% the peak band-passed amplitude of the event and wave type
+rng(opt.synth_seed);
+fc = optget(opt, 'fc', [1/112 1/100 1/20 1/17]);
+Nt = numel(t); f = (0:Nt-1)'/(Nt*opt.dt);
+bpf = zeros(Nt, 1); ib = find(f > fc(1) & f < fc(4)); bpf(ib) = bp_taper(f(ib), fc);
+bp = @(X) 2*real(ifft(fft(X) .* bpf));             % one-sided band-pass (real output)
+noise = cell(2, nev);
+for wv = 1:2
+    for e = 1:nev
+        A = max(max(abs(bp(U{wv, e}))));
+        nz = bp(randn(Nt, Nst)); nz = nz / std(nz(:));
+        noise{wv, e} = opt.noise * A * nz;
+    end
+end
+
+% SAC files and event list
+comps = opt.aswms_components;
+fid = fopen([sacdir 'evlist.txt'], 'w');
+for e = 1:nev
+    fprintf(fid, '%s\n', ev(e).id);
+    edir = [sacdir ev(e).id filesep];
+    if ~exist(edir, 'dir'), mkdir(edir); end
+    t0 = ev(e).t_cent + t(1)/86400;                   % first sample (centroid time + B of idagrn6)
+    for wv = 1:2
+        for j = 1:Nst
+            H = struct('DELTA', opt.dt, 'KSTNM', sta.name{j}, 'KCMPNM', comps{wv}, ...
+                       'KNETWK', opt.aswms_net, 'STLA', sta.lat(j), 'STLO', sta.lon(j), ...
+                       'STEL', 1000*sta.elev(j), 'EVLA', ev(e).lat, 'EVLO', ev(e).lon, ...
+                       'EVDP', 1000*ev(e).dep, 'MAG', ev(e).Mw);
+            fn = sprintf('%s%s.%s.%s.sac', edir, opt.aswms_net, sta.name{j}, comps{wv});
+            mksac(fn, U{wv, e}(:, j) + noise{wv, e}(:, j), t0, H);
+        end
+    end
+end
+fclose(fid);
+
+% truth (synthetic test only)
+truth = struct('trueid', opt.trueid, 'nbranch_data', opt.nbranch_data, 'noise', opt.noise, ...
+               'seed', opt.synth_seed, 'dt', opt.dt, 't', t, 'comps', {comps}, ...
+               'ev_id', {{ev.id}}, 't_cent', [ev.t_cent], 'sta', {sta.name}, ...
+               'clean', {U}, 'noise_tr', {noise});
+save([wd opt.truthfile], 'truth', '-v7');
+fprintf('%d events x %d stations x 2 components written to %s; truth in %s%s\n', ...
+    nev, Nst, sacdir, wd, opt.truthfile);

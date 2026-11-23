@@ -92,8 +92,12 @@ else
     lin0 = spec_refine([], rec, Cref_f, sig_true, rho_emp, cfg, mc, nm, 30);
     % log-likelihood of the true structure, with nuisance parameters fitted
     % to it (idagrn data have no "true" nuisance parameters)
-    Ltrue = fit_nuisance_LR(rec, Ctrue_f, sig_true, rho_emp, cfg, mc, nm);
-    fprintf('logL of the true structure (fitted nuisance, sigma_true): %.1f\n', Ltrue);
+    if any(isfinite(Ctrue_f{1}(:))) && any(isfinite(Ctrue_f{2}(:)))   % (real data: no true model)
+        Ltrue = fit_nuisance_LR(rec, Ctrue_f, sig_true, rho_emp, cfg, mc, nm);
+        fprintf('logL of the true structure (fitted nuisance, sigma_true): %.1f\n', Ltrue);
+    else
+        Ltrue = NaN;
+    end
     tmpf = tmp_name('setup');
     save(tmpf, 'tru', 'refp', 'cfg', 'mc', 'Tdisp', 'CtrueL', 'CtrueR', 'CrefL', 'CrefR', 'ClinL', 'ClinR', ...
          'zplot', 'sig_true', 'rho_emp', 'rec', 'sta', 'Ltrue', 'fb', 'nm', 'outdir', 'tag', 'pd', ...
@@ -208,7 +212,8 @@ elseif ~isempty(runs)
                 U.prepfile = ifempty_(opt.ref_prep, opt.prepfile); U.refid = 'not updated';
                 U.lin0 = lin0; U.Ltrue = Ltrue;
             else
-                U.Ltrue = fit_nuisance_LR(rec_u, Ctrue_f, sig_true, rho_emp, cfg_u, mc, nm);
+                U.Ltrue = NaN;
+                if any(isfinite(Ctrue_f{1}(:))), U.Ltrue = fit_nuisance_LR(rec_u, Ctrue_f, sig_true, rho_emp, cfg_u, mc, nm); end
                 fprintf('logL of the true structure with the updated reference: %.1f (was %.1f)\n', U.Ltrue, Ltrue);
             end
             tmpf = tmp_name('refupd'); save(tmpf, 'U'); movefile(tmpf, updf);

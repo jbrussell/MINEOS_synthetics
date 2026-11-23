@@ -21,13 +21,19 @@
 % perturbation (mineos_dispersion.m, mineos_lin_setup.m); Rayleigh waves
 % are radially anisotropic (they see Vsh through the MINEOS kernels).
 %
-% Data: idagrn6 seismograms of the true model with branches
-% 0..opt.nbranch_data-1, 15 real 2012 Pacific-rim earthquakes
-% (events_nomelt_2012.cmt, Global CMT), 16 NoMelt OBSs, transverse (Love)
-% and vertical (Rayleigh) displacement, band-passed (fc), normalized by
-% each record's peak, plus band-limited noise. Reference spectra Uref:
-% idagrn6_mask single-branch seismograms (n = 0..opt.nm-1) of the
-% reference model, processed the same way.
+% Data (opt.data_source = 'aswms', default): the ASWMS-Q event files
+% <opt.aswms_dir>eventmat/<event id>_<component>.mat made by A1-A3 from
+% SAC files (read_event_data.m), as for real data; for the synthetic test
+% the SAC files are idagrn6 seismograms of the true model with branches
+% 0..opt.nbranch_data-1 plus band-limited noise (D0_synth_make_sac_data.m),
+% for 15 real 2012 Pacific-rim earthquakes (events_nomelt_2012.cmt, Global
+% CMT) at 16 NoMelt OBSs, transverse (Love) and vertical (Rayleigh)
+% displacement. Events removed by A1-A3 and stations without data are
+% left out. Each record is band-passed (fc) and normalized by its peak in
+% the windows. ('internal': the true-model synthetics of the prep file,
+% with band-limited noise added here.) Reference spectra Uref: idagrn6_mask
+% single-branch seismograms (n = 0..opt.nm-1) of the reference model,
+% processed the same way.
 %
 % Windows: from the group velocities of the reference model (MINEOS):
 % overtone window from Delta/(max U of branches 1..nm-1 + 0.6) to
@@ -42,7 +48,9 @@
 % three are integrated out (B exactly, tau and dth by linearization about
 % points that are updated every opt.relin iterations; nuis_relin.m).
 %
-% Noise: band-limited (white noise through the processing band-pass),
+% Noise: in the data ('aswms'; the synthetic level and correlation are
+% measured against the noise-free records of D0) or band-limited white
+% noise added here ('internal'),
 % modelled with an exponential (AR(1)) covariance with a level sigma and
 % correlation r for each of the 4 window types (Love/Rayleigh x
 % overtone/fundamental), all sampled hierarchically. Fixed seed.
@@ -163,14 +171,30 @@ rec = struct([]); r = 0;
 % the branches >= nm that are not modelled). opt.U_start (km/s; scalar or [Love
 % Rayleigh]): start of the window ('single'); default (empty) max group
 % velocity of branches 1..nm-1 of the reference + 0.6 km/s. 'auto' = one
-% window per event picked from the data (auto_win_select.m, the ASWMS-Q
-% picker: narrow-band envelope peaks tracked across the band, group delays
-% fitted against distance, window from 2 cycles before to 5 cycles after
-% the arrivals; options opt.autowin, a struct of auto_win_select options),
-% Delta/v1 + t1 .. Delta/v2 + t2 (rec.winpara = [v1 t1 v2 t2]).
+% window per event picked from the data by ASWMS-Q (A3_run_autowinpick.m,
+% auto_win_select.m: narrow-band envelope peaks tracked across the band,
+% group delays fitted against distance, window from 2 cycles before to 5
+% cycles after the arrivals): dist/v1 + t1 .. dist/v2 + t2 after the event
+% origin of the event file (rec.winpara = event.winpara = [v1 t1 v2 t2]).
 wmode_ = og('windows', 'single');
+% data source (opt.data_source): 'aswms' = the ASWMS-Q event files of A1-A3
+% (<opt.aswms_dir>eventmat/; read_event_data.m), with the noise already in
+% the data; for the synthetic test, the noise-free records of D0
+% (opt.truthfile) give the noise level; 'internal' = true-model synthetics
+% of the prep file with noise added here
+aswms_ = strcmp(og('data_source', 'internal'), 'aswms');
+comps_ = og('aswms_components', {'BHT', 'BHZ'});
+synth_ = false;
+if aswms_
+    wd_ = og('aswms_dir', ['ASWMS' filesep]); if wd_(end) ~= '/' && wd_(end) ~= filesep, wd_ = [wd_ filesep]; end
+    tf_ = [wd_ og('truthfile', 'synth_truth.mat')];
+    synth_ = exist(tf_, 'file') == 2;
+    if synth_
+        truth = load(tf_); truth = truth.truth;
+        it_tr = round((P.t(1) - truth.t(1))/cfg.dt);      % D0 time axis -> idagrn time axis
+    end
+end
 single_ = any(strcmp(wmode_, {'single', 'fund', 'auto'}));
-autowin_ = og('autowin', struct());
 U_start_ = og('U_start', []);
 mc.single_window = single_;
 segtap = tukeywin_(cfg.N, 0.1);          % taper of the time segments (data and Uref)
@@ -187,19 +211,33 @@ for wv = 1:2
     fprintf('%s ref. group vel: fund %.2f-%.2f, overtones %.2f-%.2f km/s\n', ...
         wname{wv}, min(U0), max(U0), min(Uov(:)), max(Uov(:)));
     for e = 1:nev
+        Dj = gc_dist_az(lat, lon, ev(e).lat*ones(Nst,1), ev(e).lon*ones(Nst,1)) * 6371*pi/180;
+        if aswms_                                   % data of the ASWMS-Q event file
+            Dd = read_event_data(opt, ev(e), sta, comps_{wv}, P.t);
+            if isempty(Dd)
+                fprintf('%s %s: no event file (or event.isgood = 0): not used\n', wname{wv}, ev(e).id); continue
+            end
+            if strcmp(wmode_, 'auto') && isempty(Dd.winpara)
+                fprintf('%s %s: no window from A3 (winpara): not used\n', wname{wv}, ev(e).id); continue
+            end
+        end
         r = r + 1;
         rec(r).wave = wv; rec(r).event = e; rec(r).id = ev(e).id;
         rec(r).az_prop = mod(baz(e) + 180, 360);
         rec(r).Del0 = Del0(e);
-        Dj = gc_dist_az(lat, lon, ev(e).lat*ones(Nst,1), ev(e).lon*ones(Nst,1)) * 6371*pi/180;
         % window start / overtone-fundamental boundary / end per station (s)
         tw1 = Dj/win(wv).Uov1; twb = Dj/win(wv).Ub; tw2 = Dj/win(wv).Uf2 + 60;
-        if strcmp(wmode_, 'auto')                       % picked from the data
-            rec(r).winpara = auto_win_select(P.(['u_true_' uname{wv}]){e}, P.t, Dj, 1./fc([4 1]), autowin_);
-            tw1 = Dj/rec(r).winpara(1) + rec(r).winpara(2); twb = tw1;
-            tw2 = Dj/rec(r).winpara(3) + rec(r).winpara(4);
+        if strcmp(wmode_, 'auto')                       % picked from the data (A3, ASWMS-Q)
+            if aswms_
+                wp = Dd.winpara; Dw = Dd.dist; toff = Dd.toff;  % times after event.otime -> after the centroid
+            else
+                error('opt.windows = ''auto'' needs opt.data_source = ''aswms'' (windows picked by A3_run_autowinpick.m)');
+            end
+            rec(r).winpara = wp;
+            tw1 = Dw/wp(1) + wp(2) + toff; twb = tw1;
+            tw2 = Dw/wp(3) + wp(4) + toff;
         end
-        if strcmp(wmode_, 'auto'), t0_ = min(tw1); else, t0_ = Del0(e)/win(wv).Uov1; end
+        if strcmp(wmode_, 'auto'), t0_ = min(tw1(isfinite(tw1))); else, t0_ = Del0(e)/win(wv).Uov1; end
         rec(r).tred = cfg.dt*round((t0_ - 150)/cfg.dt);
         % (a late window start, opt.U_start, must not push the segment past
         % the end of the idagrn records)
@@ -210,12 +248,26 @@ for wv = 1:2
         if max(tw2) > t(end) || min(tw1) < t(1)
             warning('record %d (%s): windows cut by the %d-sample segment (opt.N, opt.len_hr)', r, ev(e).id, cfg.N);
         end
-        % data: full idagrn6 synthetics of the true model, same processing
-        X = fft(P.(['u_true_' uname{wv}]){e}(it, :) .* segtap);
-        Y = zeros(cfg.N, Nst); Y(cfg.ib, :) = X(cfg.ib, :) .* taper;
-        clean = 2*real(ifft(Y));
+        proc = @(U) proc_segment(U, segtap, taper, cfg);   % segment taper + band-pass (as Uref)
+        if aswms_
+            Ud = Dd.U(it, :);
+            pres = Dd.present(:)' & all(isfinite(Ud), 1);   % stations with data over the whole segment
+            Ud(:, ~pres) = 0;
+            dat = proc(Ud);
+            if synth_                                   % noise-free records of D0 (diagnostics, noise level)
+                ke = find(strcmp(truth.ev_id, ev(e).id));
+                Uc = truth.clean{wv, ke}(it + it_tr, :); Uc(:, ~pres) = 0;
+                clean = proc(Uc);
+            else
+                clean = NaN(size(dat));
+            end
+        else
+            % data: full idagrn6 synthetics of the true model, same processing
+            clean = proc(P.(['u_true_' uname{wv}]){e}(it, :));
+            pres = true(1, Nst);
+        end
         idx = []; wt = [];
-        for j = 1:Nst
+        for j = find(pres)
             io = find(t >= tw1(j) & t < twb(j));
             iF = find(t >= twb(j) & t < tw2(j));
             idx = [idx; io + (j-1)*cfg.N; iF + (j-1)*cfg.N];      %#ok<AGROW>
@@ -225,20 +277,25 @@ for wv = 1:2
                 wt = [wt; (2*wv-1)*ones(size(io)); 2*wv*ones(size(iF))]; %#ok<AGROW>
             end
         end
-        rec(r).idx = idx; rec(r).wt = wt;
+        rec(r).idx = idx; rec(r).wt = wt; rec(r).present = pres(:);
         rec(r).first = [true; diff(idx) ~= 1 | diff(wt) ~= 0];   % segment starts
         % normalize each record (data and, in apply_reference.m, the
         % reference spectra) by its peak amplitude in the windows, as is
         % usual with real data
-        rec(r).scale = max(abs(clean(idx)));
-        rec(r).clean = clean(idx) / rec(r).scale;
+        if aswms_
+            rec(r).scale = max(abs(dat(idx)));
+            rec(r).d = dat(idx) / rec(r).scale;
+            rec(r).clean = clean(idx) / rec(r).scale;
+        else
+            rec(r).scale = max(abs(clean(idx)));
+            rec(r).clean = clean(idx) / rec(r).scale;
+        end
         rec(r).Dj = Dj;
         % for the waveform figures: the step-1 starting model (all branches,
         % no nuisance correction)
         if isfield(P, ['u_start_' uname{wv}])
-            X = fft(P.(['u_start_' uname{wv}]){e}(it, :) .* segtap);
-            Y = zeros(cfg.N, Nst); Y(cfg.ib, :) = X(cfg.ib, :) .* taper;
-            u = 2*real(ifft(Y)); rec(r).start = u(idx) / rec(r).scale;
+            u = proc(P.(['u_start_' uname{wv}]){e}(it, :));
+            rec(r).start = u(idx) / rec(r).scale;
         else
             rec(r).start = NaN(size(idx));
         end
@@ -256,25 +313,44 @@ wave = [rec.wave]';
 % band-limited noise: white noise through the processing band-pass with a
 % standard deviation of opt.noise (default 3%) of the peak amplitude of
 % each (normalized) record
+% ('aswms': the noise is in the data; its level and correlation are
+% measured from data - noise-free records for the synthetic test, and set
+% to opt.noise_guess and 0.5 for real data, as starting values only: both
+% are sampled)
 sig_true = og('noise', 0.03)*ones(1, 4);
 bpf = zeros(cfg.N, 1); bpf(cfg.ib) = taper;
 cc = zeros(4, 2);                         % lag-1 autocorrelation accumulators
+ss = zeros(4, 2);                         % noise power accumulators ('aswms')
 for r = 1:nrec
-    X = fft(randn(cfg.N, Nst));
-    nz = 2*real(ifft(X .* bpf));          % one-sided filter -> real band-limited noise
-    nz = nz / std(nz(:));
-    nr = sig_true(2*rec(r).wave) * nz(rec(r).idx);
-    rec(r).d = rec(r).clean + nr;
+    if aswms_
+        nr = rec(r).d - rec(r).clean;     % (NaN for real data)
+    else
+        X = fft(randn(cfg.N, Nst));
+        nz = 2*real(ifft(X .* bpf));      % one-sided filter -> real band-limited noise
+        nz = nz / std(nz(:));
+        nr = sig_true(2*rec(r).wave) * nz(rec(r).idx);
+        rec(r).d = rec(r).clean + nr;
+    end
     nf = find(~rec(r).first);
     for w = unique(rec(r).wt)'
         i = nf(rec(r).wt(nf) == w);
         cc(w, :) = cc(w, :) + [sum(nr(i).*nr(i-1)), sum(nr(i-1).^2)];
+        ss(w, :) = ss(w, :) + [sum(nr(rec(r).wt == w).^2), sum(rec(r).wt == w)];
     end
 end
 rho_emp = (cc(:,1) ./ cc(:,2))';
+if aswms_
+    if synth_
+        sig_true = sqrt(ss(:,1) ./ ss(:,2))';
+        if single_, sig_true([2 4]) = sig_true([1 3]); end
+        fprintf('noise of the D0 data (std, fraction of each record''s peak) per window %s\n', mat2str(round(sig_true*1e4)/1e4));
+    else
+        sig_true = og('noise_guess', 0.03)*ones(1, 4); rho_emp = 0.5*ones(1, 4);
+    end
+end
 if single_, rho_emp([2 4]) = rho_emp([1 3]); end   % tied slots (single window)
 fprintf('band-limited noise: empirical lag-1 correlation per window %s\n', mat2str(round(rho_emp*100)/100));
-fprintf('%d stations, %d events, %d records, %d data samples\n', Nst, nev, nrec, ...
+fprintf('%d stations, %d events, %d records, %d data samples\n', Nst, numel(unique([rec.event])), nrec, ...
     sum(arrayfun(@(x) numel(x.d), rec)));
 
 %% ---- path delay of the data relative to the reference (diagnostic) ----

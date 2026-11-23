@@ -26,6 +26,15 @@ function P = prep_mineos_idagrn(opt)
 % Steps 2-4 for the true model are skipped when opt.P_true (a previous
 % output) is given; only the reference part is then recomputed.
 %
+% opt.data_source = 'aswms' (default of parameters_RL.m): the data are the
+% ASWMS-Q event files (A1-A3; for the synthetic test from the SAC files of
+% D0_synth_make_sac_data.m), so the full true-model synthetics of step 4
+% are NOT computed here (P.u_true_* absent). The true-model MINEOS phase
+% velocities (diagnostics of the synthetic test) are computed when
+% opt.trueid is not empty (set it to '' for real data). The single-branch
+% reference synthetics are also written in the ASWMS-Q event-file format
+% (write_branchmat.m): <opt.aswms_dir>branchmat/<refid>/<event id>_<component>.mat.
+%
 % Needs the MINEOS and idagrn6 binaries in ../FORTRAN/bin and SAC (sacio)
 % for idagrn6; see ../FORTRAN/README. Run from this directory.
 %
@@ -77,13 +86,21 @@ else
     copyfile(fullfile(P.mdir, 'CARDS', [P.ref_qmod, '.qmod']), fullfile(P.mdir, 'CARDS', [P.refid, '.qmod']));
     P.card_ref = read_model_card(fullfile(P.mdir, 'CARDS', [P.refid, '.card']));
 end
-P.card_true = read_model_card(fullfile(P.mdir, 'CARDS', [P.trueid, '.card']));
+if ~isempty(P.trueid)
+    P.card_true = read_model_card(fullfile(P.mdir, 'CARDS', [P.trueid, '.card']));
+else
+    P.card_true = P.card_ref;                     % (real data: no true model; placeholder for the plots)
+end
 
 % 2-3. mode tables, dispersion and kernels
 Pt = og('P_true', []);
+aswms_ = strcmp(og('data_source', 'internal'), 'aswms');
+true_ = ~isempty(P.trueid);
 tic;
 for TY = 'TS'
-    if isempty(Pt) || size(Pt.(['phv_true_', TY]), 2) < P.nm
+    if ~true_
+        P.(['phv_true_', TY]) = NaN(numel(P.Tdisp), P.nm);           % (real data: no true model)
+    elseif isempty(Pt) || size(Pt.(['phv_true_', TY]), 2) < P.nm
         o = mineos_modes(P.mdir, P.trueid, TY, P.nbranch_data, P.maxF, P.Tdisp, []);
         P.(['phv_true_', TY]) = o.phv(:, 1:P.nm);
     else
@@ -98,7 +115,9 @@ end
 
 % 4. synthetics
 for TY = 'TS'
-    if isempty(Pt)
+    if aswms_
+        % the data are the ASWMS-Q event files (no true-model synthetics here)
+    elseif isempty(Pt)
         D = idagrn_synth(P.mdir, P.trueid, TY, P.maxF, P.nbranch_data, P.ev, P.sta, P.len_hr, P.dt, []);
         P.t = D.t;
         P.(['u_true_', TY]) = D.u;                   % {nev x 1} [Nt x Nsta]
@@ -107,6 +126,7 @@ for TY = 'TS'
     end
     D = idagrn_synth(P.mdir, P.refid, TY, P.maxF, P.nm, P.ev, P.sta, P.len_hr, P.dt, 0:P.nm-1);
     P.(['u_ref_', TY]) = D.u;                        % {nev x nm}
+    P.t = D.t;
     fprintf('idagrn %c done (%.0f s)\n', TY, toc);
 end
 
@@ -125,6 +145,9 @@ if og('start_synth', 0)
     end
 end
 
+if aswms_ || ~isempty(og('aswms_dir', ''))     % reference branch synthetics, ASWMS-Q event-file format
+    write_branchmat(P, opt);
+end
 tmpf = tmp_name('prep');
 save(tmpf, 'P'); movefile(tmpf, prepfile);
 end
