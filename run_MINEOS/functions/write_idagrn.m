@@ -43,7 +43,7 @@ com = sprintf('awk ''{print $0}'' %s',STA);
 
 if exist(RUNFILE,'file') == 2
     disp('File exists! Removing it now')
-    com = ['rm -f',RUNFILE];
+    com = ['rm -f ',RUNFILE];
     [status,log] = system(com);
 end
 
