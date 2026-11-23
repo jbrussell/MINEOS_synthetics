@@ -23,7 +23,9 @@ vs_iso = sqrt((2*ct.vsv.^2 + ct.vsh.^2)/3);
 im = find(abs(z - zmoho) < 1e-6);
 [~, k] = max(vs_iso(im)); i1 = im(k);
 v1 = vs_iso(i1);
-v2 = interp1(z(z > zmoho + 1e-6), vs_iso(z > zmoho + 1e-6), zlin);   % (no discontinuity at zlin)
+% Vs at zlin: card_at_depth handles the node pairs of the discontinuities
+% (MATLAB's interp1 rejects repeated depths; Octave's accepts them)
+v2 = card_at_depth(struct('z', ct.z, 'vs', vs_iso), 'vs', zlin);   % (no discontinuity at zlin)
 in = find(z >= zmoho - 1e-6 & z <= zlin & vs_iso > 0);
 in = in(~(abs(z(in) - zmoho) < 1e-6 & in ~= i1));                     % mantle side only
 vs = v1 + (v2 - v1)*(z(in) - zmoho)/(zlin - zmoho);
