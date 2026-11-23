@@ -1,5 +1,5 @@
-function plot_record_sections(P, outdir, fc, U_start)
-% plot_record_sections(P, outdir, fc, U_start)
+function plot_record_sections(P, outdir, fc, U_start, windows, fund_margin)
+% plot_record_sections(P, outdir, fc, U_start, windows, fund_margin)
 %
 % Record sections of the full mode-sum idagrn6 synthetics of the step-2
 % prep structure P (prep_mineos_idagrn.m): the PA5 "data" (all branches
@@ -12,7 +12,9 @@ function plot_record_sections(P, outdir, fc, U_start)
 % as in sub_setup_records.m): Delta/U_ov (overtone window start), Delta/U_b
 % (overtone/fundamental boundary; with opt.windows = 'single' the two are
 % one window) and Delta/U_f + 60 s (end). U_start (optional, km/s, scalar
-% or [Love Rayleigh]) replaces U_ov as in opt.U_start.
+% or [Love Rayleigh]) replaces U_ov as in opt.U_start; windows = 'fund'
+% (opt.windows) starts the window at max fundamental-mode U + fund_margin
+% (opt.fund_margin, default [0.4 0.2] km/s for [Love Rayleigh]).
 %
 % Figures in outdir:
 %   record_section_all_<T|Z>.png    all events and stations vs epicentral
@@ -22,6 +24,8 @@ function plot_record_sections(P, outdir, fc, U_start)
 %                                   black, step-1 start red
 if nargin < 3 || isempty(fc), fc = [1/112 1/100 1/20 1/17]; end
 if nargin < 4, U_start = []; end
+if nargin < 5 || isempty(windows), windows = 'single'; end
+if nargin < 6 || isempty(fund_margin), fund_margin = [0.4 0.2]; end
 if ~exist(outdir, 'dir'), mkdir(outdir); end
 if exist('OCTAVE_VERSION', 'builtin'), set(0, 'defaultfigurevisible', 'off'); end
 t = P.t(:); Nt = numel(t); dt = t(2) - t(1);
@@ -37,6 +41,7 @@ for wv = 1:2
     U = P.(['grv_ref_' ty{wv}]);
     Ub = max(U(:,1)) + 0.2; Uov = max(max(U(:, 2:end))) + 0.6; Uf = min(U(:,1)) - 0.35;
     if ~isempty(U_start), Uov = U_start(min(wv, numel(U_start))); end
+    if strcmp(windows, 'fund'), Ub = max(U(:,1)) + fund_margin(min(wv, numel(fund_margin))); Uov = Ub; end
     D = zeros(nev, nst); Ut = cell(nev, 1); Up = cell(nev, 1);
     for e = 1:nev
         D(e, :) = gc_dist_az(P.sta.lat, P.sta.lon, P.ev(e).lat*ones(nst, 1), P.ev(e).lon*ones(nst, 1))';

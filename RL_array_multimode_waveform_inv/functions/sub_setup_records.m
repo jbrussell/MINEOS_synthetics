@@ -149,10 +149,15 @@ rec = struct([]); r = 0;
 % fundamental mode; one noise level and correlation per wave type, labelled
 % 2*wv-1, the slots 2*wv-1 and 2*wv tied in the samplers); 'split' = an
 % overtone window (to Delta/U_b) and a fundamental-mode window, each with
-% its own noise parameters. opt.U_start (km/s; scalar or [Love Rayleigh]):
-% start of the window; default (empty) max group velocity of branches
-% 1..nm-1 of the reference + 0.6 km/s.
-single_ = strcmp(og('windows', 'single'), 'single');
+% its own noise parameters; 'fund' = the fundamental-mode window only
+% (from Delta/U_w, U_w = max fundamental-mode group velocity of the
+% reference + opt.fund_margin(wave) km/s, default [0.4 0.2] for [Love
+% Rayleigh], to Delta/U_f + 60 s): cuts the early, fast higher modes (also
+% the branches >= nm that are not modelled). opt.U_start (km/s; scalar or [Love
+% Rayleigh]): start of the window ('single'); default (empty) max group
+% velocity of branches 1..nm-1 of the reference + 0.6 km/s.
+wmode_ = og('windows', 'single');
+single_ = any(strcmp(wmode_, {'single', 'fund'}));
 U_start_ = og('U_start', []);
 mc.single_window = single_;
 segtap = tukeywin_(cfg.N, 0.1);          % taper of the time segments (data and Uref)
@@ -162,6 +167,10 @@ for wv = 1:2
     U0 = U(:,1); Uov = U(:, 2:end);
     win(wv).Ub = max(U0) + 0.2; win(wv).Uov1 = max(Uov(:)) + 0.6; win(wv).Uf2 = min(U0) - 0.35;
     if ~isempty(U_start_), win(wv).Uov1 = U_start_(min(wv, numel(U_start_))); end   % opt.U_start
+    if strcmp(wmode_, 'fund')                                   % no overtone window
+        fm_ = og('fund_margin', [0.4 0.2]);
+        win(wv).Ub = max(U0) + fm_(min(wv, numel(fm_))); win(wv).Uov1 = win(wv).Ub;
+    end
     fprintf('%s ref. group vel: fund %.2f-%.2f, overtones %.2f-%.2f km/s\n', ...
         wname{wv}, min(U0), max(U0), min(Uov(:)), max(Uov(:)));
     for e = 1:nev
