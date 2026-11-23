@@ -79,7 +79,8 @@ for it = 1:mc.nit
                 Gn{r} = Gfun(r, Sn.Cf{wave(r)}, tauo(r, st), reshape(st.dthc(r,:,:), nm, Ka));
                 Ln(r) = llk(r, Gn{r}, st.sig, st.rho);
             end
-            if log(rand) < sum(Ln) - sum(Le)
+            dlp = lr_common('logprior', mn, cfg, mc) - lr_common('logprior', st.m, cfg, mc);
+            if log(rand) < sum(Ln) - sum(Le) + dlp                   % + smoothness prior
                 Sn.tauc = st.tauc; Sn.dthc = st.dthc; Sn.sig = st.sig; Sn.rho = st.rho;
                 st = Sn; G = Gn; Le = Ln; acc(is, mv, 2) = acc(is, mv, 2) + 1;
             end

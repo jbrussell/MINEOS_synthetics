@@ -107,7 +107,8 @@ for it = 1:pt.nit
                 for r = rr
                     [~, Ln(r), Gn{r}, Xn{r}] = nuis_relin(rec(r), Sn.Cf{wave(r)}, s.lin{r}, cfg, s.sig, s.rho, mc, nm);
                 end
-                if log(rand) < (sum(Ln) - sum(s.Le)) / Tk
+                dlp = lr_common('logprior', mn, cfg, mc) - lr_common('logprior', s.m, cfg, mc);
+                if log(rand) < (sum(Ln) - sum(s.Le)) / Tk + dlp      % smoothness prior untempered
                     Sn.G = Gn; Sn.Le = Ln; Sn.xh = Xn; Sn.lin = s.lin; s = Sn;
                     if k == 1, info.acc(is, mv, 2) = info.acc(is, mv, 2) + 1; end
                 end

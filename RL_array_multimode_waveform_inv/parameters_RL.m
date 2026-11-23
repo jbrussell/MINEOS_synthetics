@@ -76,6 +76,9 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   U_w = max fundamental-mode U of the reference + fund_margin
     ...                                  %   'single': one window per wave type from Delta/U_start (overtones +
     ...                                  %   fundamental mode, one noise level); 'split': overtone and fundamental-mode windows
+    'smooth_sig', [0 0], ...             % smoothness prior: std of the curvature of [Vsv Vsh] (km/s/km^2),
+    ...                                  %   one Gaussian term per smooth_len km (0 = off; see lr_common.m)
+    'smooth_len', 10, ...
     'autowin',  struct(), ...            % auto_win_select options ('auto' windows); empty = ASWMS-Q defaults
     'fund_margin', [0.4 0.2], ...        % 'fund' window start margin (km/s) [Love Rayleigh]
     'U_start',  [], ...                  % window start group velocity (km/s; scalar or [Love Rayleigh]);

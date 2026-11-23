@@ -7,6 +7,7 @@ function varargout = lr_common(action, varargin)
 %   [m, ok, set, mv] = lr_common('propose', m, cfg, mc, T)
 %   [S, ok] = lr_common('disp', S, m, cfg, Tdisp, fb, nm, which)
 %   v = lr_common('profiles', S, zplot, cfg)        [vsv vsh xi eta] on zplot
+%   lp = lr_common('logprior', m, cfg, mc)          smoothness log prior
 %
 % Each of m.V (Vsv), m.X (xi) and, with mc.eta_free, m.E (eta) is one
 % clamped cubic B-spline from the Moho (cfg.zmin) to cfg.zmax:
@@ -20,8 +21,22 @@ function varargout = lr_common(action, varargin)
 % Moves (xi with prob p_xi, eta with p_eta if free, Vsv otherwise):
 % 1 birth, 2 death, 3 move of an interior point, 4 value change of an
 % interior point or the top end.
-% Births draw from the prior and deaths pick uniformly, so every allowed
-% move is accepted on the likelihood ratio alone.
+% Births draw from the prior and deaths pick uniformly, so without the
+% smoothness prior every allowed move is accepted on the likelihood ratio
+% alone.
+%
+% Optional smoothness prior (mc.smooth_sig = [sig_sv sig_sh], km/s/km^2;
+% 0 = off): a Gaussian penalty on the curvature of the Vsv and Vsh
+% profiles between the Moho and zmax,
+%   log p_s(m) = -1/2 sum_{X = sv, sh} int (X''(z)/sig_X)^2 dz / mc.smooth_len,
+% i.e. independent N(0, sig_X^2) on the curvature every mc.smooth_len km
+% (default 10 km); X'' by finite differences of the B-spline profile on a
+% 1 km grid. It is a function of the profile, not of the control points,
+% so it applies the same way for any number of control points; it
+% multiplies the uniform priors (the joint prior is no longer uniform in
+% k: it favours fewer, smoother control points). The acceptance ratio of
+% the structural moves includes its change (untempered, so it cancels in
+% the parallel-tempering swaps).
 switch action
     case 'draw_prior'
         [cfg, mc] = varargin{:};
@@ -86,6 +101,22 @@ switch action
         S.CL = CL; S.CR = CR; S.m = m;
         if ok, S.Cf = {disp_to_band(CL, Tdisp, fb), disp_to_band(CR, Tdisp, fb)}; end
         varargout = {S, ok};
+    case 'logprior'
+        [m, cfg, mc] = varargin{:};
+        lp = 0; sg = [0 0];
+        if isfield(mc, 'smooth_sig') && ~isempty(mc.smooth_sig), sg = mc.smooth_sig(:)' .* [1 1]; end
+        if any(sg > 0)
+            dz = 1; zg = (cfg.zmin:dz:cfg.zmax)';
+            vs = bspline_profile([cfg.zmin; m.V.zc(:); cfg.zmax], [m.V.ev(1); m.V.vc(:); m.V.ev(2)], zg);
+            xi = bspline_profile([cfg.zmin; m.X.zc(:); cfg.zmax], [m.X.ev(1); m.X.vc(:); m.X.ev(2)], zg);
+            P = [vs, vs .* sqrt(xi)];
+            ell = 10; if isfield(mc, 'smooth_len') && ~isempty(mc.smooth_len), ell = mc.smooth_len; end
+            for c = find(sg > 0)
+                d2 = diff(P(:, c), 2) / dz^2;
+                lp = lp - 0.5*sum((d2/sg(c)).^2)*dz/ell;
+            end
+        end
+        varargout = {lp};
     case 'profiles'
         % [vsv vsh xi eta] on zplot: the B-spline profiles between zmin and
         % zmax, the reference model elsewhere (and eta at the reference

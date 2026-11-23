@@ -60,6 +60,8 @@ mc.kxmin = 0;  mc.kxmax = og('kxmax', 15);   % interior xi control points
 mc.vsmin = 4.0; mc.vsmax = 5.0;              % U prior on Vsv (km/s)
 mc.ximin = 0.90; mc.ximax = 1.20;            % U prior on xi
 mc.p_xi  = 0.4;                              % fraction of moves on xi
+mc.smooth_sig = og('smooth_sig', [0 0]);     % curvature prior on [Vsv Vsh] (km/s/km^2; 0 = off; lr_common)
+mc.smooth_len = og('smooth_len', 10);        % ... one N(0, sig^2) curvature term per smooth_len km
 % eta (opt.eta_free): held at the reference model by default; if free, a
 % third transdimensional B-spline profile (ke <= kv, bottom tied to the
 % reference, U prior), updated in a fraction p_eta of the moves
