@@ -68,11 +68,15 @@ opt = opt_defaults(opt, struct( ...
     'upd_ngn',  10, ...                  % Gauss-Newton steps per state to move tau, dth, B to the new reference
     'ref_prep', '', ...                  % optional prep file of another starting reference (D6)
     'spec_Kt',  3, 'tau_prior', 15, 'dtau_prior', 10, ...   % tau_n(w): Legendre terms, prior std (s)
-    'windows',  'fund', ...              % 'fund': fundamental-mode window only, Delta/U_w to Delta/U_f + 60 s
+    'windows',  'auto', ...              % 'auto': window picked from the data per event (auto_win_select.m, the
+    ...                                  %   ASWMS-Q picker; options in 'autowin', e.g. struct('cycle_before', 2,
+    ...                                  %   'cycle_after', 5, 'min_groupv', 2, 'max_groupv', 5));
+    ...                                  %   'fund': fundamental-mode window only, Delta/U_w to Delta/U_f + 60 s
     ...                                  %   (cuts the fast higher modes, incl. the unmodelled branches >= nm);
     ...                                  %   U_w = max fundamental-mode U of the reference + fund_margin
     ...                                  %   'single': one window per wave type from Delta/U_start (overtones +
     ...                                  %   fundamental mode, one noise level); 'split': overtone and fundamental-mode windows
+    'autowin',  struct(), ...            % auto_win_select options ('auto' windows); empty = ASWMS-Q defaults
     'fund_margin', [0.4 0.2], ...        % 'fund' window start margin (km/s) [Love Rayleigh]
     'U_start',  [], ...                  % window start group velocity (km/s; scalar or [Love Rayleigh]);
     ...                                  %   [] = max U of branches 1..nm-1 of the reference + 0.6 km/s

@@ -155,9 +155,15 @@ rec = struct([]); r = 0;
 % Rayleigh], to Delta/U_f + 60 s): cuts the early, fast higher modes (also
 % the branches >= nm that are not modelled). opt.U_start (km/s; scalar or [Love
 % Rayleigh]): start of the window ('single'); default (empty) max group
-% velocity of branches 1..nm-1 of the reference + 0.6 km/s.
+% velocity of branches 1..nm-1 of the reference + 0.6 km/s. 'auto' = one
+% window per event picked from the data (auto_win_select.m, the ASWMS-Q
+% picker: narrow-band envelope peaks tracked across the band, group delays
+% fitted against distance, window from 2 cycles before to 5 cycles after
+% the arrivals; options opt.autowin, a struct of auto_win_select options),
+% Delta/v1 + t1 .. Delta/v2 + t2 (rec.winpara = [v1 t1 v2 t2]).
 wmode_ = og('windows', 'single');
-single_ = any(strcmp(wmode_, {'single', 'fund'}));
+single_ = any(strcmp(wmode_, {'single', 'fund', 'auto'}));
+autowin_ = og('autowin', struct());
 U_start_ = og('U_start', []);
 mc.single_window = single_;
 segtap = tukeywin_(cfg.N, 0.1);          % taper of the time segments (data and Uref)
@@ -178,15 +184,23 @@ for wv = 1:2
         rec(r).wave = wv; rec(r).event = e; rec(r).id = ev(e).id;
         rec(r).az_prop = mod(baz(e) + 180, 360);
         rec(r).Del0 = Del0(e);
-        rec(r).tred = cfg.dt*round((Del0(e)/win(wv).Uov1 - 150)/cfg.dt);
+        Dj = gc_dist_az(lat, lon, ev(e).lat*ones(Nst,1), ev(e).lon*ones(Nst,1)) * 6371*pi/180;
+        % window start / overtone-fundamental boundary / end per station (s)
+        tw1 = Dj/win(wv).Uov1; twb = Dj/win(wv).Ub; tw2 = Dj/win(wv).Uf2 + 60;
+        if strcmp(wmode_, 'auto')                       % picked from the data
+            rec(r).winpara = auto_win_select(P.(['u_true_' uname{wv}]){e}, P.t, Dj, 1./fc([4 1]), autowin_);
+            tw1 = Dj/rec(r).winpara(1) + rec(r).winpara(2); twb = tw1;
+            tw2 = Dj/rec(r).winpara(3) + rec(r).winpara(4);
+        end
+        if strcmp(wmode_, 'auto'), t0_ = min(tw1); else, t0_ = Del0(e)/win(wv).Uov1; end
+        rec(r).tred = cfg.dt*round((t0_ - 150)/cfg.dt);
         % (a late window start, opt.U_start, must not push the segment past
         % the end of the idagrn records)
         rec(r).tred = min(rec(r).tred, P.t(1) + cfg.dt*floor((P.t(end) - P.t(1))/cfg.dt - (cfg.N - 1)));
-        Dj = gc_dist_az(lat, lon, ev(e).lat*ones(Nst,1), ev(e).lon*ones(Nst,1)) * 6371*pi/180;
         t  = (0:cfg.N-1)'*cfg.dt + rec(r).tred;
         it = round((t - P.t(1))/cfg.dt) + 1;          % samples of the idagrn traces
         if it(end) > numel(P.t) || it(1) < 1, error('idagrn records too short: increase opt.len_hr'); end
-        if max(Dj)/win(wv).Uf2 + 60 > t(end) || min(Dj)/win(wv).Uov1 < t(1)
+        if max(tw2) > t(end) || min(tw1) < t(1)
             warning('record %d (%s): windows cut by the %d-sample segment (opt.N, opt.len_hr)', r, ev(e).id, cfg.N);
         end
         % data: full idagrn6 synthetics of the true model, same processing
@@ -195,8 +209,8 @@ for wv = 1:2
         clean = 2*real(ifft(Y));
         idx = []; wt = [];
         for j = 1:Nst
-            io = find(t >= Dj(j)/win(wv).Uov1 & t < Dj(j)/win(wv).Ub);
-            iF = find(t >= Dj(j)/win(wv).Ub   & t < Dj(j)/win(wv).Uf2 + 60);
+            io = find(t >= tw1(j) & t < twb(j));
+            iF = find(t >= twb(j) & t < tw2(j));
             idx = [idx; io + (j-1)*cfg.N; iF + (j-1)*cfg.N];      %#ok<AGROW>
             if single_
                 wt = [wt; (2*wv-1)*ones(numel(io) + numel(iF), 1)]; %#ok<AGROW>   % one surface-wave window
