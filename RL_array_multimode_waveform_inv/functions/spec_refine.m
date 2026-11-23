@@ -52,7 +52,12 @@ function [linc, hist, pick] = spec_refine(linc, rec, Cf, sig, rho, cfg, mc, nm, 
 % Start (from [], mc.nuis_start):
 %   'best' (default): the three starts below, and for every record the one
 %          with the highest log-likelihood (records are independent, so the
-%          choice is exact); pick (optional output) = 1, 2, 3 per record
+%          choice is exact); pick (optional output) = 1, 2, 3 per record.
+%          Test (PA5, matched 8 branches): at the true dispersion log L
+%          220383 (direct 215368, global 205887, banded 197717; records won
+%          8/16/6); at the reference dispersion (the chains' lin0) 219068
+%          (direct 216177, global 217464, banded 189666; 9/13/8). One
+%          cycle-jump pass (cycle_jump.m) then adds 817 and 275.
 %   'direct'              : the whole band from the start: constant tau_n,
 %                           then all terms
 %   'continuation_global' : frequency continuation (mc.fcont_stages stages,
