@@ -1,5 +1,5 @@
-function [linc, hist] = spec_refine(linc, rec, Cf, sig, rho, cfg, mc, nm, ngn)
-% [linc, hist] = spec_refine(linc, rec, Cf, sig, rho, cfg, mc, nm, ngn)
+function [linc, hist, pick] = spec_refine(linc, rec, Cf, sig, rho, cfg, mc, nm, ngn)
+% [linc, hist, pick] = spec_refine(linc, rec, Cf, sig, rho, cfg, mc, nm, ngn)
 % Refine the linearization points of the nuisance parameters (tau_n(w),
 % dth_n(w), B_n(w)) of every record for a FIXED structure Cf = {Love,
 % Rayleigh} band dispersion by damped Gauss-Newton steps (nuis_relin).
@@ -49,11 +49,50 @@ function [linc, hist] = spec_refine(linc, rec, Cf, sig, rho, cfg, mc, nm, ngn)
 % band basis carries that through (Love record 11: -1752; full 6689, old
 % 7257).
 %
+% Start (from [], mc.nuis_start):
+%   'best' (default): the three starts below, and for every record the one
+%          with the highest log-likelihood (records are independent, so the
+%          choice is exact);
+%          pick (optional output) = 1, 2, 3 per record
+%   'old'  : constant tau_n, then all terms, on the full band
+%   'full' : frequency continuation (mc.fcont_stages stages, default 4),
+%            full-band tau basis
+%   'band' : frequency continuation, band-restricted tau basis
+% Without mc.nuis_start: mc.fcont_stages (> 1: continuation) and
+% mc.fcont_basis decide, as before.
+%
 % hist (optional output): per stage, the linearization points (lin), the
 % time-shift basis (Psit) and the low-pass (LP, [] for the full band).
 
 if nargin < 9 || isempty(ngn), ngn = 30; end
-nrec = numel(rec);
+nrec = numel(rec); pick = [];
+if isempty(linc) && isfield(mc, 'nuis_start') && ~isempty(mc.nuis_start)
+    ns_ = 4; if isfield(mc, 'fcont_stages') && ~isempty(mc.fcont_stages) && mc.fcont_stages > 1, ns_ = mc.fcont_stages; end
+    switch mc.nuis_start
+        case 'best'
+            nm_ = {'old', 'full', 'band'}; Ls = zeros(nrec, 3); Lc = cell(1, 3);
+            for v = 1:3
+                m_ = mc; m_.nuis_start = nm_{v};
+                Lc{v} = spec_refine([], rec, Cf, sig, rho, cfg, m_, nm, ngn);
+                for r = 1:nrec
+                    [~, Ls(r, v)] = nuis_relin(rec(r), Cf{rec(r).wave}, Lc{v}{r}, cfg, sig, rho, mc, nm, false);
+                end
+            end
+            [~, pick] = max(Ls, [], 2);
+            linc = cell(nrec, 1);
+            for r = 1:nrec, linc{r} = Lc{pick(r)}{r}; end
+            hist = struct('lin', {}, 'Psit', {}, 'LP', {});
+            fprintf('nuisance start: best of old/full/band per record: %d/%d/%d records; log L %.1f (old %.1f, full %.1f, band %.1f)\n', ...
+                sum(pick == 1), sum(pick == 2), sum(pick == 3), sum(max(Ls, [], 2)), sum(Ls(:, 1)), sum(Ls(:, 2)), sum(Ls(:, 3)));
+            return
+        case 'old'
+            mc.fcont_stages = 1;
+        case {'full', 'band'}
+            mc.fcont_stages = ns_; mc.fcont_basis = mc.nuis_start;
+        otherwise
+            error('spec_refine: unknown mc.nuis_start ''%s''', mc.nuis_start);
+    end
+end
 Kt = size(cfg.Psit, 2);
 stages = {mc}; LPs = {[]}; Pst = {cfg.Psit};
 if isempty(linc)
