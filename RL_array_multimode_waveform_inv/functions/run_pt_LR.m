@@ -20,7 +20,9 @@ function [sv, st, info, S] = run_pt_LR(rec, cfg, mc, Tdisp, fb, nm, zplot, seed,
 %
 % lin0 : {nrec} initial linearization points (e.g. fit_nuisance_LR at the
 %        reference dispersion)
-% pt   : T (temperatures, T(1) = 1), nit, burn, thin
+% pt   : T (temperatures, T(1) = 1), nit, burn, thin; optional jump_last:
+%        cycle-skip checks (cycle_jump.m, every mc.jump_every iterations,
+%        all temperatures) up to this iteration (default pt.burn)
 % S0   : OPTIONAL {K} initial states (fields m, sig, rho and, optionally,
 %        lin: {nrec} linearization points), e.g. the final states S of an
 %        earlier call (continuation after a reference update); default:
@@ -32,6 +34,9 @@ rng(seed);
 nrec = numel(rec); wave = [rec.wave]'; K = numel(pt.T);
 Kb = size(cfg.Phi, 2); Ka = size(cfg.Psi, 2); Kt = size(cfg.Psit, 2);
 relin = max(1, round(mc.relin));
+jev = 0; if isfield(mc, 'jump_every') && ~isempty(mc.jump_every), jev = round(mc.jump_every); end
+jlast = pt.burn; if isfield(pt, 'jump_last'), jlast = pt.jump_last; end
+info.jumps = zeros(0, 3);                         % [iteration, temperature index, accepted changes]
 lay = @(lr) spec_layout(lr, nm, Kb, Ka, mc.sb, mc.taup, mc.dthp);
 
 % ---------- independent prior draws for every temperature ----------
@@ -92,6 +97,19 @@ for it = 1:pt.nit
                 lr.dth0 = lr.dth0 + max(min(xh(ith), mc.max_dth), -mc.max_dth);
                 s.lin{r} = lr;
                 [~, s.Le(r), s.G{r}, s.xh{r}] = nuis_relin(rec(r), s.Cf{wave(r)}, lr, cfg, s.sig, s.rho, mc, nm);
+            end
+        end
+        % ---------- cycle-skip check of the time shifts (burn-in) ----------
+        if jev > 0 && it <= jlast && mod(it, jev) == 0
+            nj = 0;
+            for r = 1:nrec
+                [s.lin{r}, s.Le(r), s.G{r}, s.xh{r}, a] = cycle_jump(rec(r), s.Cf{wave(r)}, s.lin{r}, ...
+                    s.Le(r), s.G{r}, s.xh{r}, cfg, s.sig, s.rho, mc, nm);
+                nj = nj + a;
+            end
+            info.jumps(end+1, :) = [it, k, nj];
+            if k == 1 && nj > 0
+                fprintf('PT %d  it %5d  cycle-skip check: %d time-shift change(s) kept (T = 1)\n', ie, it, nj);
             end
         end
         % ---------- structural move ----------

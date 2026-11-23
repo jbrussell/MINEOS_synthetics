@@ -60,6 +60,10 @@ opt = opt_defaults(opt, struct( ...
     'nuisance', 'marginal', ...          % tau_n(w), dth_n(w), B_n(w): 'marginal' (integrated out,
     ...                                  %   linearized) or 'sample' (tau, dth sampled; plain only)
     'relin',    1, ...                   % relinearize tau, dth and B every relin iterations (1: per proposal)
+    'fcont_stages', 4, ...               % initial nuisance fit from long to short periods in this many band
+    ...                                  %   stages, against cycle skipping of tau_n(w) (1 = off; spec_refine)
+    'jump_every', 100, ...               % every this many burn-in iterations, try moving each tau_n(w) by one
+    ...                                  %   cycle at the short periods and keep it if log L improves (0 = off)
     'eta_free', false, ...               % eta: false = held at the reference model; true = a free
     ...                                  %   B-spline profile (prior U[etamin, etamax], default 0.80-1.05)
     'update_ref', 'burnin', ...          % 'burnin': recompute the reference (MINEOS + idagrn6) once at the

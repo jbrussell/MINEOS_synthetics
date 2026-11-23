@@ -121,7 +121,7 @@ if ~upd_
 elseif ~isempty(runs)
     % ---------- phase 1: burn-in with the current reference ----------
     % the last opt.upd_frac of the burn-in is saved (T = 1) for the update
-    pt1 = pt; pt1.nit = pt.burn;
+    pt1 = pt; pt1.nit = pt.burn; pt1.jump_last = pt.burn;   % cycle-skip checks over the whole burn-in
     pt1.burn = pt.burn - max(pt.thin, pt.thin*round(opt.upd_frac*pt.burn/pt.thin));
     parfor q = 1:numel(runs)
         ic = runs(q);
@@ -228,7 +228,7 @@ elseif ~isempty(runs)
         [rec_u, cfg_u] = apply_reference(rec, cfg, Pu, Tdisp, fb);
     end
     clear Pu
-    pt2 = pt; pt2.nit = pt.nit - pt.burn; pt2.burn = 0;
+    pt2 = pt; pt2.nit = pt.nit - pt.burn; pt2.burn = 0; pt2.jump_last = 0;
     parfor q = 1:numel(runs)
         ic = runs(q);
         if exist(chainf(ic), 'file') == 2, continue; end
