@@ -15,7 +15,11 @@ function linc = spec_refine(linc, rec, Cf, sig, rho, cfg, mc, nm, ngn)
 % chi-square of the Love fundamental-mode windows 2.0 vs 1.13 with the
 % continuation, at the true structure).
 %
-% Frequency continuation (from [], mc.fcont_stages = ns > 1, default 4):
+% Frequency continuation (from [], mc.fcont_stages = ns > 1; default 1 = off,
+% because in a test with PA5 data it fit worse: log L of the true structure
+% 205.9k vs 215.4k. The Legendre tau_n(w) terms fitted in the long-period
+% stages extrapolate freely to the short periods; a basis on the current
+% band or per-frequency unwrapping would be needed):
 % against cycle skipping, the fit starts at the long periods, where the
 % path delays are a small fraction of a cycle, and the band is widened
 % toward the short periods in ns stages (low-pass corners log-spaced over
