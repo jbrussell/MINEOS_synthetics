@@ -63,7 +63,9 @@ opt = opt_defaults(opt, struct( ...
     'eta_free', false, ...               % eta: false = held at the reference model; true = a free
     ...                                  %   B-spline profile (prior U[etamin, etamax], default 0.80-1.05)
     'update_ref', 'burnin', ...          % 'burnin': recompute the reference (MINEOS + idagrn6) once at the
-    ...                                  %   end of burn-in from the mean model of all chains; 'none': keep step 1
+    ...                                  %   end of burn-in from the mean model of all chains; 'lin': only the
+    ...                                  %   MINEOS linearization of the dispersion (waveform reference of
+    ...                                  %   step 1 kept); 'none': keep step 1
     'upd_frac', 0.2, ...                 % fraction of the burn-in (its end) averaged for the update
     'upd_ngn',  10, ...                  % Gauss-Newton steps per state to move tau, dth, B to the new reference
     'ref_prep', '', ...                  % optional prep file of another starting reference (D6)

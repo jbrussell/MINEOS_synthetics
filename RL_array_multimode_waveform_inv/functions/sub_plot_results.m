@@ -4,7 +4,8 @@
 % True model: PA5; reference model: refp (the step-1 isotropic model).
 if ~exist('tag', 'var'), tag = '_plain'; end
 load(['setup' tag '.mat']);
-% reference updated at the end of burn-in (D3, opt.update_ref = 'burnin'):
+% reference updated at the end of burn-in (D3, opt.update_ref = 'burnin';
+% with 'lin' only cfg.lin, the dispersion linearization, is replaced):
 % the post-burn-in samples use the updated reference spectra and MINEOS
 % linearization, so the final waveforms, the path delays and log L(true)
 % are evaluated with it; the "reference" waveforms and curves stay those of
@@ -13,7 +14,11 @@ upd = [];
 if exist(['refupd' tag '.mat'], 'file') == 2
     upd = load(['refupd' tag '.mat']); upd = upd.U;
     upd_plot = ~(isfield(upd, 'reverted') && upd.reverted);
-    if upd_plot                  % (a rejected update leaves the setup's reference)
+    upd_lin = isfield(upd, 'mode') && strcmp(upd.mode, 'lin');
+    if upd_plot && upd_lin       % linearization only: records and path delays unchanged
+        Pu_ = load(upd.prepfile); Pu_ = Pu_.P;
+        cfg = apply_linearization(cfg, Pu_); clear Pu_
+    elseif upd_plot              % (a rejected update leaves the setup's reference)
         Pu_ = load(upd.prepfile); Pu_ = Pu_.P;
         refsyn0_ = {rec.refsyn};
         [rec, cfg, Cu_f_] = apply_reference(rec, cfg, Pu_, Tdisp, fb);
@@ -57,7 +62,12 @@ end
 fid = fopen(fullfile(outdir, 'summary.txt'), 'w');
 for fo = [1 fid]
     fprintf(fo, 'Run %s: %d chains/ensembles, %d saved samples\n', tag, nc, ns);
-    if ~isempty(upd) && upd_plot
+    if ~isempty(upd) && upd_plot && upd_lin
+        fprintf(fo, 'MINEOS linearization updated at the end of burn-in (%s, mean of %d late burn-in samples; waveform reference unchanged)\n', ...
+            upd.refid, upd.nsamples);
+        fprintf(fo, '  end-of-burn-in states: dispersion change rms %s %%, max %s %%; logL change %s\n', ...
+            mat2str(round(100*upd.dCrms')/100), mat2str(round(100*upd.dCmax')/100), mat2str(round(upd.dL')));
+    elseif ~isempty(upd) && upd_plot
         fprintf(fo, 'reference updated at the end of burn-in (%s, mean of %d late burn-in samples); log L(true) %.1f -> %.1f\n', ...
             upd.refid, upd.nsamples, Ltrue_setup, Ltrue);
     elseif ~isempty(upd)
@@ -150,7 +160,8 @@ for q = 1:3
     if ~isempty(upd) && upd_plot
         im_ = zplot >= cfg.zmin & zplot <= cfg.zmax;
         hh(end+1) = plot(upd.(names{q})(im_), zplot(im_), '-.', 'color', [0.8 0.4 0], 'linewidth', 1.2); %#ok<SAGROW>
-        ll{end+1} = 'updated reference (end of burn-in)'; %#ok<SAGROW>
+        if upd_lin, ll{end+1} = 'linearization model (end of burn-in)'; %#ok<SAGROW>
+        else, ll{end+1} = 'updated reference (end of burn-in)'; end %#ok<SAGROW>
     end
     if q == 1, legend(hh, ll, 'location', 'southwest'); end
 end

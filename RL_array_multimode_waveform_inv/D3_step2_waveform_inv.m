@@ -27,6 +27,15 @@
 %       reference, fixed for the rest of the run. With parallel processes,
 %       the process that finds all burn-in files first does the update
 %       (MINEOS + idagrn6, ~10 min) and the others wait for it.
+%   'lin': as 'burnin', but only the MINEOS LINEARIZATION (cfg.lin: phase
+%       velocities and kernels used to predict the dispersion of a model) is
+%       moved to the mean model; the waveform reference (rec.Uref, rec.cref,
+%       cfg.need) stays that of step 1, so the nuisance parameters keep their
+%       meaning and every chain keeps its own linearization points. (A full
+%       update changes the path delays tau_n(w) must absorb relative to the
+%       reference; with a biased mean model these are larger and less smooth
+%       than the 3-term tau_n(w) basis can fit.) Always kept; the
+%       log-likelihood change of the end-of-burn-in states is only reported.
 %   'none': the reference of opt.prepfile (step 1) throughout.
 %   The update is kept only if the end-of-burn-in (T = 1) states of the
 %   chains fit the data at least as well with it on average (refupd<tag>.mat
@@ -55,7 +64,8 @@ setupf = ['setup' tag '.mat'];
 pt_ = strcmp(opt.sampler, 'pt');
 sample_ = strcmp(opt.nuisance, 'sample');
 if pt_ && sample_, error('opt.nuisance = ''sample'' is only available with the plain sampler'); end
-upd_ = strcmp(opt.update_ref, 'burnin');
+upd_ = any(strcmp(opt.update_ref, {'burnin', 'lin'}));
+linonly_ = strcmp(opt.update_ref, 'lin');
 if upd_ && sample_
     fprintf('note: no reference update with opt.nuisance = ''sample''\n'); upd_ = false;
 end
@@ -137,6 +147,38 @@ elseif ~isempty(runs)
             U.prepfile = sprintf('prep%s_burnupd.mat', tag);
             fprintf('reference update: mean of %d late burn-in samples -> %s (MINEOS + idagrn6)\n', ns, U.refid);
             Pu = update_reference(U.vsv, U.vsh, zplot, cfg, opt, U.refid, U.prepfile, U.eta);
+            U.mode = opt.update_ref;
+            if linonly_
+                % linearization only: same records and nuisance meaning; report
+                % how the states' dispersion and log-likelihood change (each
+                % state with its own linearization points)
+                cfg_u = apply_linearization(cfg, Pu);
+                dL = zeros(mc.nchains, 1); dCmax = dL; dCrms = dL;
+                for i = 1:mc.nchains
+                    B = load(burnf(i)); s1 = B.Sf{1};
+                    [sk, okk] = lr_common('disp', struct(), s1.m, cfg_u, Tdisp, fb, nm, 'both');
+                    Ln = -Inf;
+                    if okk
+                        Ln = 0;
+                        for r = 1:numel(rec)
+                            [~, Lr] = nuis_relin(rec(r), sk.Cf{rec(r).wave}, s1.lin{r}, cfg_u, s1.sig, s1.rho, mc, nm, false);
+                            Ln = Ln + Lr;
+                        end
+                        dC = 100*[(sk.CL - s1.CL)./s1.CL, (sk.CR - s1.CR)./s1.CR];
+                        dC = dC(isfinite(dC)); dCmax(i) = max(abs(dC)); dCrms(i) = sqrt(mean(dC.^2));
+                    end
+                    dL(i) = Ln - B.info1.Ltrace(end, 1);
+                end
+                U.dL = dL; U.dCmax = dCmax; U.dCrms = dCrms; U.reverted = false;
+                U.lin0 = lin0; U.Ltrue = Ltrue;   % waveform reference unchanged: log L(true) unchanged
+                fprintf('linearization update: dispersion change of the end-of-burn-in states (%%) rms %s, max %s\n', ...
+                    mat2str(round(100*dCrms')/100), mat2str(round(100*dCmax')/100));
+                fprintf('linearization update: logL change of the end-of-burn-in states %s (mean %.1f; reported, not tested)\n', ...
+                    mat2str(round(dL')), mean(dL));
+                tmpf = tmp_name('refupd'); save(tmpf, 'U'); movefile(tmpf, updf);
+                rmdir(lockd); clear Pu cfg_u B
+                continue
+            end
             [rec_u, cfg_u, Cu_f] = apply_reference(rec, cfg, Pu, Tdisp, fb);
             U.lin0 = spec_refine([], rec_u, Cu_f, sig_true, rho_emp, cfg_u, mc, nm, 30);
             % safeguard: the T = 1 end-of-burn-in states of all chains must fit
@@ -179,7 +221,13 @@ elseif ~isempty(runs)
     % ---------- phase 2: sampling with the updated reference (fixed) ----------
     U = load(updf); U = U.U;
     Pu = load(U.prepfile); Pu = Pu.P;
-    [rec_u, cfg_u] = apply_reference(rec, cfg, Pu, Tdisp, fb); clear Pu
+    lino_ = isfield(U, 'mode') && strcmp(U.mode, 'lin');
+    if lino_                                      % linearization only
+        rec_u = rec; cfg_u = apply_linearization(cfg, Pu);
+    else
+        [rec_u, cfg_u] = apply_reference(rec, cfg, Pu, Tdisp, fb);
+    end
+    clear Pu
     pt2 = pt; pt2.nit = pt.nit - pt.burn; pt2.burn = 0;
     parfor q = 1:numel(runs)
         ic = runs(q);
@@ -188,7 +236,9 @@ elseif ~isempty(runs)
         for k = 1:numel(S0)                       % linearization points at the new reference
             [sk, okk] = lr_common('disp', struct(), S0{k}.m, cfg_u, Tdisp, fb, nm, 'both');
             if ~okk, error('state %d of chain %d has no valid dispersion with the new reference', k, ic); end
-            S0{k}.lin = spec_refine(U.lin0, rec_u, sk.Cf, S0{k}.sig, S0{k}.rho, cfg_u, mc, nm, opt.upd_ngn);
+            if ~lino_                             % (linearization only: own points stay valid)
+                S0{k}.lin = spec_refine(U.lin0, rec_u, sk.Cf, S0{k}.sig, S0{k}.rho, cfg_u, mc, nm, opt.upd_ngn);
+            end
         end
         [sv, st, info] = run_pt_LR(rec_u, cfg_u, mc, Tdisp, fb, nm, zplot, 3000 + ic, U.lin0, pt2, ic, S0);
         sv.L = [B.sv1.L; sv.L];                   % full trace (burn-in: old reference)
