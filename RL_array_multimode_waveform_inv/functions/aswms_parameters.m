@@ -13,6 +13,12 @@ function parameters = aswms_parameters(opt, component)
 %   periods         15 log-spaced periods spanning the inversion band
 %                   1/opt.fc(4) .. 1/opt.fc(1) (17-112 s by default)
 %   lalim, lolim    station bounds of opt.stationfile +- 1 degree
+%   refv            4 km/s (ASWMS-Q) for Rayleigh, 4.5 km/s for Love
+%                   (component with 'T'): calc_SNR (A1) takes the signal
+%                   between dist/(1.1 refv) and dist/(0.5 refv); with 4 km/s
+%                   the Love waves (group velocity ~4.4 km/s) fall before it
+%                   (synthetic test: Love SNR median 0.3, all stations
+%                   rejected; with 4.5 km/s median 9.7, 99% kept)
 % Any field can be overridden with opt.aswms (a struct of parameters
 % fields).
 if nargin < 1 || isempty(opt), opt = struct(); end
@@ -58,8 +64,9 @@ parameters.min_sta_num = 5;
 parameters.is_removebadwindows = 1;
 
 % (used by calc_SNR and the window plots)
-parameters.refv = 4;
-parameters.refphv = ones(size(parameters.periods))*4;
+parameters.refv = 4;                            % (Rayleigh, ASWMS-Q default)
+if any(component == 'T'), parameters.refv = 4.5; end   % Love: calc_SNR's signal window starts at 1.1*refv
+parameters.refphv = ones(size(parameters.periods))*parameters.refv;
 parameters.min_width = 0.10;
 parameters.max_width = parameters.min_width;
 parameters.prefilt_frac = 0.25;
