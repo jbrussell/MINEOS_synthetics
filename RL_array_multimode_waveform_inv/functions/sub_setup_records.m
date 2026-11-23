@@ -364,3 +364,6 @@ end
 % of the true structure is evaluated with nuisance parameters fitted to it
 % (fit_nuisance_LR.m, called by D3); NaN until then.
 Ltrue = NaN;
+% synthetic test only (opt.fix_tau): time shifts held at the true path
+% delays, exactly at every frequency (apply_fixed_tau.m)
+if og('fix_tau', false), [rec, mc] = apply_fixed_tau(rec, cfg, pd, mc); end

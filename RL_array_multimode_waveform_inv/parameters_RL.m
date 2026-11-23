@@ -83,6 +83,8 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   'continuation_banded' (frequency continuation, long to short periods,
     ...                                  %   with a tau basis over the whole band or over each stage's band)
     'fcont_stages', 4, ...               % stages of the frequency continuation
+    'fix_tau', false, ...                % synthetic test only: tau_n(w) held at the true path delays, exactly at
+    ...                                  %   every frequency (apply_fixed_tau.m; update_ref 'none' or 'lin')
     'jump_every', 100, ...               % every this many burn-in iterations, try moving each tau_n(w) by one
     ...                                  %   cycle at the short periods and keep it if log L improves (0 = off)
     'eta_free', false, ...               % eta: false = held at the reference model; true = a free
