@@ -60,10 +60,11 @@ opt = opt_defaults(opt, struct( ...
     'nuisance', 'marginal', ...          % tau_n(w), dth_n(w), B_n(w): 'marginal' (integrated out,
     ...                                  %   linearized) or 'sample' (tau, dth sampled; plain only)
     'relin',    1, ...                   % relinearize tau, dth and B every relin iterations (1: per proposal)
-    'nuis_start', 'best', ...            % start of the nuisance fit (spec_refine): 'best' = for every record the
-    ...                                  %   best of 'old' (constant tau, then all terms), 'full' and 'band'
-    ...                                  %   (frequency continuation, long to short periods, with a full-band or
-    ...                                  %   band-restricted tau basis); against cycle skipping of tau_n(w)
+    'nuis_start', 'best', ...            % start of the nuisance fit (spec_refine), against cycle skipping of
+    ...                                  %   tau_n(w): 'best' = for every record the best of 'direct' (whole band
+    ...                                  %   at once: constant tau, then all terms), 'continuation_global' and
+    ...                                  %   'continuation_banded' (frequency continuation, long to short periods,
+    ...                                  %   with a tau basis over the whole band or over each stage's band)
     'fcont_stages', 4, ...               % stages of the frequency continuation
     'jump_every', 100, ...               % every this many burn-in iterations, try moving each tau_n(w) by one
     ...                                  %   cycle at the short periods and keep it if log L improves (0 = off)

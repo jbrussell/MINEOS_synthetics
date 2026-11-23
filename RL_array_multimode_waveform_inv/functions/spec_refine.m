@@ -30,8 +30,8 @@ function [linc, hist, pick] = spec_refine(linc, rec, Cf, sig, rho, cfg, mc, nm, 
 % (not degenerate, unlike a whole-cycle shift k/f). The first stage keeps
 % the higher tau_n(w) terms at zero as above.
 %
-% Band-restricted time-shift basis (mc.fcont_basis = 'band'; default 'full'
-% = the Legendre basis of the whole band in every stage): in a low-passed
+% Band-restricted time-shift basis (mc.fcont_basis = 'banded'; default
+% 'global' = the Legendre basis of the whole band in every stage): in a low-passed
 % stage with corner fc, tau_n(w) is described by Legendre polynomials in
 % normalized log f on [f_min, fc] only, held constant (its value at fc) at
 % shorter periods, where the stage has no data. With the full-band basis the
@@ -41,23 +41,24 @@ function [linc, hist, pick] = spec_refine(linc, rec, Cf, sig, rho, cfg, mc, nm, 
 % cfg.Psit.
 %
 % Test (PA5, matched 8 branches, nuisance fitted at the true dispersion; log L
-% of the true structure): old start 215367.5, 'full' 205886.7, 'band'
-% 197717.2. 'band' fixes the records where the full-band terms extrapolate
+% of the true structure): direct start 215367.5, continuation with the
+% global basis 205886.7, with the banded basis 197717.2. The banded basis fixes the records where the full-band terms extrapolate
 % (Rayleigh record 17: 7284 vs -6145, old 7316) but fails where the Love
 % fundamental mode and first overtone overlap at long periods: the first
 % stage already lands a cycle off or trades delays between them, and the
-% band basis carries that through (Love record 11: -1752; full 6689, old
-% 7257).
+% banded basis carries that through (Love record 11: -1752; global 6689,
+% direct 7257).
 %
 % Start (from [], mc.nuis_start):
 %   'best' (default): the three starts below, and for every record the one
 %          with the highest log-likelihood (records are independent, so the
-%          choice is exact);
-%          pick (optional output) = 1, 2, 3 per record
-%   'old'  : constant tau_n, then all terms, on the full band
-%   'full' : frequency continuation (mc.fcont_stages stages, default 4),
-%            full-band tau basis
-%   'band' : frequency continuation, band-restricted tau basis
+%          choice is exact); pick (optional output) = 1, 2, 3 per record
+%   'direct'              : the whole band from the start: constant tau_n,
+%                           then all terms
+%   'continuation_global' : frequency continuation (mc.fcont_stages stages,
+%                           default 4), tau basis over the whole band
+%   'continuation_banded' : frequency continuation, tau basis restricted to
+%                           each stage's band
 % Without mc.nuis_start: mc.fcont_stages (> 1: continuation) and
 % mc.fcont_basis decide, as before.
 %
@@ -70,7 +71,7 @@ if isempty(linc) && isfield(mc, 'nuis_start') && ~isempty(mc.nuis_start)
     ns_ = 4; if isfield(mc, 'fcont_stages') && ~isempty(mc.fcont_stages) && mc.fcont_stages > 1, ns_ = mc.fcont_stages; end
     switch mc.nuis_start
         case 'best'
-            nm_ = {'old', 'full', 'band'}; Ls = zeros(nrec, 3); Lc = cell(1, 3);
+            nm_ = {'direct', 'continuation_global', 'continuation_banded'}; Ls = zeros(nrec, 3); Lc = cell(1, 3);
             for v = 1:3
                 m_ = mc; m_.nuis_start = nm_{v};
                 Lc{v} = spec_refine([], rec, Cf, sig, rho, cfg, m_, nm, ngn);
@@ -82,13 +83,15 @@ if isempty(linc) && isfield(mc, 'nuis_start') && ~isempty(mc.nuis_start)
             linc = cell(nrec, 1);
             for r = 1:nrec, linc{r} = Lc{pick(r)}{r}; end
             hist = struct('lin', {}, 'Psit', {}, 'LP', {});
-            fprintf('nuisance start: best of old/full/band per record: %d/%d/%d records; log L %.1f (old %.1f, full %.1f, band %.1f)\n', ...
+            fprintf('nuisance start, best per record: direct %d, continuation_global %d, continuation_banded %d records; log L %.1f (direct %.1f, global %.1f, banded %.1f)\n', ...
                 sum(pick == 1), sum(pick == 2), sum(pick == 3), sum(max(Ls, [], 2)), sum(Ls(:, 1)), sum(Ls(:, 2)), sum(Ls(:, 3)));
             return
-        case 'old'
+        case 'direct'
             mc.fcont_stages = 1;
-        case {'full', 'band'}
-            mc.fcont_stages = ns_; mc.fcont_basis = mc.nuis_start;
+        case 'continuation_global'
+            mc.fcont_stages = ns_; mc.fcont_basis = 'global';
+        case 'continuation_banded'
+            mc.fcont_stages = ns_; mc.fcont_basis = 'banded';
         otherwise
             error('spec_refine: unknown mc.nuis_start ''%s''', mc.nuis_start);
     end
@@ -100,7 +103,7 @@ if isempty(linc)
     mc1 = mc;
     if Kt > 1, mc1.taup = [mc.taup(1), 1e-3*ones(1, Kt - 1)]; end   % higher terms held at 0
     ns = 1; if isfield(mc, 'fcont_stages') && ~isempty(mc.fcont_stages), ns = mc.fcont_stages; end
-    bb = isfield(mc, 'fcont_basis') && strcmp(mc.fcont_basis, 'band');
+    bb = isfield(mc, 'fcont_basis') && strcmp(mc.fcont_basis, 'banded');
     if ns > 1
         f = cfg.w(:)/(2*pi); f1 = min(f); f2 = max(f);
         fk = min((0:cfg.N-1)', cfg.N - (0:cfg.N-1)') / (cfg.N*cfg.dt);   % FFT frequency grid

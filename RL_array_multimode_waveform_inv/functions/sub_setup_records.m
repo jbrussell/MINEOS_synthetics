@@ -80,8 +80,9 @@ mc.spec_Kt = og('spec_Kt', 3);               % Legendre terms for tau_n(w)
 mc.dthp = [mc.dth_prior, og('dth1_prior', 5)*ones(1, mc.spec_Ka - 1)];   % prior std (deg)
 mc.taup = [mc.tau_prior, og('dtau_prior', 10)*ones(1, mc.spec_Kt - 1)];  % prior std (s)
 mc.relin = og('relin', 1);                   % relinearize tau, dth, B every relin iterations
-mc.nuis_start = og('nuis_start', 'best');   % start of the nuisance fit: 'best' of old/full/band per record, or one of them (spec_refine)
-mc.fcont_stages = og('fcont_stages', 4);     % stages of the frequency continuation ('full', 'band' and 'best' starts)
+mc.nuis_start = og('nuis_start', 'best');   % start of the nuisance fit: 'best' per record of 'direct', 'continuation_global',
+                                             %   'continuation_banded', or one of them (spec_refine)
+mc.fcont_stages = og('fcont_stages', 4);     % stages of the frequency continuation
 mc.jump_every = og('jump_every', 100);       % cycle-skip check of tau_n(w) every jump_every burn-in iterations (0 = off; cycle_jump)
 mc.jump_tol = og('jump_tol', 0);             % log-likelihood gain required to keep a cycle change
 mc.max_dtau = 2; mc.max_dth = 3;             % max step of a relinearization (s, deg)
