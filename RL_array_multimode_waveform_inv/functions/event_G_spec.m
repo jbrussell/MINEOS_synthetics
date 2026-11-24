@@ -73,8 +73,11 @@ end
 if nargin >= 7 && basis_only, G = G(:, 1:nb); return; end
 b0 = lin.b0;
 if nargin >= 6 && ~isempty(sig)
-    Gb = G(:, 1:nb); lam = (mean(sig)/sb)^2;
-    x = (Gb'*Gb + lam*eye(nb)) \ (Gb'*ev.d + lam*repmat([1; 0], nm*K, 1));
+    Gb = G(:, 1:nb); lam = (mean(sig)/sb)^2; db = ev.d;
+    if isfield(ev, 'nlev') && ~isempty(ev.nlev)   % per-sample noise levels: sig is a scale on them
+        Gb = Gb ./ ev.nlev(:); db = db ./ ev.nlev(:);
+    end
+    x = (Gb'*Gb + lam*eye(nb)) \ (Gb'*db + lam*repmat([1; 0], nm*K, 1));
     b0 = reshape(x(1:2:end) + 1i*x(2:2:end), K, nm).';
 end
 for n = 1:nm
