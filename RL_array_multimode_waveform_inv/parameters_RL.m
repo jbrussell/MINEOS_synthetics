@@ -61,10 +61,11 @@ opt = opt_defaults(opt, struct( ...
     'synth_seed',   3, ...               % D0: random seed of the noise
     'truthfile',    'synth_truth.mat', ... % D0: noise-free records, noise and true model (in aswms_dir)
     'noise_guess',  0.03, ...            % real data without noise levels: starting noise level (fraction of peak)
-    'noise_levels', 'pre', ...           % 'pre': noise std of each record and station measured from the
-    ...                                  %   pre-event noise (records must start before the origin), the sampled
-    ...                                  %   sigma is a scale factor on it; 'none': one sigma per wave type
-    'synth_pre_s',  1800, ...            % D0: pre-event noise before the origin (s)
+    'noise_levels', 'pre', ...           % 'pre': noise std of each record and station measured before the first
+    ...                                  %   arrival (dist/13.5 km/s - 60 s after the origin, plus any samples
+    ...                                  %   before the origin); the sampled sigma is a scale factor on it;
+    ...                                  %   'none': one sigma per wave type
+    'synth_pre_s',  0, ...               % D0: noise before the origin (s; 0: records start at the origin)
     'synth_noise_spread', 0, ...         % D0: noise level per station x 10^(spread*U[-1,1]) (0: all equal)
     ... % ---- step 2: MINEOS + idagrn6 (D2) ----
     'prepfile',     'prep_step2.mat', ...

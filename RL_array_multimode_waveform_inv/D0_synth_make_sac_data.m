@@ -7,7 +7,8 @@
 % (transverse and vertical displacement) at the stations of
 % opt.stationfile for the events of opt.eventfile (Global CMT), opt.dt
 % sampling, opt.synth_len_hr hours from the centroid time, preceded by
-% opt.synth_pre_s (1800) s of pre-event noise. Noise is added: white noise
+% opt.synth_pre_s s of pre-event noise (default 0: the records start at
+% the origin; the noise levels are measured before the P wave). Noise is added: white noise
 % through the processing band-pass (opt.fc), with a standard deviation of
 % opt.noise times the peak band-passed amplitude of the event and wave type,
 % times a factor per station 10^(opt.synth_noise_spread*U[-1,1]) (default
@@ -72,7 +73,7 @@ fc = optget(opt, 'fc', [1/112 1/100 1/20 1/17]);
 Nt = numel(t); f = (0:Nt-1)'/(Nt*opt.dt);
 bpf = zeros(Nt, 1); ib = find(f > fc(1) & f < fc(4)); bpf(ib) = bp_taper(f(ib), fc);
 bp = @(X) 2*real(ifft(fft(X) .* bpf));             % one-sided band-pass (real output)
-Npre = round(optget(opt, 'synth_pre_s', 1800)/opt.dt); Ne = Npre + Nt;
+Npre = round(optget(opt, 'synth_pre_s', 0)/opt.dt); Ne = Npre + Nt;
 fe = (0:Ne-1)'/(Ne*opt.dt);
 bpe = zeros(Ne, 1); ibe = find(fe > fc(1) & fe < fc(4)); bpe(ibe) = bp_taper(fe(ibe), fc);
 spread = optget(opt, 'synth_noise_spread', 0);

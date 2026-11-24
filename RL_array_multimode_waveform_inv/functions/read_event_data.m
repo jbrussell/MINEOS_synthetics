@@ -17,11 +17,13 @@ function D = read_event_data(opt, ev, sta_names, comp, tg)
 %   winpara : [v1 t1 v2 t2] of A3 ([] if none)
 %   toff    : event.otime - centroid time (s): the windows dist/v1 + t1 ..
 %             dist/v2 + t2 are times after event.otime, i.e. tg = t + toff
-%   nstd    : [Nst x 1] pre-event noise level: std of the samples more
-%             than 60 s before event.otime, band-passed like the data
-%             (opt.fc; Tukey taper, central 80% used); NaN if a trace has
-%             fewer than 100 such samples (see opt.synth_pre_s for D0; for
-%             real data, cut the records to start before the origin)
+%   nstd    : [Nst x 1] noise level before the first arrival: std of the
+%             samples earlier than dist/13.5 km/s - 60 s after event.otime
+%             (dist/13.5 km/s is before the P wave at 20-100 deg; any
+%             samples before the origin are included), band-passed like
+%             the data (opt.fc; Tukey taper, central 80% used); NaN if fewer
+%             than opt.noise_min_n (40) such samples. opt.noise_pre_origin =
+%             false uses only the samples after the origin (test option).
 % Traces with another sample interval than tg are low-passed (2nd-order
 % Butterworth at the new Nyquist frequency, zero phase, as in A1) and
 % interpolated (spline).
@@ -57,8 +59,10 @@ for k = 1:numel(event.stadata)
         D.U(in, j) = interp1(tk, x, tg(in), 'spline');
     end
     D.present(j) = true; D.dist(j) = s.dist;
-    ip = find(tk - D.toff < -60);                % pre-event samples (s before event.otime)
-    if numel(ip) >= 100
+    to = tk - D.toff;                            % time after event.otime (s)
+    ip = find(to < s.dist/13.5 - 60);            % before the first arrival (P)
+    if ~optget(opt, 'noise_pre_origin', true), ip = ip(to(ip) >= 0); end
+    if numel(ip) >= optget(opt, 'noise_min_n', 40)
         D.nstd(j) = noise_std_(s.data(ip), s.delta, fc);
     end
 end

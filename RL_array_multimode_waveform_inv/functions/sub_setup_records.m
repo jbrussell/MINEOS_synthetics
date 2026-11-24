@@ -291,8 +291,8 @@ for wv = 1:2
             rec(r).scale = max(abs(dat(idx)));
             rec(r).d = dat(idx) / rec(r).scale;
             rec(r).clean = clean(idx) / rec(r).scale;
-            % per-record, per-station noise levels from the pre-event noise
-            % (opt.noise_levels = 'pre'): noise std of a sample = sigma x the
+            % per-record, per-station noise levels from the noise before the
+            % first arrival (opt.noise_levels = 'pre'; read_event_data.m): noise std of a sample = sigma x the
             % measured level of its station / the record's peak
             rec(r).nlev = [];
             if strcmp(nlev_mode_, 'pre')
