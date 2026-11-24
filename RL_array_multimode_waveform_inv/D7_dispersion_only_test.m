@@ -17,7 +17,9 @@
 %
 % Options: disp_tag ('_plain8lin'), disp_sig (0.0025), disp_nit (20000),
 % disp_burn (10000), disp_chains (4), disp_w ([1 1]: weights of Love and
-% Rayleigh), disp_cases ({'lin', 'mineos'}); summary.txt is appended to. Output: figs_disp<disp_tag>/ (disp_<case>.png, summary.txt).
+% Rayleigh), disp_cases ({'lin', 'mineos'}), disp_branches ([] = all; e.g.
+% 0 or [0 1]: only these branches are data), disp_out (suffix of the
+% output folder); summary.txt is appended to. Output: figs_disp<disp_tag>/ (disp_<case>.png, summary.txt).
 
 parameters_RL;
 tg_ = optget(opt, 'disp_tag', '_plain8lin');
@@ -26,7 +28,8 @@ S0 = load(['setup' tg_ '.mat'], 'cfg', 'mc', 'Tdisp', 'fb', 'nm', 'zplot', 'tru'
 sigd = optget(opt, 'disp_sig', 0.0025);
 nit = optget(opt, 'disp_nit', 20000); burn = optget(opt, 'disp_burn', 10000);
 nch = optget(opt, 'disp_chains', 4); wts = optget(opt, 'disp_w', [1 1]); thin = 20;
-od = ['figs_disp' tg_]; if ~exist(od, 'dir'), mkdir(od); end
+br_ = optget(opt, 'disp_branches', []);       % branches fitted ([] = all 0..nm-1)
+od = ['figs_disp' tg_ optget(opt, 'disp_out', '')]; if ~exist(od, 'dir'), mkdir(od); end
 if exist('OCTAVE_VERSION', 'builtin'), set(0, 'defaultfigurevisible', 'off'); end
 cases = optget(opt, 'disp_cases', {'lin', 'mineos'});
 z = S0.zplot; tru = S0.tru; refp = S0.refp;
@@ -34,6 +37,9 @@ bands = [7 60; 60 160; 160 250; 250 350];
 fid = fopen(fullfile(od, 'summary.txt'), 'a');
 for ic = 1:numel(cases)
     if strcmp(cases{ic}, 'lin'), CLd = S0.ClinL; CRd = S0.ClinR; else, CLd = S0.CtrueL; CRd = S0.CtrueR; end
+    if ~isempty(br_)                               % only these branches are data
+        off = setdiff(0:S0.nm-1, br_) + 1; CLd(:, off) = NaN; CRd(:, off) = NaN;
+    end
     R = cell(nch, 1); tic;
     for k = 1:nch
         R{k} = run_disp_inv(CLd, CRd, sigd, S0.cfg, S0.mc, S0.Tdisp, S0.fb, S0.nm, z, nit, burn, thin, 100*find(strcmp(cases{ic}, {'lin', 'mineos'})) + k, wts);
@@ -42,8 +48,8 @@ for ic = 1:numel(cases)
     for f_ = {'vsv', 'vsh', 'xi'}, V.(f_{1}) = cell2mat(cellfun(@(x) x.(f_{1}), R', 'UniformOutput', false)); end
     % summary
     for o = [1 fid]
-        fprintf(o, 'Case %s (data: %s dispersion of the true model), sig %.2f%%, %d chains x %d it (%.0f s); acceptance %s\n', ...
-            cases{ic}, cases{ic}, 100*sigd, nch, nit, toc, mat2str(round(100*cellfun(@(x) x.acc, R'))/100));
+        fprintf(o, 'Case %s (data: %s dispersion of the true model, branches %s), sig %.2f%%, %d chains x %d it (%.0f s); acceptance %s\n', ...
+            cases{ic}, cases{ic}, mat2str(ifelse_br(br_, S0.nm)), 100*sigd, nch, nit, toc, mat2str(round(100*cellfun(@(x) x.acc, R'))/100));
         fprintf(o, '   final log L per chain %s (0 = exact fit)\n', mat2str(round(cellfun(@(x) x.L(end), R'))));
         fprintf(o, '   xi band averages: posterior mean [5-95%%] | true | chain means\n');
         for b = 1:size(bands, 1)
@@ -76,8 +82,8 @@ for ic = 1:numel(cases)
         if q_ == 1, legend([h2 h3 h1], {'true (PA5)', 'reference (step 1)', 'posterior mean'}, 'location', 'southwest'); end
     end
     axes('position', [0 0.95 1 0.04], 'visible', 'off');
-    text(0.5, 0.5, sprintf(['Dispersion-only inversion of the %s dispersion of the true model (Love + Rayleigh branches 0-%d, sig %.2f%%); ' ...
-        'thin colour lines: chain means, dashed: 5-95%%'], cases{ic}, S0.nm - 1, 100*sigd), 'horizontalalignment', 'center');
+    text(0.5, 0.5, sprintf(['Dispersion-only inversion of the %s dispersion of the true model (Love + Rayleigh branches %s, sig %.2f%%); ' ...
+        'thin colour lines: chain means, dashed: 5-95%%'], cases{ic}, mat2str(ifelse_br(br_, S0.nm)), 100*sigd), 'horizontalalignment', 'center');
     print(fig, '-dpng', '-r110', fullfile(od, ['disp_' cases{ic} '.png'])); close(fig);
     save(fullfile(od, ['disp_' cases{ic} '.mat']), 'R', '-v7');
 end

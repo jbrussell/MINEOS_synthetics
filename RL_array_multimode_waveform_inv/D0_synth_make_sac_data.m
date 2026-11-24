@@ -47,8 +47,16 @@ for wv = 1:2
     mineos_lock(opt.mdir, 'acquire');
     try
         mineos_modes(opt.mdir, opt.trueid, TY, opt.nbranch_data, opt.maxF, Tdisp, []);
-        D = idagrn_synth(opt.mdir, opt.trueid, TY, opt.maxF, opt.nbranch_data, ev, sta, ...
-                         opt.synth_len_hr, opt.dt, []);
+        if opt.nbranch_data >= 3
+            D = idagrn_synth(opt.mdir, opt.trueid, TY, opt.maxF, opt.nbranch_data, ev, sta, ...
+                             opt.synth_len_hr, opt.dt, []);
+        else
+            % (MINEOS tables have >= 3 branches: sum single-branch synthetics instead)
+            D = idagrn_synth(opt.mdir, opt.trueid, TY, opt.maxF, opt.nbranch_data, ev, sta, ...
+                             opt.synth_len_hr, opt.dt, 0:opt.nbranch_data-1);
+            for e_ = 1:numel(ev), D.u{e_, 1} = sum(cat(3, D.u{e_, :}), 3); end
+            D.u = D.u(:, 1);
+        end
     catch err
         mineos_lock(opt.mdir, 'release'); rethrow(err);
     end
