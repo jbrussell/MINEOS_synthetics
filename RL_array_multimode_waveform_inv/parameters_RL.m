@@ -127,8 +127,10 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   U_w = max fundamental-mode U of the reference + fund_margin
     ...                                  %   'single': one window per wave type from Delta/U_start (overtones +
     ...                                  %   fundamental mode, one noise level); 'split': overtone and fundamental-mode windows
-    'smooth_sig', [0 0], ...             % smoothness prior: std of the curvature of [Vsv Vsh] (km/s/km^2),
-    ...                                  %   one Gaussian term per smooth_len km (0 = off; see lr_common.m)
+    'smooth_sig', [0 0], ...             % smoothness prior: std of the curvature of the two smooth_param
+    ...                                  %   profiles, one Gaussian term per smooth_len km (0 = off; lr_common.m)
+    'smooth_param', 'vsv_vsh', ...       % 'vsv_vsh': [Vsv Vsh] (km/s/km^2; xi smoothed only through Vsh);
+    ...                                  %   'vsv_xi': [Vsv (km/s/km^2) xi (1/km^2)], smoothed independently
     'smooth_len', 10, ...
     'fund_margin', [0.4 0.2], ...        % 'fund' window start margin (km/s) [Love Rayleigh]
     'U_start',  [], ...                  % window start group velocity (km/s; scalar or [Love Rayleigh]);

@@ -25,11 +25,15 @@ function varargout = lr_common(action, varargin)
 % smoothness prior every allowed move is accepted on the likelihood ratio
 % alone.
 %
-% Optional smoothness prior (mc.smooth_sig = [sig_sv sig_sh], km/s/km^2;
-% 0 = off): a Gaussian penalty on the curvature of the Vsv and Vsh
-% profiles between the Moho and zmax,
-%   log p_s(m) = -1/2 sum_{X = sv, sh} int (X''(z)/sig_X)^2 dz / mc.smooth_len,
-% i.e. independent N(0, sig_X^2) on the curvature every mc.smooth_len km
+% Optional smoothness prior (mc.smooth_sig = [sig_1 sig_2]; 0 = off): a
+% Gaussian penalty on the curvature of two profiles between the Moho and
+% zmax, chosen by mc.smooth_param:
+%   'vsv_vsh' (default): X1 = Vsv, X2 = Vsh = Vsv*sqrt(xi) (sig in km/s/km^2);
+%                        xi is smoothed only through Vsh
+%   'vsv_xi'           : X1 = Vsv (km/s/km^2), X2 = xi (1/km^2); Vsv and xi
+%                        smoothed independently
+%   log p_s(m) = -1/2 sum_{c = 1,2} int (Xc''(z)/sig_c)^2 dz / mc.smooth_len,
+% i.e. independent N(0, sig_c^2) on the curvature every mc.smooth_len km
 % (default 10 km); X'' by finite differences of the B-spline profile on a
 % 1 km grid. It is a function of the profile, not of the control points,
 % so it applies the same way for any number of control points; it
@@ -109,7 +113,12 @@ switch action
             dz = 1; zg = (cfg.zmin:dz:cfg.zmax)';
             vs = bspline_profile([cfg.zmin; m.V.zc(:); cfg.zmax], [m.V.ev(1); m.V.vc(:); m.V.ev(2)], zg);
             xi = bspline_profile([cfg.zmin; m.X.zc(:); cfg.zmax], [m.X.ev(1); m.X.vc(:); m.X.ev(2)], zg);
-            P = [vs, vs .* sqrt(xi)];
+            sp = 'vsv_vsh'; if isfield(mc, 'smooth_param') && ~isempty(mc.smooth_param), sp = mc.smooth_param; end
+            switch sp
+                case 'vsv_vsh', P = [vs, vs .* sqrt(xi)];
+                case 'vsv_xi',  P = [vs, xi];
+                otherwise, error('lr_common: unknown smooth_param ''%s'' (vsv_vsh or vsv_xi)', sp);
+            end
             ell = 10; if isfield(mc, 'smooth_len') && ~isempty(mc.smooth_len), ell = mc.smooth_len; end
             for c = find(sg > 0)
                 d2 = diff(P(:, c), 2) / dz^2;
