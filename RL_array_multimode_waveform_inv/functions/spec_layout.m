@@ -7,7 +7,9 @@ function [mu, sb2, it, ith] = spec_layout(lin_r, nm, K, Ka, sb, tau_prior, dth_p
 %               linear and quadratic terms in normalized log(w)
 %   dth_prior : 1 x Ka prior std of the arrival-angle coefficients (deg)
 % The priors are centred on zero TOTAL tau and dth (hence the -lin terms).
-% it  : nm x Kt indices of the dtau coefficients in the solution
+% it  : nm x Kt indices of the dtau coefficients in the solution (index the
+%       solution with reshape(xh(it), size(it)): with nm = 1, xh(it) of a column
+%       xh would be a column, not 1 x Kt)
 % ith : nm x Ka indices of the dth coefficients
 nb  = 2*nm*K;
 T0 = lin_r.tau0;

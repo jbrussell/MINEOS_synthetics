@@ -21,7 +21,7 @@ G = event_G_spec(ev, Cf, lr, cfg, sig(2*ev.wave-1:2*ev.wave), mc.sb);
 [L, xh] = event_loglike_ar(ev.d, G, ev.wt, ev.first, sig, rho, mu, sb2);
 if update
     lr.b0   = reshape(xh(1:2:nb) + 1i*xh(2:2:nb), K, nm).';
-    lr.tau0 = lr.tau0 + max(min(xh(it), mc.max_dtau), -mc.max_dtau);
-    lr.dth0 = lr.dth0 + max(min(xh(ith), mc.max_dth), -mc.max_dth);
+    lr.tau0 = lr.tau0 + max(min(reshape(xh(it), size(it)), mc.max_dtau), -mc.max_dtau);
+    lr.dth0 = lr.dth0 + max(min(reshape(xh(ith), size(ith)), mc.max_dth), -mc.max_dth);
 end
 end

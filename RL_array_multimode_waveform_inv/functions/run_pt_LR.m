@@ -93,8 +93,8 @@ for it = 1:pt.nit
                 [~, ~, itau, ith] = lay(s.lin{r});
                 xh = s.xh{r}; lr = s.lin{r};
                 lr.b0   = reshape(xh(1:2:2*nm*Kb) + 1i*xh(2:2:2*nm*Kb), Kb, nm).';
-                lr.tau0 = lr.tau0 + max(min(xh(itau), mc.max_dtau), -mc.max_dtau);
-                lr.dth0 = lr.dth0 + max(min(xh(ith), mc.max_dth), -mc.max_dth);
+                lr.tau0 = lr.tau0 + max(min(reshape(xh(itau), size(itau)), mc.max_dtau), -mc.max_dtau);
+                lr.dth0 = lr.dth0 + max(min(reshape(xh(ith), size(ith)), mc.max_dth), -mc.max_dth);
                 s.lin{r} = lr;
                 [~, s.Le(r), s.G{r}, s.xh{r}] = nuis_relin(rec(r), s.Cf{wave(r)}, lr, cfg, s.sig, s.rho, mc, nm);
             end
@@ -167,7 +167,7 @@ for it = 1:pt.nit
         for r = 1:nrec
             [~, ~, itau, ith] = lay(s.lin{r});
             xh = s.xh{r};                                                   % cached posterior mean
-            tc = s.lin{r}.tau0 + xh(itau); dc = s.lin{r}.dth0 + xh(ith);   % nm x Kt, nm x Ka
+            tc = s.lin{r}.tau0 + reshape(xh(itau), size(itau)); dc = s.lin{r}.dth0 + reshape(xh(ith), size(ith));   % nm x Kt, nm x Ka
             sv.tauc(r,:,:,isv) = reshape(tc, 1, nm, Kt); sv.tau(r,:,isv) = tc(:, 1)';
             sv.dthc(r,:,:,isv) = reshape(dc, 1, nm, Ka); sv.dth(r,:,isv) = dc(:, 1)';
         end
