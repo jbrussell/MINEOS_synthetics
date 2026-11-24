@@ -394,3 +394,12 @@ Ltrue = NaN;
 % synthetic test only (opt.fix_tau): time shifts held at the true path
 % delays, exactly at every frequency (apply_fixed_tau.m)
 if og('fix_tau', false), [rec, mc] = apply_fixed_tau(rec, cfg, pd, mc); end
+% synthetic test only (opt.fix_nuisance): B_n(w), tau_n(w) and dth_n(w) held
+% at B = 1, tau = 0, dth = 0 (prior std 1e-3) - their true values when the
+% reference model of the prep file is the TRUE model and the data have the
+% modelled branches only (oracle nuisance test; set opt.jump_every = 0)
+if og('fix_nuisance', false)
+    mc.sb = 1e-3; mc.taup = 1e-3*ones(size(mc.taup)); mc.dthp = 1e-3*ones(size(mc.dthp));
+    mc.fix_nuisance = true;
+    fprintf('nuisance parameters held at B = 1, tau = 0, dth = 0 (opt.fix_nuisance)\n');
+end
