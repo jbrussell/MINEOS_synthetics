@@ -127,11 +127,19 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   U_w = max fundamental-mode U of the reference + fund_margin
     ...                                  %   'single': one window per wave type from Delta/U_start (overtones +
     ...                                  %   fundamental mode, one noise level); 'split': overtone and fundamental-mode windows
-    'smooth_sig', [0 0], ...             % smoothness prior: std of the curvature of the two smooth_param
-    ...                                  %   profiles, one Gaussian term per smooth_len km (0 = off; lr_common.m)
-    'smooth_param', 'vsv_vsh', ...       % 'vsv_vsh': [Vsv Vsh] (km/s/km^2; xi smoothed only through Vsh);
-    ...                                  %   'vsv_xi': [Vsv (km/s/km^2) xi (1/km^2)], smoothed independently
-    'smooth_len', 10, ...
+    'smooth_sig', [0 0], ...             % smoothness prior [sig_1 sig_2] on the curvature of the two
+    ...                                  %   smooth_param profiles: log p = -1/2 sum_c int (X_c''/sig_c)^2 dz/smooth_len.
+    ...                                  %   sig is the STD of the allowed curvature, not a weight:
+    ...                                  %     LARGER sig = WEAKER prior = LESS smoothing (rougher profiles allowed);
+    ...                                  %     SMALLER sig = STRONGER prior = MORE smoothing (penalty scales as 1/sig^2,
+    ...                                  %     so halving sig quadruples it); 0 = prior OFF for that profile (not
+    ...                                  %     'infinitely smooth'). E.g. 4e-4 km/s/km^2: a curvature of 4e-4 over
+    ...                                  %     smooth_len costs 1/2 in log-prior. See lr_common.m.
+    'smooth_param', 'vsv_vsh', ...       % profiles smoothed by smooth_sig:
+    ...                                  %   'vsv_vsh' (default): [Vsv Vsh], both km/s/km^2; xi smoothed only through Vsh
+    ...                                  %   'vsv_xi': [Vsv (km/s/km^2), xi (1/km^2)], independent; sig_xi ~ 2*sig_sv/Vsv
+    ...                                  %     (about 2e-4 for 4e-4) is comparable to the 'vsv_vsh' prior
+    'smooth_len', 10, ...                % depth interval (km) of one Gaussian curvature term (larger = weaker prior)
     'fund_margin', [0.4 0.2], ...        % 'fund' window start margin (km/s) [Love Rayleigh]
     'U_start',  [], ...                  % window start group velocity (km/s; scalar or [Love Rayleigh]);
     ...                                  %   [] = max U of branches 1..nm-1 of the reference + 0.6 km/s
