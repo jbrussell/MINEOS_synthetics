@@ -25,7 +25,7 @@ dthp = mc.dthp(1:Ka); taup = mc.taup(1:Kt);
 lp_nuis = @(tau, dc) -0.5*sum(sum(tau.^2 ./ taup.^2)) - 0.5*sum(sum(dc.^2 ./ dthp.^2));
 Gfun = @(r, Cf, tau, dc) event_G_spec(rec(r), Cf, struct('tau0', tau, 'dth0', dc, ...
            'b0', ones(nm, K)), cfg, [], [], true);
-llk = @(r, G, sig, rho) event_loglike_ar(rec(r).d, G, rec(r).wt, rec(r).first, sig, rho, mu_b, sb2);
+llk = @(r, G, sig, rho) event_loglike_ar(rec(r).d, G, rec(r).wt, rec(r).first, sig, rho, mu_b, sb2, rec_nlev(rec(r)));
 
 % ---------- random start from the prior ----------
 while true

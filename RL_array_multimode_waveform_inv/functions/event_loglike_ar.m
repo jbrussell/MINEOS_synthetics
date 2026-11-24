@@ -1,4 +1,4 @@
-function [L, bhat] = event_loglike_ar(d, G, wt, first, sig, rho, mu_b, sb2)
+function [L, bhat] = event_loglike_ar(d, G, wt, first, sig, rho, mu_b, sb2, nlev)
 % EVENT_LOGLIKE_AR  Marginal log-likelihood for one record with correlated
 % noise (Bodin et al., 2012, exponential correlation law): within each
 % contiguous window segment the noise covariance is
@@ -18,7 +18,16 @@ function [L, bhat] = event_loglike_ar(d, G, wt, first, sig, rho, mu_b, sb2)
 %
 %   first : logical, true at the first sample of every contiguous segment
 %   sig, rho : 1 x 4 noise levels and correlations
+%   nlev     : OPTIONAL per-sample noise level (e.g. the measured pre-event
+%              noise of the sample's station, rec.nlev): the noise std of a
+%              sample is then sig(wt) * nlev (constant within a segment, so
+%              the AR(1) structure is unchanged); [] or absent = 1
 
+if nargin >= 9 && ~isempty(nlev)              % per-sample noise levels: scale d and G
+    nlev = nlev(:); d = d ./ nlev; G = G ./ nlev;
+else
+    nlev = [];
+end
 rw = reshape(rho(wt), [], 1);
 nf = ~first(:);
 s  = sqrt(1 - rw(nf).^2);
@@ -31,4 +40,5 @@ else
     L = event_loglike(dw, Gw, wt, sig, mu_b, sb2);
 end
 L = L - sum(log(s));                 % -0.5 * log det of the correlation part
+if ~isempty(nlev), L = L - sum(log(nlev)); end   % -0.5 * log det of the level scaling
 end

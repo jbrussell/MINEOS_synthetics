@@ -60,7 +60,12 @@ opt = opt_defaults(opt, struct( ...
     'synth_len_hr', 2, ...               % D0: length of the synthetic SAC records (h; ASWMS-Q needs dist/2 km/s)
     'synth_seed',   3, ...               % D0: random seed of the noise
     'truthfile',    'synth_truth.mat', ... % D0: noise-free records, noise and true model (in aswms_dir)
-    'noise_guess',  0.03, ...            % real data: starting noise level (fraction of each record's peak)
+    'noise_guess',  0.03, ...            % real data without noise levels: starting noise level (fraction of peak)
+    'noise_levels', 'pre', ...           % 'pre': noise std of each record and station measured from the
+    ...                                  %   pre-event noise (records must start before the origin), the sampled
+    ...                                  %   sigma is a scale factor on it; 'none': one sigma per wave type
+    'synth_pre_s',  1800, ...            % D0: pre-event noise before the origin (s)
+    'synth_noise_spread', 0, ...         % D0: noise level per station x 10^(spread*U[-1,1]) (0: all equal)
     ... % ---- step 2: MINEOS + idagrn6 (D2) ----
     'prepfile',     'prep_step2.mat', ...
     'refid',        'RLinv_step1', ...   % reference card of step 2 (= s1_final)

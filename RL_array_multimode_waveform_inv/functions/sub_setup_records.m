@@ -186,6 +186,7 @@ wmode_ = og('windows', 'single');
 % (opt.truthfile) give the noise level; 'internal' = true-model synthetics
 % of the prep file with noise added here
 aswms_ = strcmp(og('data_source', 'internal'), 'aswms');
+nlev_mode_ = og('noise_levels', 'pre'); nlev_n_ = 0;   % per-record noise levels ('aswms' data)
 comps_ = og('aswms_components', {'BHT', 'BHZ'});
 synth_ = false;
 if aswms_
@@ -290,6 +291,22 @@ for wv = 1:2
             rec(r).scale = max(abs(dat(idx)));
             rec(r).d = dat(idx) / rec(r).scale;
             rec(r).clean = clean(idx) / rec(r).scale;
+            % per-record, per-station noise levels from the pre-event noise
+            % (opt.noise_levels = 'pre'): noise std of a sample = sigma x the
+            % measured level of its station / the record's peak
+            rec(r).nlev = [];
+            if strcmp(nlev_mode_, 'pre')
+                lev = Dd.nstd(:)' / rec(r).scale;          % 1 x Nst
+                okl = pres & isfinite(lev) & lev > 0;
+                if any(okl)
+                    lev(~okl) = median(lev(okl));          % (stations without a measurement)
+                    jst = ceil(idx / cfg.N);               % station of each sample
+                    rec(r).nlev = lev(jst)';
+                    nlev_n_ = nlev_n_ + 1;
+                else
+                    warning('record %d (%s): no pre-event noise measured; no per-station noise levels', r, ev(e).id);
+                end
+            end
         else
             rec(r).scale = max(abs(clean(idx)));
             rec(r).clean = clean(idx) / rec(r).scale;
@@ -328,6 +345,7 @@ ss = zeros(4, 2);                         % noise power accumulators ('aswms')
 for r = 1:nrec
     if aswms_
         nr = rec(r).d - rec(r).clean;     % (NaN for real data)
+        if isfield(rec, 'nlev') && ~isempty(rec(r).nlev), nr = nr ./ rec(r).nlev; end   % relative to the measured levels
     else
         X = fft(randn(cfg.N, Nst));
         nz = 2*real(ifft(X .* bpf));      % one-sided filter -> real band-limited noise
@@ -347,9 +365,14 @@ if aswms_
     if synth_
         sig_true = sqrt(ss(:,1) ./ ss(:,2))';
         if single_, sig_true([2 4]) = sig_true([1 3]); end
-        fprintf('noise of the D0 data (std, fraction of each record''s peak) per window %s\n', mat2str(round(sig_true*1e4)/1e4));
+        fprintf('noise of the D0 data (std; with per-station levels: relative to them) per window %s\n', mat2str(round(sig_true*1e4)/1e4));
+    elseif nlev_n_ > 0
+        sig_true = ones(1, 4); rho_emp = 0.5*ones(1, 4);      % (scale on the measured levels)
     else
         sig_true = og('noise_guess', 0.03)*ones(1, 4); rho_emp = 0.5*ones(1, 4);
+    end
+    if nlev_n_ > 0
+        fprintf('per-station noise levels from the pre-event noise in %d of %d records (sigma = scale on them)\n', nlev_n_, nrec);
     end
 end
 if single_, rho_emp([2 4]) = rho_emp([1 3]); end   % tied slots (single window)

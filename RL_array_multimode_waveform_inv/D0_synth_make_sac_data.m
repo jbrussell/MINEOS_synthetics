@@ -6,15 +6,18 @@
 % branches 0..opt.nbranch_data-1 and idagrn6 full mode-sum seismograms
 % (transverse and vertical displacement) at the stations of
 % opt.stationfile for the events of opt.eventfile (Global CMT), opt.dt
-% sampling, opt.synth_len_hr hours from the centroid time. Noise is added:
-% white noise through the processing band-pass (opt.fc), with a standard
-% deviation of opt.noise times the peak band-passed amplitude of the event
-% and wave type (all stations).
+% sampling, opt.synth_len_hr hours from the centroid time, preceded by
+% opt.synth_pre_s (1800) s of pre-event noise. Noise is added: white noise
+% through the processing band-pass (opt.fc), with a standard deviation of
+% opt.noise times the peak band-passed amplitude of the event and wave type,
+% times a factor per station 10^(opt.synth_noise_spread*U[-1,1]) (default
+% spread 0: the same at all stations).
 %
 % Output, in opt.aswms_dir (ASWMS-Q layout):
 %   sacdata/<event id>/<net>.<station>.<component>.sac
 %       components opt.aswms_components = {Love, Rayleigh} ('BHT', 'BHZ');
-%       origin (NZ* header) = centroid time, B = 0; EVLA, EVLO, EVDP (m),
+%       reference time (NZ*) = origin = centroid time, O = 0, B = -pre_s;
+%       EVLA, EVLO, EVDP (m),
 %       MAG (Mw), STLA, STLO, STEL (m), KSTNM, KCMPNM, KNETWK, DELTA
 %   sacdata/evlist.txt  (event ids)
 %   <opt.truthfile>     (synthetic test only, never read for real data):
@@ -59,18 +62,28 @@ for wv = 1:2
 end
 
 % noise: white noise through the processing band-pass, std = opt.noise x
-% the peak band-passed amplitude of the event and wave type
+% the peak band-passed amplitude of the event and wave type, times a factor
+% per station (and event, wave type) 10^(opt.synth_noise_spread*U[-1,1])
+% (default spread 0: the same level at all stations); the records start
+% opt.synth_pre_s s before the origin with noise only (pre-event noise, for
+% the per-record noise levels of the inversion)
 rng(opt.synth_seed);
 fc = optget(opt, 'fc', [1/112 1/100 1/20 1/17]);
 Nt = numel(t); f = (0:Nt-1)'/(Nt*opt.dt);
 bpf = zeros(Nt, 1); ib = find(f > fc(1) & f < fc(4)); bpf(ib) = bp_taper(f(ib), fc);
 bp = @(X) 2*real(ifft(fft(X) .* bpf));             % one-sided band-pass (real output)
-noise = cell(2, nev);
+Npre = round(optget(opt, 'synth_pre_s', 1800)/opt.dt); Ne = Npre + Nt;
+fe = (0:Ne-1)'/(Ne*opt.dt);
+bpe = zeros(Ne, 1); ibe = find(fe > fc(1) & fe < fc(4)); bpe(ibe) = bp_taper(fe(ibe), fc);
+spread = optget(opt, 'synth_noise_spread', 0);
+noise = cell(2, nev); noise_pre = noise; nfac = noise;
 for wv = 1:2
     for e = 1:nev
         A = max(max(abs(bp(U{wv, e}))));
-        nz = bp(randn(Nt, Nst)); nz = nz / std(nz(:));
-        noise{wv, e} = opt.noise * A * nz;
+        nz = 2*real(ifft(fft(randn(Ne, Nst)) .* bpe)); nz = nz / std(nz(:));
+        nfac{wv, e} = 10.^(spread*(2*rand(1, Nst) - 1));
+        nz = opt.noise * A * nz .* nfac{wv, e};
+        noise_pre{wv, e} = nz(1:Npre, :); noise{wv, e} = nz(Npre+1:end, :);
     end
 end
 
@@ -81,7 +94,7 @@ for e = 1:nev
     fprintf(fid, '%s\n', ev(e).id);
     edir = [sacdir ev(e).id filesep];
     if ~exist(edir, 'dir'), mkdir(edir); end
-    t0 = ev(e).t_cent + t(1)/86400;                   % first sample (centroid time + B of idagrn6)
+    t0 = ev(e).t_cent;                                % SAC reference time = origin (centroid)
     for wv = 1:2
         for j = 1:Nst
             H = struct('DELTA', opt.dt, 'KSTNM', sta.name{j}, 'KCMPNM', comps{wv}, ...
@@ -89,7 +102,9 @@ for e = 1:nev
                        'STEL', 1000*sta.elev(j), 'EVLA', ev(e).lat, 'EVLO', ev(e).lon, ...
                        'EVDP', 1000*ev(e).dep, 'MAG', ev(e).Mw);
             fn = sprintf('%s%s.%s.%s.sac', edir, opt.aswms_net, sta.name{j}, comps{wv});
-            mksac(fn, U{wv, e}(:, j) + noise{wv, e}(:, j), t0, H);
+            x = [noise_pre{wv, e}(:, j); U{wv, e}(:, j) + noise{wv, e}(:, j)];
+            mksac(fn, x, t0, H);
+            sac_set_times(fn, t(1) - Npre*opt.dt, opt.dt, numel(x));   % B < 0: pre-event noise
         end
     end
 end
@@ -99,7 +114,8 @@ fclose(fid);
 truth = struct('trueid', opt.trueid, 'nbranch_data', opt.nbranch_data, 'noise', opt.noise, ...
                'seed', opt.synth_seed, 'dt', opt.dt, 't', t, 'comps', {comps}, ...
                'ev_id', {{ev.id}}, 't_cent', [ev.t_cent], 'sta', {sta.name}, ...
-               'clean', {U}, 'noise_tr', {noise});
+               'clean', {U}, 'noise_tr', {noise}, 'pre_s', Npre*opt.dt, ...
+               'noise_spread', spread, 'noise_fac', {nfac});
 save([wd opt.truthfile], 'truth', '-v7');
 fprintf('%d events x %d stations x 2 components written to %s; truth in %s%s\n', ...
     nev, Nst, sacdir, wd, opt.truthfile);

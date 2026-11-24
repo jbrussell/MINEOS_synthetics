@@ -17,6 +17,11 @@ function D = read_event_data(opt, ev, sta_names, comp, tg)
 %   winpara : [v1 t1 v2 t2] of A3 ([] if none)
 %   toff    : event.otime - centroid time (s): the windows dist/v1 + t1 ..
 %             dist/v2 + t2 are times after event.otime, i.e. tg = t + toff
+%   nstd    : [Nst x 1] pre-event noise level: std of the samples more
+%             than 60 s before event.otime, band-passed like the data
+%             (opt.fc; Tukey taper, central 80% used); NaN if a trace has
+%             fewer than 100 such samples (see opt.synth_pre_s for D0; for
+%             real data, cut the records to start before the origin)
 % Traces with another sample interval than tg are low-passed (2nd-order
 % Butterworth at the new Nyquist frequency, zero phase, as in A1) and
 % interpolated (spline).
@@ -29,7 +34,8 @@ S = load(f); event = S.event;
 if isfield(event, 'isgood') && ~event.isgood, return; end
 tg = tg(:); dt = tg(2) - tg(1); Nst = numel(sta_names);
 tc = (ev.t_cent - datenum(1970, 1, 1))*86400;    % centroid time (epoch s)
-D.U = NaN(numel(tg), Nst); D.present = false(Nst, 1); D.dist = NaN(Nst, 1);
+D.U = NaN(numel(tg), Nst); D.present = false(Nst, 1); D.dist = NaN(Nst, 1); D.nstd = NaN(Nst, 1);
+fc = optget(opt, 'fc', [1/112 1/100 1/20 1/17]);
 D.winpara = []; if isfield(event, 'winpara') && numel(event.winpara) == 4, D.winpara = event.winpara; end
 D.toff = event.otime - tc;
 for k = 1:numel(event.stadata)
@@ -51,5 +57,19 @@ for k = 1:numel(event.stadata)
         D.U(in, j) = interp1(tk, x, tg(in), 'spline');
     end
     D.present(j) = true; D.dist(j) = s.dist;
+    ip = find(tk - D.toff < -60);                % pre-event samples (s before event.otime)
+    if numel(ip) >= 100
+        D.nstd(j) = noise_std_(s.data(ip), s.delta, fc);
+    end
 end
+end
+
+function sd = noise_std_(x, dt, fc)
+% std of x band-passed as the data (Tukey taper, one-sided band-pass taper),
+% central 80% of the samples
+x = x(:) - mean(x); n = numel(x);
+f = (0:n-1)'/(n*dt); ib = find(f > fc(1) & f < fc(4));
+X = fft(x .* tukeywin_(n, 0.1)); Y = zeros(n, 1); Y(ib) = X(ib) .* bp_taper(f(ib), fc);
+u = 2*real(ifft(Y)); k = round(0.1*n) + 1 : round(0.9*n);
+sd = std(u(k));
 end

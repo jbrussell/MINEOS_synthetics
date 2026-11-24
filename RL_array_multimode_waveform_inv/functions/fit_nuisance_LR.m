@@ -19,6 +19,7 @@ for r = 1:nrec
     [~, L, G, xh] = nuis_relin(rec(r), Cf{rec(r).wave}, linc{r}, cfg, sig, rho, mc, nm, false);
     Ltot = Ltot + L;
     res = rec(r).d - G*xh;
-    chi(r) = mean((res ./ sig(rec(r).wt)').^2);
+    nl_ = rec_nlev(rec(r)); if isempty(nl_), nl_ = 1; end
+    chi(r) = mean((res ./ (sig(rec(r).wt)' .* nl_)).^2);
 end
 end

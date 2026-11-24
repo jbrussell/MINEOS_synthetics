@@ -55,7 +55,8 @@ for k = 1:K
             if ok, break; end
         end
         s.sig = zeros(1, 4);
-        for wv = 1:2, s.sig(2*wv-1:2*wv) = std(rec(find(wave == wv, 1)).d); end
+        for wv = 1:2, r1_ = find(wave == wv, 1); nl_ = rec_nlev(rec(r1_)); if isempty(nl_), nl_ = 1; end
+            s.sig(2*wv-1:2*wv) = std(rec(r1_).d ./ nl_); end
         s.rho = 0.5*ones(1, 4);
         s.lin = lin0;
     end
@@ -143,7 +144,7 @@ for it = 1:pt.nit
             Ln = s.Le; Xn = s.xh;
             for r = find(wave == ceil(iw/2))'
                 [mu, sb2] = lay(s.lin{r});
-                [Ln(r), Xn{r}] = event_loglike_ar(rec(r).d, s.G{r}, rec(r).wt, rec(r).first, sg, rh, mu, sb2);
+                [Ln(r), Xn{r}] = event_loglike_ar(rec(r).d, s.G{r}, rec(r).wt, rec(r).first, sg, rh, mu, sb2, rec_nlev(rec(r)));
             end
             if log(rand) < (sum(Ln) - sum(s.Le)) / Tk, s.sig = sg; s.rho = rh; s.Le = Ln; s.xh = Xn; end
         end
