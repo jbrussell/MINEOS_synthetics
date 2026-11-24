@@ -202,6 +202,7 @@ for wv = 1:2
     % reference group velocities -> window boundaries for this wave type
     U = P.(['grv_ref_' uname{wv}]);
     U0 = U(:,1); Uov = U(:, 2:end);
+    if isempty(Uov), Uov = U0; end                   % (fundamental mode only: no overtones)
     win(wv).Ub = max(U0) + 0.2; win(wv).Uov1 = max(Uov(:)) + 0.6; win(wv).Uf2 = min(U0) - 0.35;
     if ~isempty(U_start_), win(wv).Uov1 = U_start_(min(wv, numel(U_start_))); end   % opt.U_start
     if strcmp(wmode_, 'fund')                                   % no overtone window

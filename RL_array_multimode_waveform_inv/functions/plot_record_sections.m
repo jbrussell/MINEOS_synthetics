@@ -39,7 +39,8 @@ comp = {'T', 'Z'}; ty = {'T', 'S'}; wname = {'Love (transverse)', 'Rayleigh (ver
 ecol = lines(nev);
 for wv = 1:2
     U = P.(['grv_ref_' ty{wv}]);
-    Ub = max(U(:,1)) + 0.2; Uov = max(max(U(:, 2:end))) + 0.6; Uf = min(U(:,1)) - 0.35;
+    if size(U, 2) > 1, Uo_ = U(:, 2:end); else, Uo_ = U(:, 1); end   % (fundamental mode only: no overtones)
+    Ub = max(U(:,1)) + 0.2; Uov = max(Uo_(:)) + 0.6; Uf = min(U(:,1)) - 0.35;
     if ~isempty(U_start), Uov = U_start(min(wv, numel(U_start))); end
     if strcmp(windows, 'fund'), Ub = max(U(:,1)) + fund_margin(min(wv, numel(fund_margin))); Uov = Ub; end
     D = zeros(nev, nst); Ut = cell(nev, 1); Up = cell(nev, 1);
