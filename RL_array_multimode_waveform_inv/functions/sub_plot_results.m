@@ -397,3 +397,10 @@ if ~isempty(infc{1}) && numel(infc{1}.T) > 1
     xlabel('iteration'); ylabel('log L - log L(true)'); title('Ensemble 1 by temperature (blue: T = 1)');
     print(fig, '-dpng', '-r130', fullfile(outdir, 'fig7_pt_diagnostics.png'));
 end
+
+%% noise diagnostics of the pre-P noise ('aswms' data; plot_noise_diagnostics.m)
+try
+    plot_noise_diagnostics(rec, cfg, ev, sta, outdir);
+catch err_
+    fprintf('noise diagnostics not plotted: %s\n', err_.message);
+end
