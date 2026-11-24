@@ -34,6 +34,8 @@ function P = prep_mineos_idagrn(opt)
 % opt.trueid is not empty (set it to '' for real data). The single-branch
 % reference synthetics are also written in the ASWMS-Q event-file format
 % (write_branchmat.m): <opt.aswms_dir>branchmat/<refid>/<event id>_<component>.mat.
+% opt.lin_only = true: MINEOS (dispersion, kernels) only, no idagrn6
+% synthetics (linearization-only reference updates, D3).
 %
 % Needs the MINEOS and idagrn6 binaries in ../FORTRAN/bin and SAC (sacio)
 % for idagrn6; see ../FORTRAN/README. Run from this directory.
@@ -113,8 +115,11 @@ for TY = 'TS'
     fprintf('MINEOS %c done (%.0f s)\n', TY, toc);
 end
 
-% 4. synthetics
+% 4. synthetics (none with opt.lin_only: a linearization-only reference
+% update needs the MINEOS dispersion and kernels only)
+lin_only_ = og('lin_only', false);
 for TY = 'TS'
+    if lin_only_, break; end
     if aswms_
         % the data are the ASWMS-Q event files (no true-model synthetics here)
     elseif isempty(Pt)
@@ -132,7 +137,7 @@ end
 
 % 5. synthetics of the step-1 STARTING model (CARDS/<s1_start>.card, with
 % its .qmod, written by D1), all branches (for the waveform figures)
-if og('start_synth', 0)
+if og('start_synth', 0) && ~lin_only_
     sid = og('s1_start', 'RLinv_pa5iso');
     if exist(fullfile(P.mdir, 'CARDS', [sid, '.card']), 'file') ~= 2
         error('prep_mineos_idagrn: %s.card (the step-1 starting model) not found; run D1 first', sid);
@@ -145,7 +150,7 @@ if og('start_synth', 0)
     end
 end
 
-if aswms_ || ~isempty(og('aswms_dir', ''))     % reference branch synthetics, ASWMS-Q event-file format
+if (aswms_ || ~isempty(og('aswms_dir', ''))) && ~lin_only_   % reference branch synthetics, ASWMS-Q event-file format
     write_branchmat(P, opt);
 end
 tmpf = tmp_name('prep');

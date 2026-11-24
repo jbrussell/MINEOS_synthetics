@@ -65,8 +65,16 @@ for fo = [1 fid]
     if ~isempty(upd) && upd_plot && upd_lin
         fprintf(fo, 'MINEOS linearization updated at the end of burn-in (%s, mean of %d late burn-in samples; waveform reference unchanged)\n', ...
             upd.refid, upd.nsamples);
-        fprintf(fo, '  end-of-burn-in states: dispersion change rms %s %%, max %s %%; logL change %s\n', ...
-            mat2str(round(100*upd.dCrms')/100), mat2str(round(100*upd.dCmax')/100), mat2str(round(upd.dL')));
+        if isfield(upd, 'stages')                  % several updates during the burn-in
+            for k_ = 1:numel(upd.stages)
+                u_ = upd.stages{k_};
+                fprintf(fo, '  update %d (%s): states'' dispersion change rms %s %%, max %s %%; logL change %s\n', k_, u_.refid, ...
+                    mat2str(round(100*u_.dCrms')/100), mat2str(round(100*u_.dCmax')/100), mat2str(round(u_.dL')));
+            end
+        else
+            fprintf(fo, '  end-of-burn-in states: dispersion change rms %s %%, max %s %%; logL change %s\n', ...
+                mat2str(round(100*upd.dCrms')/100), mat2str(round(100*upd.dCmax')/100), mat2str(round(upd.dL')));
+        end
     elseif ~isempty(upd) && upd_plot
         fprintf(fo, 'reference updated at the end of burn-in (%s, mean of %d late burn-in samples); log L(true) %.1f -> %.1f\n', ...
             upd.refid, upd.nsamples, Ltrue_setup, Ltrue);

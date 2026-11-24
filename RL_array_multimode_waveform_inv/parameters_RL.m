@@ -93,6 +93,7 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   end of burn-in from the mean model of all chains; 'lin': only the
     ...                                  %   MINEOS linearization of the dispersion (waveform reference of
     ...                                  %   step 1 kept); 'none': keep step 1
+    'lin_updates', 1, ...                % 'lin': number of linearization updates, evenly spaced over the burn-in
     'upd_frac', 0.2, ...                 % fraction of the burn-in (its end) averaged for the update
     'upd_ngn',  10, ...                  % Gauss-Newton steps per state to move tau, dth, B to the new reference
     'ref_prep', '', ...                  % optional prep file of another starting reference (D6)

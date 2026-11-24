@@ -36,6 +36,10 @@
 %       reference; with a biased mean model these are larger and less smooth
 %       than the 3-term tau_n(w) basis can fit.) Always kept; the
 %       log-likelihood change of the end-of-burn-in states is only reported.
+%       opt.lin_updates = n > 1: the burn-in is split into n equal stages
+%       and the linearization is updated after each (lin_update.m), so the
+%       kernels can follow the model as it moves away from the step-1
+%       reference; the sampling uses the last one.
 %   'none': the reference of opt.prepfile (step 1) throughout.
 %   The update is kept only if the end-of-burn-in (T = 1) states of the
 %   chains fit the data at least as well with it on average (refupd<tag>.mat
@@ -66,6 +70,7 @@ sample_ = strcmp(opt.nuisance, 'sample');
 if pt_ && sample_, error('opt.nuisance = ''sample'' is only available with the plain sampler'); end
 upd_ = any(strcmp(opt.update_ref, {'burnin', 'lin'}));
 linonly_ = strcmp(opt.update_ref, 'lin');
+nlu_ = max(1, round(optget(opt, 'lin_updates', 1)));   % linearization updates during the burn-in ('lin')
 if upd_ && sample_
     fprintf('note: no reference update with opt.nuisance = ''sample''\n'); upd_ = false;
 end
@@ -122,6 +127,49 @@ if ~upd_
             save_pt(chainf(ic), sv, st, ic, info);
         end
     end
+elseif linonly_ && nlu_ > 1 && ~isempty(runs)
+    % ---------- burn-in in opt.lin_updates stages, each followed by a ----------
+    % ---------- linearization update (lin_update.m), then sampling    ----------
+    % stage k: chain<tag>_XX_burn<k>.mat (its last opt.upd_frac saved, T = 1),
+    % update k: refupd<tag>_<k>.mat, MINEOS of prep<tag>_lin<k>.mat; every
+    % chain continues from its own states with the new linearization
+    stgf = @(i, k) sprintf('chain%s_%02d_burn%d.mat', tag, i, k);
+    nk = diff(round(linspace(0, pt.burn, nlu_ + 1)));    % stage lengths
+    cfg_k = cfg; Uall = cell(1, nlu_);
+    for k = 1:nlu_
+        ptk = pt; ptk.nit = nk(k); ptk.jump_last = nk(k);   % cycle-skip checks over the whole burn-in
+        ptk.burn = nk(k) - max(pt.thin, pt.thin*round(opt.upd_frac*nk(k)/pt.thin));
+        parfor q = 1:numel(runs)
+            ic = runs(q);
+            if exist(chainf(ic), 'file') == 2 || exist(stgf(ic, k), 'file') == 2, continue; end
+            if k == 1, S0 = {}; else, B = load(stgf(ic, k - 1)); S0 = B.Sf; end
+            [sv1, ~, info1, Sf] = run_pt_LR(rec, cfg_k, mc, Tdisp, fb, nm, zplot, 2000 + 100*(k-1) + ic, lin0, ptk, ic, S0);
+            save_burn(stgf(ic, k), sv1, info1, Sf);
+        end
+        Uall{k} = lin_update(arrayfun(@(i) stgf(i, k), 1:mc.nchains, 'UniformOutput', false), ...
+            sprintf('refupd%s_%d.mat', tag, k), sprintf('%s_lin%s_%d', opt.refid, tag, k), ...
+            sprintf('prep%s_lin%d.mat', tag, k), cfg_k, cfg, rec, opt, mc, zplot, Tdisp, fb, nm, lin0, Ltrue);
+        Pu = load(Uall{k}.prepfile); cfg_k = apply_linearization(cfg, Pu.P); clear Pu
+    end
+    if exist(updf, 'file') ~= 2                    % final update + history (for D4)
+        U = Uall{end}; U.stages = cellfun(@(x) rmfield(x, 'lin0'), Uall, 'UniformOutput', false);
+        tmpf = tmp_name('refupd'); save(tmpf, 'U'); movefile(tmpf, updf);
+    end
+    pt2 = pt; pt2.nit = pt.nit - pt.burn; pt2.burn = 0; pt2.jump_last = 0;
+    parfor q = 1:numel(runs)
+        ic = runs(q);
+        if exist(chainf(ic), 'file') == 2, continue; end
+        B = load(stgf(ic, nlu_)); S0 = B.Sf;
+        [sv, st, info] = run_pt_LR(rec, cfg_k, mc, Tdisp, fb, nm, zplot, 3000 + ic, lin0, pt2, ic, S0);
+        Lb = []; Lt = []; sw = 0;
+        for k = 1:nlu_                                % full trace: all burn-in stages
+            B = load(stgf(ic, k));
+            Lb = [Lb; B.sv1.L]; Lt = [Lt; B.info1.Ltrace]; sw = sw + B.info1.swap; %#ok<AGROW>
+        end
+        sv.L = [Lb; sv.L]; info.Ltrace = [Lt; info.Ltrace]; info.swap = info.swap + sw;
+        info.ref_update = updf;
+        save_pt(chainf(ic), sv, st, ic, info);
+    end
 elseif ~isempty(runs)
     % ---------- phase 1: burn-in with the current reference ----------
     % the last opt.upd_frac of the burn-in is saved (T = 1) for the update
@@ -150,7 +198,8 @@ elseif ~isempty(runs)
             U.refid = sprintf('%s_upd%s', opt.refid, tag);
             U.prepfile = sprintf('prep%s_burnupd.mat', tag);
             fprintf('reference update: mean of %d late burn-in samples -> %s (MINEOS + idagrn6)\n', ns, U.refid);
-            Pu = update_reference(U.vsv, U.vsh, zplot, cfg, opt, U.refid, U.prepfile, U.eta);
+            ou_ = opt; if linonly_, ou_.lin_only = true; end   % ('lin': MINEOS only, no idagrn6)
+            Pu = update_reference(U.vsv, U.vsh, zplot, cfg, ou_, U.refid, U.prepfile, U.eta);
             U.mode = opt.update_ref;
             if linonly_
                 % linearization only: same records and nuisance meaning; report
