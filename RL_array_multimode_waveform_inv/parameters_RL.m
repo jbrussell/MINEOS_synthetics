@@ -71,6 +71,10 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   4 s sampling): none whitens it well (residual lag-1 correlation 0.6-0.65
     ...                                  %   vs 0.56 for AR(1)); the noise covariance is nearly singular (the band is
     ...                                  %   ~1/3 of the Nyquist range), high orders are unstable.
+    ...                                  %   'fdom': frequency-domain likelihood (tapered in-band DFT coefficients of
+    ...                                  %   each station's window, scaled by its noise spectrum from the pre-P
+    ...                                  %   noise; fdom_operator.m); for real data
+    'noise_psd',    'shape', ...         % 'fdom' spectra: 'shape' (pooled shape x station level) or 'station'
     'noise_arp',    8, ...               % 'arp', 'emp': AR order
     'noise_nugget', 0.05, ...            % white-noise fraction added before the AR fits (stability)
     'synth_pre_s',  0, ...               % D0: noise before the origin (s; 0: records start at the origin)

@@ -77,6 +77,10 @@ if nargin >= 6 && ~isempty(sig)
     if isfield(ev, 'nlev') && ~isempty(ev.nlev)   % per-sample noise levels: sig is a scale on them
         Gb = Gb ./ ev.nlev(:); db = db ./ ev.nlev(:);
     end
+    if isfield(ev, 'W') && ~isempty(ev.W)         % fixed noise model (AR(p), fdom): sig is a scale
+        if isstruct(ev.W), Wm = ev.W.M; else, Wm = ev.W; end
+        Gb = Wm*Gb; db = Wm*db;
+    end
     x = (Gb'*Gb + lam*eye(nb)) \ (Gb'*db + lam*repmat([1; 0], nm*K, 1));
     b0 = reshape(x(1:2:end) + 1i*x(2:2:end), K, nm).';
 end

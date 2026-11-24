@@ -24,6 +24,10 @@ function D = read_event_data(opt, ev, sta_names, comp, tg)
 %             the data (opt.fc; Tukey taper, central 80% used); NaN if fewer
 %             than opt.noise_min_n (40) such samples. opt.noise_pre_origin =
 %             false uses only the samples after the origin (test option).
+%   npsd    : [Nst x 60] two-sided power spectral density of that noise
+%             (data units^2/Hz; periodogram, Tukey 0.2 taper, 3-bin running
+%             mean) on the grid npsd_f = linspace(fc(1), fc(4), 60) Hz (for
+%             the frequency-domain noise model, sub_setup_records.m)
 %   nacf    : [Nst x maxlag+1] autocorrelation of that noise, lags
 %             0..opt.noise_maxlag (12) samples (NaN rows where nstd is NaN;
 %             for the AR(p) noise models, sub_setup_records.m)
@@ -42,6 +46,7 @@ tc = (ev.t_cent - datenum(1970, 1, 1))*86400;    % centroid time (epoch s)
 D.U = NaN(numel(tg), Nst); D.present = false(Nst, 1); D.dist = NaN(Nst, 1); D.nstd = NaN(Nst, 1);
 maxlag = optget(opt, 'noise_maxlag', 12); D.nacf = NaN(Nst, maxlag + 1);
 fc = optget(opt, 'fc', [1/112 1/100 1/20 1/17]);
+D.npsd_f = linspace(fc(1), fc(4), 60); D.npsd = NaN(Nst, 60);
 D.winpara = []; if isfield(event, 'winpara') && numel(event.winpara) == 4, D.winpara = event.winpara; end
 D.toff = event.otime - tc;
 for k = 1:numel(event.stadata)
@@ -67,12 +72,12 @@ for k = 1:numel(event.stadata)
     ip = find(to < s.dist/13.5 - 60);            % before the first arrival (P)
     if ~optget(opt, 'noise_pre_origin', true), ip = ip(to(ip) >= 0); end
     if numel(ip) >= optget(opt, 'noise_min_n', 40)
-        [D.nstd(j), D.nacf(j, :)] = noise_std_(s.data(ip), s.delta, fc, maxlag);
+        [D.nstd(j), D.nacf(j, :), D.npsd(j, :)] = noise_std_(s.data(ip), s.delta, fc, maxlag, D.npsd_f);
     end
 end
 end
 
-function [sd, ac] = noise_std_(x, dt, fc, maxlag)
+function [sd, ac, ps] = noise_std_(x, dt, fc, maxlag, fg)
 % std of x band-passed as the data (Tukey taper, one-sided band-pass taper),
 % central 80% of the samples, and its autocorrelation at lags 0..maxlag
 % (biased estimator; NaN beyond the available lags)
@@ -84,4 +89,8 @@ sd = std(u(k));
 uk = u(k) - mean(u(k)); nk = numel(uk); ac = NaN(1, maxlag + 1);
 for L = 0:min(maxlag, nk - 1), ac(L+1) = sum(uk(1:nk-L) .* uk(1+L:nk)) / nk; end
 ac = ac / ac(1);
+w = tukeywin_(nk, 0.2); P = abs(fft(uk .* w)).^2 * dt / sum(w.^2);   % two-sided PSD estimate
+P = conv(P, ones(3, 1)/3, 'same'); fk = (0:nk-1)'/(nk*dt);
+h = fk < 1/(2*dt);
+ps = interp1(fk(h), P(h), fg(:)', 'linear', NaN);
 end

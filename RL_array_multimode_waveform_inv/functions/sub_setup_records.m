@@ -269,7 +269,7 @@ for wv = 1:2
         else
             % data: full idagrn6 synthetics of the true model, same processing
             clean = proc(P.(['u_true_' uname{wv}]){e}(it, :));
-            pres = true(1, Nst); rec(r).nacf_ = [];
+            pres = true(1, Nst); rec(r).nacf_ = []; rec(r).npsd_ = []; rec(r).nstd_ = [];
         end
         idx = []; wt = [];
         for j = find(pres)
@@ -295,6 +295,7 @@ for wv = 1:2
             % first arrival (opt.noise_levels = 'pre'; read_event_data.m): noise std of a sample = sigma x the
             % measured level of its station / the record's peak
             rec(r).nlev = []; rec(r).nacf_ = Dd.nacf;    % (pre-P noise autocorrelation per station)
+            rec(r).npsd_ = Dd.npsd; rec(r).nstd_ = Dd.nstd(:)';   % (pre-P noise spectra and levels)
             if strcmp(nlev_mode_, 'pre')
                 lev = Dd.nstd(:)' / rec(r).scale;          % 1 x Nst
                 okl = pres & isfinite(lev) & lev > 0;
@@ -377,6 +378,48 @@ if any(strcmp(nmodel_, {'ar2', 'arp', 'emp'}))
     rho_emp_model_ = pooled_(:, 2)';
 end
 
+% 'fdom': frequency-domain likelihood (fdom_operator.m): each station's
+% window tapered (Tukey 0.2) and transformed to its in-band DFT
+% coefficients, scaled by the noise power spectrum of the station from its
+% pre-P noise (read_event_data.m): opt.noise_psd = 'shape' (default; the
+% pooled spectral shape of the wave type x the station's own level, robust
+% with short pre-P noise) or 'station' (each station's own smoothed
+% spectrum; for real data with station-specific spectra). sigma is a scale
+% factor (~1); the per-station levels are in the spectra (rec.nlev unused).
+if strcmp(nmodel_, 'fdom')
+    if ~aswms_, error('opt.noise_model = ''fdom'' needs opt.data_source = ''aswms'' (pre-P noise)'); end
+    fg_ = linspace(fc(1), fc(4), 60); psdm_ = og('noise_psd', 'shape');
+    shape_ = NaN(2, numel(fg_));
+    for wv = 1:2
+        A_ = [];
+        for r = find([rec.wave] == wv)
+            A_ = [A_; rec(r).npsd_ ./ (rec(r).nstd_(:).^2)];          %#ok<AGROW>
+        end
+        for k_ = 1:numel(fg_), a_ = A_(isfinite(A_(:, k_)), k_); if ~isempty(a_), shape_(wv, k_) = median(a_); end, end
+    end
+    nown_ = 0; ntot_ = 0;
+    for r = 1:nrec
+        jst_ = ceil(rec(r).idx / cfg.N);
+        lv_ = rec(r).nstd_(:).^2; lv_(~isfinite(lv_)) = median(lv_(isfinite(lv_)));
+        Srow_ = lv_ * shape_(rec(r).wave, :);                             % [Nst x 60]
+        if strcmp(psdm_, 'station')
+            for j = unique(jst_)'
+                ntot_ = ntot_ + 1;
+                if all(isfinite(rec(r).npsd_(j, :))), Srow_(j, :) = rec(r).npsd_(j, :); nown_ = nown_ + 1; end
+            end
+        end
+        Srow_ = Srow_ / rec(r).scale^2;                                   % (records are normalized by their peak)
+        Srow_ = max(Srow_, 1e-3*max(Srow_, [], 2));                       % (floor: band edges)
+        Sfun_ = @(j, f) interp1(fg_, Srow_(j, :), f, 'linear', 'extrap');
+        rec(r).W = fdom_operator(rec(r).first, rec(r).wt, jst_, cfg.dt, [fc(1) fc(4)], Sfun_);
+        rec(r).wld = rec(r).W.ld; rec(r).nlev = [];
+    end
+    fprintf('frequency-domain noise model (%s spectra): %d coefficients per record on average (%d samples)\n', psdm_, ...
+        round(mean(arrayfun(@(x) numel(x.W.wt), rec))), round(mean(arrayfun(@(x) numel(x.d), rec))));
+    if strcmp(psdm_, 'station'), fprintf('   %d of %d record-stations with their own spectrum\n', nown_, ntot_); end
+    mc.fixed_corr = true; mc.noise_model = 'fdom';
+end
+
 %% ---- noise ----
 % band-limited noise: white noise through the processing band-pass with a
 % standard deviation of opt.noise (default 3%) of the peak amplitude of
@@ -389,10 +432,16 @@ sig_true = og('noise', 0.03)*ones(1, 4);
 bpf = zeros(cfg.N, 1); bpf(cfg.ib) = taper;
 cc = zeros(4, 2);                         % lag-1 autocorrelation accumulators
 ss = zeros(4, 2);                         % noise power accumulators ('aswms')
+ssw_ = zeros(4, 2);                       % (whitened, fixed noise models)
 for r = 1:nrec
     if aswms_
         nr = rec(r).d - rec(r).clean;     % (NaN for real data)
         if isfield(rec, 'nlev') && ~isempty(rec(r).nlev), nr = nr ./ rec(r).nlev; end   % relative to the measured levels
+        if isfield(rec, 'W') && ~isempty(rec(r).W)    % fixed noise model: whitened units (sigma ~ 1)
+            Wr_ = rec(r).W;
+            if isstruct(Wr_), yw_ = Wr_.M*nr; wtw_ = Wr_.wt; else, yw_ = Wr_*nr; wtw_ = rec(r).wt; end
+            for w = unique(wtw_)', ssw_(w, :) = ssw_(w, :) + [sum(yw_(wtw_ == w).^2), sum(wtw_ == w)]; end
+        end
     else
         X = fft(randn(cfg.N, Nst));
         nz = 2*real(ifft(X .* bpf));      % one-sided filter -> real band-limited noise
@@ -411,6 +460,7 @@ rho_emp = (cc(:,1) ./ cc(:,2))';
 if aswms_
     if synth_
         sig_true = sqrt(ss(:,1) ./ ss(:,2))';
+        if any(ssw_(:, 2) > 0), sig_true = sqrt(ssw_(:,1) ./ max(ssw_(:,2), 1))'; end   % (whitened units)
         if single_, sig_true([2 4]) = sig_true([1 3]); end
         fprintf('noise of the D0 data (std; with per-station levels: relative to them) per window %s\n', mat2str(round(sig_true*1e4)/1e4));
     elseif nlev_n_ > 0
