@@ -105,6 +105,7 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   every frequency (apply_fixed_tau.m; update_ref 'none' or 'lin')
     'fix_nuisance', false, ...           % synthetic test only: B, tau, dth held at 1, 0, 0 (true values when the
     ...                                  %   reference is the true model and data = modelled branches)
+    'ckpt_every', 100, ...               % checkpoint every this many iterations (resume after an interruption)
     'jump_every', 100, ...               % every this many burn-in iterations, try moving each tau_n(w) by one
     ...                                  %   cycle at the short periods and keep it if log L improves (0 = off)
     'eta_free', false, ...               % eta: false = held at the reference model; true = a free

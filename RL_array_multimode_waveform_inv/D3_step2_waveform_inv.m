@@ -54,6 +54,10 @@
 %   $ CHAINS="1 2" octave-cli --eval D3_step2_waveform_inv &  % chains in parallel
 %   $ ENSEMBLES="1" octave-cli --eval "opt.sampler='pt'; D3_step2_waveform_inv" &
 %
+% Checkpoints: every opt.ckpt_every (100) iterations each chain/ensemble
+% saves ckpt<tag>_XX_<phase>.mat (run_pt_LR.m); rerunning the same command
+% after an interruption resumes from them (and skips finished stages).
+%
 % Output: setup<tag>.mat, chain<tag>_XX.mat (tag = '_plain' or '_pt' by
 % default), with the reference update also chain<tag>_XX_burn.mat (burn-in
 % states), refupd<tag>.mat and prep<tag>_burnupd.mat (the new reference);
@@ -116,6 +120,9 @@ if ~isempty(envc), runs = str2num(envc); end %#ok<ST2NM>
 chainf = @(i) sprintf('chain%s_%02d.mat', tag, i);
 burnf  = @(i) sprintf('chain%s_%02d_burn.mat', tag, i);
 updf   = ['refupd' tag '.mat'];
+ckf    = @(i, ph) sprintf('ckpt%s_%02d_%s.mat', tag, i, ph);   % checkpoints (run_pt_LR; deleted when done)
+pt.ckpt_every = optget(opt, 'ckpt_every', 100);
+rmck   = @rm_if_exists;
 if ~upd_
     parfor q = 1:numel(runs)
         ic = runs(q);
@@ -123,8 +130,8 @@ if ~upd_
             [sv, st] = run_chain_LR(rec, cfg, mc, Tdisp, fb, nm, zplot, 1000 + ic, ic, lin0);
             save_chain(chainf(ic), sv, st, ic);
         else
-            [sv, st, info] = run_pt_LR(rec, cfg, mc, Tdisp, fb, nm, zplot, 2000 + ic, lin0, pt, ic);
-            save_pt(chainf(ic), sv, st, ic, info);
+            [sv, st, info] = run_pt_LR(rec, cfg, mc, Tdisp, fb, nm, zplot, 2000 + ic, lin0, setfield(pt, 'ckpt', ckf(ic, 'run')), ic);
+            save_pt(chainf(ic), sv, st, ic, info); rmck(ckf(ic, 'run'));
         end
     end
 elseif linonly_ && nlu_ > 1 && ~isempty(runs)
@@ -143,8 +150,9 @@ elseif linonly_ && nlu_ > 1 && ~isempty(runs)
             ic = runs(q);
             if exist(chainf(ic), 'file') == 2 || exist(stgf(ic, k), 'file') == 2, continue; end
             if k == 1, S0 = {}; else, B = load(stgf(ic, k - 1)); S0 = B.Sf; end
-            [sv1, ~, info1, Sf] = run_pt_LR(rec, cfg_k, mc, Tdisp, fb, nm, zplot, 2000 + 100*(k-1) + ic, lin0, ptk, ic, S0);
-            save_burn(stgf(ic, k), sv1, info1, Sf);
+            [sv1, ~, info1, Sf] = run_pt_LR(rec, cfg_k, mc, Tdisp, fb, nm, zplot, 2000 + 100*(k-1) + ic, lin0, ...
+                setfield(ptk, 'ckpt', ckf(ic, sprintf('stage%d', k))), ic, S0);
+            save_burn(stgf(ic, k), sv1, info1, Sf); rmck(ckf(ic, sprintf('stage%d', k)));
         end
         Uall{k} = lin_update(arrayfun(@(i) stgf(i, k), 1:mc.nchains, 'UniformOutput', false), ...
             sprintf('refupd%s_%d.mat', tag, k), sprintf('%s_lin%s_%d', opt.refid, tag, k), ...
@@ -160,7 +168,7 @@ elseif linonly_ && nlu_ > 1 && ~isempty(runs)
         ic = runs(q);
         if exist(chainf(ic), 'file') == 2, continue; end
         B = load(stgf(ic, nlu_)); S0 = B.Sf;
-        [sv, st, info] = run_pt_LR(rec, cfg_k, mc, Tdisp, fb, nm, zplot, 3000 + ic, lin0, pt2, ic, S0);
+        [sv, st, info] = run_pt_LR(rec, cfg_k, mc, Tdisp, fb, nm, zplot, 3000 + ic, lin0, setfield(pt2, 'ckpt', ckf(ic, 'samp')), ic, S0);
         Lb = []; Lt = []; sw = 0;
         for k = 1:nlu_                                % full trace: all burn-in stages
             B = load(stgf(ic, k));
@@ -168,7 +176,7 @@ elseif linonly_ && nlu_ > 1 && ~isempty(runs)
         end
         sv.L = [Lb; sv.L]; info.Ltrace = [Lt; info.Ltrace]; info.swap = info.swap + sw;
         info.ref_update = updf;
-        save_pt(chainf(ic), sv, st, ic, info);
+        save_pt(chainf(ic), sv, st, ic, info); rmck(ckf(ic, 'samp'));
     end
 elseif ~isempty(runs)
     % ---------- phase 1: burn-in with the current reference ----------
@@ -178,8 +186,8 @@ elseif ~isempty(runs)
     parfor q = 1:numel(runs)
         ic = runs(q);
         if exist(chainf(ic), 'file') == 2 || exist(burnf(ic), 'file') == 2, continue; end
-        [sv1, ~, info1, Sf] = run_pt_LR(rec, cfg, mc, Tdisp, fb, nm, zplot, 2000 + ic, lin0, pt1, ic);
-        save_burn(burnf(ic), sv1, info1, Sf);
+        [sv1, ~, info1, Sf] = run_pt_LR(rec, cfg, mc, Tdisp, fb, nm, zplot, 2000 + ic, lin0, setfield(pt1, 'ckpt', ckf(ic, 'burn')), ic);
+        save_burn(burnf(ic), sv1, info1, Sf); rmck(ckf(ic, 'burn'));
     end
     % ---------- reference update: once, by one process ----------
     lockd = [updf '.lock'];
@@ -294,12 +302,12 @@ elseif ~isempty(runs)
                 S0{k}.lin = spec_refine(U.lin0, rec_u, sk.Cf, S0{k}.sig, S0{k}.rho, cfg_u, mc, nm, opt.upd_ngn);
             end
         end
-        [sv, st, info] = run_pt_LR(rec_u, cfg_u, mc, Tdisp, fb, nm, zplot, 3000 + ic, U.lin0, pt2, ic, S0);
+        [sv, st, info] = run_pt_LR(rec_u, cfg_u, mc, Tdisp, fb, nm, zplot, 3000 + ic, U.lin0, setfield(pt2, 'ckpt', ckf(ic, 'samp')), ic, S0);
         sv.L = [B.sv1.L; sv.L];                   % full trace (burn-in: old reference)
         info.Ltrace = [B.info1.Ltrace; info.Ltrace];
         info.swap = info.swap + B.info1.swap;
         info.ref_update = updf;
-        save_pt(chainf(ic), sv, st, ic, info);
+        save_pt(chainf(ic), sv, st, ic, info); rmck(ckf(ic, 'samp'));
     end
 end
 done = arrayfun(@(i) exist(sprintf('chain%s_%02d.mat', tag, i), 'file') == 2, 1:mc.nchains);

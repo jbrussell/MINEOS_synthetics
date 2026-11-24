@@ -23,6 +23,8 @@ function [sv, st, info, S] = run_pt_LR(rec, cfg, mc, Tdisp, fb, nm, zplot, seed,
 % pt   : T (temperatures, T(1) = 1), nit, burn, thin; optional jump_last:
 %        cycle-skip checks (cycle_jump.m, every mc.jump_every iterations,
 %        all temperatures) up to this iteration (default pt.burn)
+% pt.ckpt, pt.ckpt_every : OPTIONAL checkpoint file and interval
+%        (iterations, default 100): see the checkpoint section below
 % S0   : OPTIONAL {K} initial states (fields m, sig, rho and, optionally,
 %        lin: {nrec} linearization points), e.g. the final states S of an
 %        earlier call (continuation after a reference update); default:
@@ -83,7 +85,28 @@ isv = 0; tic;
 fprintf('PT %d: %d temperature(s), T = %s, relinearization every %d iteration(s)\n', ...
     ie, K, mat2str(round(pt.T*100)/100), relin);
 
-for it = 1:pt.nit
+% ---------- checkpoints (pt.ckpt, every pt.ckpt_every iterations) ----------
+% the states of all temperatures (without the stored operators, recomputed
+% here), the samples so far, info, the iteration and the random-number
+% state; a run started with an existing checkpoint resumes from it
+ckf = ''; ckev = 100; it0 = 1;
+if isfield(pt, 'ckpt') && ~isempty(pt.ckpt), ckf = pt.ckpt; end
+if isfield(pt, 'ckpt_every') && ~isempty(pt.ckpt_every), ckev = pt.ckpt_every; end
+if ~isempty(ckf) && exist(ckf, 'file') == 2
+    C = load(ckf);
+    S = C.S; sv = C.sv; info = C.info; isv = C.isv; it0 = C.it + 1;
+    for k = 1:K
+        s = S{k}; s.G = cell(nrec, 1); s.Le = zeros(nrec, 1); s.xh = cell(nrec, 1);
+        for r = 1:nrec
+            [~, s.Le(r), s.G{r}, s.xh{r}] = nuis_relin(rec(r), s.Cf{wave(r)}, s.lin{r}, cfg, s.sig, s.rho, mc, nm);
+        end
+        S{k} = s;
+    end
+    rng(C.rngst);
+    fprintf('PT %d: resumed from %s at iteration %d of %d\n', ie, ckf, C.it, pt.nit);
+    clear C
+end
+for it = it0:pt.nit
     for k = 1:K
         s = S{k}; Tk = pt.T(k);
         % ---------- relinearize tau, dth and B about the current structure ----------
@@ -177,6 +200,9 @@ for it = 1:pt.nit
         fprintf('PT %d  it %5d  logL(T=1) %.1f  kv=%d kx=%d  r=%s  swap%% %s  %.0f s\n', ie, it, ...
             sum(S{1}.Le), numel(S{1}.m.V.zc), numel(S{1}.m.X.zc), mat2str(round(S{1}.rho*100)/100), ...
             mat2str(round(100*info.swap(:,2)./max(info.swap(:,1),1))'), toc);
+    end
+    if ~isempty(ckf) && mod(it, ckev) == 0 && it < pt.nit
+        ckpt_save(ckf, cellfun(@(x) rmfield(x, {'G', 'xh'}), S, 'uniformoutput', false), sv, info, isv, it, rng);
     end
 end
 info.Lmean = mean(info.Ltrace(min(pt.burn+1, pt.nit):end, :), 1)';
