@@ -72,25 +72,7 @@ for k = 1:numel(event.stadata)
     ip = find(to < s.dist/13.5 - 60);            % before the first arrival (P)
     if ~optget(opt, 'noise_pre_origin', true), ip = ip(to(ip) >= 0); end
     if numel(ip) >= optget(opt, 'noise_min_n', 40)
-        [D.nstd(j), D.nacf(j, :), D.npsd(j, :)] = noise_std_(s.data(ip), s.delta, fc, maxlag, D.npsd_f);
+        [D.nstd(j), D.nacf(j, :), D.npsd(j, :)] = noise_stats(s.data(ip), s.delta, fc, maxlag, D.npsd_f);
     end
 end
-end
-
-function [sd, ac, ps] = noise_std_(x, dt, fc, maxlag, fg)
-% std of x band-passed as the data (Tukey taper, one-sided band-pass taper),
-% central 80% of the samples, and its autocorrelation at lags 0..maxlag
-% (biased estimator; NaN beyond the available lags)
-x = x(:) - mean(x); n = numel(x);
-f = (0:n-1)'/(n*dt); ib = find(f > fc(1) & f < fc(4));
-X = fft(x .* tukeywin_(n, 0.1)); Y = zeros(n, 1); Y(ib) = X(ib) .* bp_taper(f(ib), fc);
-u = 2*real(ifft(Y)); k = round(0.1*n) + 1 : round(0.9*n);
-sd = std(u(k));
-uk = u(k) - mean(u(k)); nk = numel(uk); ac = NaN(1, maxlag + 1);
-for L = 0:min(maxlag, nk - 1), ac(L+1) = sum(uk(1:nk-L) .* uk(1+L:nk)) / nk; end
-ac = ac / ac(1);
-w = tukeywin_(nk, 0.2); P = abs(fft(uk .* w)).^2 * dt / sum(w.^2);   % two-sided PSD estimate
-P = conv(P, ones(3, 1)/3, 'same'); fk = (0:nk-1)'/(nk*dt);
-h = fk < 1/(2*dt);
-ps = interp1(fk(h), P(h), fg(:)', 'linear', NaN);
 end

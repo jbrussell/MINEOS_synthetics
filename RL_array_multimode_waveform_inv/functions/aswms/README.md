@@ -2,8 +2,8 @@
 
 Copied from [ASWMS-Q](https://github.com/jbrussell/ASWMS-Q) at commit
 `7255f9d` (2026-03-09). They are used by the data-preparation scripts
-`A1_sac2eventmat.m`, `A2_cleanup_events.m`, `A3_run_autowinpick.m` and
-`A3b_run_exam_winpara.m`. Real data and the synthetic "data" from
+`A1_sac2eventmat.m`, `A2_cleanup_events.m`, `A3_run_autowinpick.m`,
+`A3b_run_exam_winpara.m` and `A4_plot_event_data.m` (figures and noise diagnostics per event). Real data and the synthetic "data" from
 `D0_synth_make_sac_data.m` go through the same steps.
 
 | File | Used by |

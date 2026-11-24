@@ -17,7 +17,7 @@
 % saved as winpara/<event id>_<component>.png.
 % Input/output: <opt.aswms_dir>eventmat/<event id>_<component>.mat
 % Next (optional, MATLAB, interactive): A3b_run_exam_winpara.m; then
-% D2_step2_prep_mineos_idagrn.m.
+% A4_plot_event_data.m (figures, noise diagnostics), D2_step2_prep_mineos_idagrn.m.
 
 parameters_RL;
 isfigure = optget(opt, 'aswms_plot', false);
