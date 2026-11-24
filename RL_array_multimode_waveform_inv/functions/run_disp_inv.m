@@ -12,7 +12,9 @@ function out = run_disp_inv(CLd, CRd, sig, cfg, mc, Tdisp, fb, nm, zplot, nit, b
 % (default [1 1]; 0 drops a wave type).
 %
 % CLd, CRd : [numel(Tdisp) x nm] data phase velocities (km/s)
-% sig      : relative standard deviation (e.g. 0.0025 = 0.25%)
+% sig      : relative standard deviation (e.g. 0.0025 = 0.25%), or a cell
+%            {sigL, sigR} of [numel(Tdisp) x nm] (or [numel(Tdisp) x 1])
+%            relative standard deviations per period (and branch)
 % nit, burn, thin, seed : iterations, burn-in, thinning, random seed
 % out      : vsv, vsh, xi [numel(zplot) x nsave], kv, kx, L (trace),
 %            CL, CR [numel(Tdisp) x nm x nsave], acc (accepted fraction)
@@ -20,8 +22,11 @@ if nargin < 14 || isempty(w), w = [1 1]; end
 rng(seed);
 need = cfg.need;
 okL = need & isfinite(CLd); okR = need & isfinite(CRd);
-loglik = @(S) -0.5*(w(1)*sum(((S.CL(okL) - CLd(okL)) ./ (sig*CLd(okL))).^2) + ...
-                    w(2)*sum(((S.CR(okR) - CRd(okR)) ./ (sig*CRd(okR))).^2));
+if iscell(sig), sL = sig{1} .* ones(size(CLd)); sR = sig{2} .* ones(size(CRd));
+else, sL = sig * ones(size(CLd)); sR = sig * ones(size(CRd)); end
+okL = okL & isfinite(sL) & sL > 0; okR = okR & isfinite(sR) & sR > 0;
+loglik = @(S) -0.5*(w(1)*sum(((S.CL(okL) - CLd(okL)) ./ (sL(okL).*CLd(okL))).^2) + ...
+                    w(2)*sum(((S.CR(okR) - CRd(okR)) ./ (sR(okR).*CRd(okR))).^2));
 while true
     m = lr_common('draw_prior', cfg, mc);
     [S, ok] = lr_common('disp', struct(), m, cfg, Tdisp, fb, nm, 'both');

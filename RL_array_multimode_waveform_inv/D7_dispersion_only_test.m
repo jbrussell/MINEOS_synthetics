@@ -19,13 +19,33 @@
 % disp_burn (10000), disp_chains (4), disp_w ([1 1]: weights of Love and
 % Rayleigh), disp_cases ({'lin', 'mineos'}), disp_branches ([] = all; e.g.
 % 0 or [0 1]: only these branches are data), disp_out (suffix of the
-% output folder); summary.txt is appended to. Output: figs_disp<disp_tag>/ (disp_<case>.png, summary.txt).
+% output folder), disp_sig_from (tag of a waveform run, e.g. '_b1pt': the
+% relative standard deviation per period and branch is the posterior
+% std/mean of that run's phase velocities, chain<tag>_*.mat, i.e. the
+% precision the waveforms actually deliver; overrides disp_sig;
+% disp_sig_scale (1) multiplies it); summary.txt is appended to. Output: figs_disp<disp_tag>/ (disp_<case>.png, summary.txt).
 
 parameters_RL;
 tg_ = optget(opt, 'disp_tag', '_plain8lin');
 S0 = load(['setup' tg_ '.mat'], 'cfg', 'mc', 'Tdisp', 'fb', 'nm', 'zplot', 'tru', 'refp', ...
            'CtrueL', 'CtrueR', 'ClinL', 'ClinR');
 sigd = optget(opt, 'disp_sig', 0.0025);
+sfrom_ = optget(opt, 'disp_sig_from', '');
+if ~isempty(sfrom_)                            % per-period precision of a waveform run
+    fl_ = dir(['chain' sfrom_ '_*.mat']); fl_ = fl_(~cellfun(@isempty, regexp({fl_.name}, ['^chain' regexptranslate('escape', sfrom_) '_\d+\.mat$']))); CL_ = []; CR_ = [];
+    for k_ = 1:numel(fl_), C_ = load(fl_(k_).name, 'sv'); CL_ = cat(3, CL_, C_.sv.CL); CR_ = cat(3, CR_, C_.sv.CR); end
+    if isempty(CL_), error('D7: no chain%s_XX.mat files', sfrom_); end
+    sc_ = optget(opt, 'disp_sig_scale', 1);
+    sigd = {sc_*std(CL_, 0, 3)./mean(CL_, 3), sc_*std(CR_, 0, 3)./mean(CR_, 3)};
+    nb_ = min(size(sigd{1}, 2), S0.nm);
+    for w_ = 1:2, s_ = NaN(numel(S0.Tdisp), S0.nm); s_(:, 1:nb_) = sigd{w_}(:, 1:nb_); sigd{w_} = s_; end
+end
+if iscell(sigd)
+    sdesc_ = sprintf('per period from %s x%g (branch 0, %%: Love %s, Rayleigh %s)', sfrom_, optget(opt, 'disp_sig_scale', 1), ...
+        mat2str(round(1000*sigd{1}(:, 1)')/10), mat2str(round(1000*sigd{2}(:, 1)')/10));
+else
+    sdesc_ = sprintf('%.2f%%', 100*sigd);
+end
 nit = optget(opt, 'disp_nit', 20000); burn = optget(opt, 'disp_burn', 10000);
 nch = optget(opt, 'disp_chains', 4); wts = optget(opt, 'disp_w', [1 1]); thin = 20;
 br_ = optget(opt, 'disp_branches', []);       % branches fitted ([] = all 0..nm-1)
@@ -48,8 +68,8 @@ for ic = 1:numel(cases)
     for f_ = {'vsv', 'vsh', 'xi'}, V.(f_{1}) = cell2mat(cellfun(@(x) x.(f_{1}), R', 'UniformOutput', false)); end
     % summary
     for o = [1 fid]
-        fprintf(o, 'Case %s (data: %s dispersion of the true model, branches %s), sig %.2f%%, %d chains x %d it (%.0f s); acceptance %s\n', ...
-            cases{ic}, cases{ic}, mat2str(ifelse_br(br_, S0.nm)), 100*sigd, nch, nit, toc, mat2str(round(100*cellfun(@(x) x.acc, R'))/100));
+        fprintf(o, 'Case %s (data: %s dispersion of the true model, branches %s), sig %s, %d chains x %d it (%.0f s); acceptance %s\n', ...
+            cases{ic}, cases{ic}, mat2str(ifelse_br(br_, S0.nm)), sdesc_, nch, nit, toc, mat2str(round(100*cellfun(@(x) x.acc, R'))/100));
         fprintf(o, '   final log L per chain %s (0 = exact fit)\n', mat2str(round(cellfun(@(x) x.L(end), R'))));
         fprintf(o, '   xi band averages: posterior mean [5-95%%] | true | chain means\n');
         for b = 1:size(bands, 1)
@@ -82,8 +102,8 @@ for ic = 1:numel(cases)
         if q_ == 1, legend([h2 h3 h1], {'true (PA5)', 'reference (step 1)', 'posterior mean'}, 'location', 'southwest'); end
     end
     axes('position', [0 0.95 1 0.04], 'visible', 'off');
-    text(0.5, 0.5, sprintf(['Dispersion-only inversion of the %s dispersion of the true model (Love + Rayleigh branches %s, sig %.2f%%); ' ...
-        'thin colour lines: chain means, dashed: 5-95%%'], cases{ic}, mat2str(ifelse_br(br_, S0.nm)), 100*sigd), 'horizontalalignment', 'center');
+    text(0.5, 0.5, sprintf(['Dispersion-only inversion of the %s dispersion of the true model (Love + Rayleigh branches %s, sig %s); ' ...
+        'thin colour lines: chain means, dashed: 5-95%%'], cases{ic}, mat2str(ifelse_br(br_, S0.nm)), sdesc_), 'horizontalalignment', 'center');
     print(fig, '-dpng', '-r110', fullfile(od, ['disp_' cases{ic} '.png'])); close(fig);
     save(fullfile(od, ['disp_' cases{ic} '.mat']), 'R', '-v7');
 end
