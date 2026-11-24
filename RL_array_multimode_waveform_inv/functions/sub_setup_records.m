@@ -156,7 +156,9 @@ Ctrue_f = {disp_band(CtrueL), disp_band(CtrueR)};
 
 %% ---- events and records ----
 ev = P.ev; nev = numel(ev);
-[Del_c, baz] = gc_dist_az(lat0, lon0, [ev.lat], [ev.lon]);   % array center -> event
+% distances and azimuths on the sphere from GEOCENTRIC latitudes (geoc_lat.m),
+% as in idagrn6 (reference spectra, synthetic data)
+[Del_c, baz] = gc_dist_az(geoc_lat(lat0), lon0, geoc_lat([ev.lat]), [ev.lon]);   % array center -> event
 Del0 = Del_c * 6371*pi/180;                                   % km
 wname = {'Love', 'Rayleigh'}; uname = {'T', 'S'};
 rec = struct([]); r = 0;
@@ -213,7 +215,7 @@ for wv = 1:2
     fprintf('%s ref. group vel: fund %.2f-%.2f, overtones %.2f-%.2f km/s\n', ...
         wname{wv}, min(U0), max(U0), min(Uov(:)), max(Uov(:)));
     for e = 1:nev
-        Dj = gc_dist_az(lat, lon, ev(e).lat*ones(Nst,1), ev(e).lon*ones(Nst,1)) * 6371*pi/180;
+        Dj = gc_dist_az(geoc_lat(lat), lon, geoc_lat(ev(e).lat)*ones(Nst,1), ev(e).lon*ones(Nst,1)) * 6371*pi/180;
         if aswms_                                   % data of the ASWMS-Q event file
             Dd = read_event_data(opt, ev(e), sta, comps_{wv}, P.t);
             if isempty(Dd)
