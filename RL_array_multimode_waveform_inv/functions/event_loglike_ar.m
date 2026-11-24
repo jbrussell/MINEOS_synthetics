@@ -1,4 +1,4 @@
-function [L, bhat] = event_loglike_ar(d, G, wt, first, sig, rho, mu_b, sb2, nlev)
+function [L, bhat] = event_loglike_ar(d, G, wt, first, sig, rho, mu_b, sb2, nlev, W, wld)
 % EVENT_LOGLIKE_AR  Marginal log-likelihood for one record with correlated
 % noise (Bodin et al., 2012, exponential correlation law): within each
 % contiguous window segment the noise covariance is
@@ -22,11 +22,25 @@ function [L, bhat] = event_loglike_ar(d, G, wt, first, sig, rho, mu_b, sb2, nlev
 %              noise of the sample's station, rec.nlev): the noise std of a
 %              sample is then sig(wt) * nlev (constant within a segment, so
 %              the AR(1) structure is unchanged); [] or absent = 1
+%   W, wld   : OPTIONAL precomputed whitening operator of the record and its
+%              log det (whiten_operator.m: AR(p) noise, opt.noise_model =
+%              'ar2' or 'emp'); used instead of the AR(1) with rho
 
 if nargin >= 9 && ~isempty(nlev)              % per-sample noise levels: scale d and G
     nlev = nlev(:); d = d ./ nlev; G = G ./ nlev;
 else
     nlev = [];
+end
+if nargin >= 10 && ~isempty(W)                % AR(p) whitening (fixed correlation)
+    dw = W*d; Gw = W*G;
+    if nargout > 1
+        [L, bhat] = event_loglike(dw, Gw, wt, sig, mu_b, sb2);
+    else
+        L = event_loglike(dw, Gw, wt, sig, mu_b, sb2);
+    end
+    L = L + wld;
+    if ~isempty(nlev), L = L - sum(log(nlev)); end
+    return
 end
 rw = reshape(rho(wt), [], 1);
 nf = ~first(:);

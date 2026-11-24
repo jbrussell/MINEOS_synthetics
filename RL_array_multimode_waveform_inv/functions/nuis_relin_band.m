@@ -17,7 +17,7 @@ Nst = size(cfg.xy, 1);
 F = @(X) filt_(X, ev.idx, cfg.N, Nst, LP);
 G = F(G); d = F(ev.d);
 [mu, sb2, it, ith] = spec_layout(lr, nm, K, Ka, mc.sb, mc.taup, mc.dthp);
-[~, xh] = event_loglike_ar(d, G, ev.wt, ev.first, sig, rho, mu, sb2, rec_nlev(ev));
+[~, xh] = event_loglike_ar(d, G, ev.wt, ev.first, sig, rho, mu, sb2, rec_nlev(ev), rec_W(ev), rec_wld(ev));
 lr.b0   = reshape(xh(1:2:nb) + 1i*xh(2:2:nb), K, nm).';
 lr.tau0 = lr.tau0 + max(min(reshape(xh(it), size(it)), mc.max_dtau), -mc.max_dtau);
 lr.dth0 = lr.dth0 + max(min(reshape(xh(ith), size(ith)), mc.max_dth), -mc.max_dth);

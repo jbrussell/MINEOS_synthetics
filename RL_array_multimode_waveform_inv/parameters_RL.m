@@ -65,6 +65,14 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   arrival (dist/13.5 km/s - 60 s after the origin, plus any samples
     ...                                  %   before the origin); the sampled sigma is a scale factor on it;
     ...                                  %   'none': one sigma per wave type
+    'noise_model',  'ar1', ...           % noise correlation: 'ar1' (AR(1), correlation sampled); EXPERIMENTAL, fixed
+    ...                                  %   from the pre-P noise: 'ar2' (AR(2) per wave type, pooled), 'arp' (AR(p),
+    ...                                  %   pooled), 'emp' (AR(p) per station and record). Test (band-passed noise,
+    ...                                  %   4 s sampling): none whitens it well (residual lag-1 correlation 0.6-0.65
+    ...                                  %   vs 0.56 for AR(1)); the noise covariance is nearly singular (the band is
+    ...                                  %   ~1/3 of the Nyquist range), high orders are unstable. See README.
+    'noise_arp',    8, ...               % 'arp', 'emp': AR order
+    'noise_nugget', 0.05, ...            % white-noise fraction added before the AR fits (stability)
     'synth_pre_s',  0, ...               % D0: noise before the origin (s; 0: records start at the origin)
     'synth_noise_spread', 0, ...         % D0: noise level per station x 10^(spread*U[-1,1]) (0: all equal)
     ... % ---- step 2: MINEOS + idagrn6 (D2) ----

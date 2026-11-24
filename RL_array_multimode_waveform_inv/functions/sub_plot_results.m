@@ -128,8 +128,13 @@ R4 = cell2mat(cellfun(@(x) x.rho, svc, 'uniformoutput', false));
 S4 = cell2mat(cellfun(@(x) x.sig, svc, 'uniformoutput', false));
 for fo = [1 fid]
     if sw_, fprintf(fo, 'single surface-wave window per wave type: noise slots (L, L, R, R) tied\n'); end
-    fprintf(fo, 'noise correlation r (L ovt, L fund, R ovt, R fund): posterior %s +- %s | empirical %s\n', ...
-        mat2str(round(mean(R4)*100)/100), mat2str(round(std(R4)*100)/100), mat2str(round(rho_emp*100)/100));
+    if isfield(mc, 'fixed_corr') && mc.fixed_corr
+        fprintf(fo, 'noise correlation: fixed %s model from the pre-P noise (not sampled) | empirical lag-1 %s\n', ...
+            upper(mc.noise_model), mat2str(round(rho_emp*100)/100));
+    else
+        fprintf(fo, 'noise correlation r (L ovt, L fund, R ovt, R fund): posterior %s +- %s | empirical %s\n', ...
+            mat2str(round(mean(R4)*100)/100), mat2str(round(std(R4)*100)/100), mat2str(round(rho_emp*100)/100));
+    end
     fprintf(fo, 'noise sigma / sigma_true: %s\n', mat2str(round(mean(S4)./sig_true*100)/100));
 end
 % band averages of xi: posterior mean, 5-95%, truth, reference
@@ -251,7 +256,7 @@ for e0 = unique([1 min(8, max([rec.event]))])
         mu_b = repmat([1; 0], nm*K, 1); sb2 = mc.sb^2*ones(2*nm*K, 1);
         G1 = event_G_spec(rec(r), s1.Cf{wv}, struct('tau0', reshape(s1.tauc(r,:,1:Kt), nm, Kt), ...
             'dth0', reshape(s1.dthc(r,:,1:Ka), nm, Ka), 'b0', ones(nm, K)), cfg, [], [], true);
-        [~, b1] = event_loglike_ar(rec(r).d, G1, rec(r).wt, rec(r).first, s1.sig, s1.rho, mu_b, sb2, rec_nlev(rec(r)));
+        [~, b1] = event_loglike_ar(rec(r).d, G1, rec(r).wt, rec(r).first, s1.sig, s1.rho, mu_b, sb2, rec_nlev(rec(r)), rec_W(rec(r)), rec_wld(rec(r)));
         p1 = G1*b1;
         stn = ceil(rec(r).idx/cfg.N); tt = mod(rec(r).idx - 1, cfg.N)*cfg.dt + rec(r).tred;
         for q = 1:numel(pick)

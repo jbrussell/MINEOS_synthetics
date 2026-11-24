@@ -135,7 +135,7 @@ for it = 1:pt.nit
         end
         % ---------- noise move: level sigma or AR(1) correlation r ----------
         sg = s.sig; rh = s.rho; iw = randi(4); okn = true;
-        if rand < 0.5, sg(iw) = sg(iw)*exp(mc.step_lsig*randn);
+        if rand < 0.5 || (isfield(mc, 'fixed_corr') && mc.fixed_corr), sg(iw) = sg(iw)*exp(mc.step_lsig*randn);   % (fixed correlation: sigma only)
         else, rh(iw) = rh(iw) + mc.step_rho*randn; okn = rh(iw) >= 0 && rh(iw) < mc.rhomax; end
         if isfield(mc, 'single_window') && mc.single_window   % one window per wave type: tied slots
             pr_ = 2*ceil(iw/2) - [1 0]; sg(pr_) = sg(iw); rh(pr_) = rh(iw);
@@ -144,7 +144,7 @@ for it = 1:pt.nit
             Ln = s.Le; Xn = s.xh;
             for r = find(wave == ceil(iw/2))'
                 [mu, sb2] = lay(s.lin{r});
-                [Ln(r), Xn{r}] = event_loglike_ar(rec(r).d, s.G{r}, rec(r).wt, rec(r).first, sg, rh, mu, sb2, rec_nlev(rec(r)));
+                [Ln(r), Xn{r}] = event_loglike_ar(rec(r).d, s.G{r}, rec(r).wt, rec(r).first, sg, rh, mu, sb2, rec_nlev(rec(r)), rec_W(rec(r)), rec_wld(rec(r)));
             end
             if log(rand) < (sum(Ln) - sum(s.Le)) / Tk, s.sig = sg; s.rho = rh; s.Le = Ln; s.xh = Xn; end
         end

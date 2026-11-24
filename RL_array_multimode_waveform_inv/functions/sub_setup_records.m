@@ -269,7 +269,7 @@ for wv = 1:2
         else
             % data: full idagrn6 synthetics of the true model, same processing
             clean = proc(P.(['u_true_' uname{wv}]){e}(it, :));
-            pres = true(1, Nst);
+            pres = true(1, Nst); rec(r).nacf_ = [];
         end
         idx = []; wt = [];
         for j = find(pres)
@@ -294,7 +294,7 @@ for wv = 1:2
             % per-record, per-station noise levels from the noise before the
             % first arrival (opt.noise_levels = 'pre'; read_event_data.m): noise std of a sample = sigma x the
             % measured level of its station / the record's peak
-            rec(r).nlev = [];
+            rec(r).nlev = []; rec(r).nacf_ = Dd.nacf;    % (pre-P noise autocorrelation per station)
             if strcmp(nlev_mode_, 'pre')
                 lev = Dd.nstd(:)' / rec(r).scale;          % 1 x Nst
                 okl = pres & isfinite(lev) & lev > 0;
@@ -329,6 +329,53 @@ end
 nrec = numel(rec);
 wave = [rec.wave]';
 [cfg.Phi, cfg.Psi, cfg.Psit] = spec_basis(cfg.w, mc.spec_K, mc.spec_Ka, mc.spec_Kt);
+
+%% ---- noise correlation model (opt.noise_model) ----
+% 'ar1' (default): AR(1) per window type with the correlation r sampled;
+% 'ar2': AR(2) per wave type fitted to the pooled pre-P noise
+% autocorrelation (read_event_data.m), fixed; 'arp': the same with order
+% opt.noise_arp; 'emp': each station of each
+% record its own AR(p) (opt.noise_arp, default 8) from its own pre-P noise
+% (the pooled fit where a station's noise is too short), fixed. The fits
+% (levinson_ar.m, white nugget opt.noise_nugget = 0.05) give each record a
+% sparse whitening operator rec.W with log det rec.wld (whiten_operator.m);
+% only sigma is then sampled.
+nmodel_ = og('noise_model', 'ar1');
+if any(strcmp(nmodel_, {'ar2', 'arp', 'emp'}))
+    if ~aswms_, error('opt.noise_model = ''%s'' needs opt.data_source = ''aswms'' (pre-P noise)', nmodel_); end
+    if strcmp(nmodel_, 'ar2'), p_ = 2; else, p_ = og('noise_arp', 8); end
+    nug_ = og('noise_nugget', 0.05);
+    pooled_ = NaN(2, size(rec(1).nacf_, 2));
+    for wv = 1:2
+        A_ = vertcat(rec([rec.wave] == wv).nacf_); A_ = A_(isfinite(A_(:, 1)), :);
+        for L_ = 1:size(A_, 2), a_ = A_(isfinite(A_(:, L_)), L_); if ~isempty(a_), pooled_(wv, L_) = mean(a_); end, end
+        [ph_, v_] = levinson_ar(pooled_(wv, :), p_, nug_);
+        Mp_(wv) = struct('phi', {ph_}, 'v', v_);                    %#ok<SAGROW>
+        fprintf('%s noise, pooled pre-P autocorrelation (lags 0-%d) %s; AR(%d) coefficients %s, innovation var %.3f\n', ...
+            wname{wv}, p_, mat2str(round(pooled_(wv, 1:p_+1)*100)/100), numel(v_) - 1, mat2str(round(ph_{end}*1000)/1000), v_(end));
+    end
+    nown_ = 0; ntot_ = 0;
+    for r = 1:nrec
+        jst_ = ceil(rec(r).idx / cfg.N);
+        if any(strcmp(nmodel_, {'ar2', 'arp'}))     % one model per wave type (pooled)
+            [rec(r).W, rec(r).wld] = whiten_operator(rec(r).first, ones(size(jst_)), Mp_(rec(r).wave));
+        else
+            M_ = repmat(Mp_(rec(r).wave), 1, Nst);
+            for j = unique(jst_)'
+                a_ = rec(r).nacf_(j, :); ntot_ = ntot_ + 1;
+                if all(isfinite(a_(1:p_+1)))
+                    [ph_, v_] = levinson_ar(a_, p_, nug_); M_(j) = struct('phi', {ph_}, 'v', v_); nown_ = nown_ + 1;
+                end
+            end
+            [rec(r).W, rec(r).wld] = whiten_operator(rec(r).first, jst_, M_);
+        end
+    end
+    if strcmp(nmodel_, 'emp')
+        fprintf('empirical AR(%d) noise models: %d of %d record-stations from their own pre-P noise (others pooled)\n', p_, nown_, ntot_);
+    end
+    mc.fixed_corr = true; mc.noise_model = nmodel_;
+    rho_emp_model_ = pooled_(:, 2)';
+end
 
 %% ---- noise ----
 % band-limited noise: white noise through the processing band-pass with a

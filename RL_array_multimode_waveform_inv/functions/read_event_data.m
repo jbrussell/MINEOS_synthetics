@@ -24,6 +24,9 @@ function D = read_event_data(opt, ev, sta_names, comp, tg)
 %             the data (opt.fc; Tukey taper, central 80% used); NaN if fewer
 %             than opt.noise_min_n (40) such samples. opt.noise_pre_origin =
 %             false uses only the samples after the origin (test option).
+%   nacf    : [Nst x maxlag+1] autocorrelation of that noise, lags
+%             0..opt.noise_maxlag (12) samples (NaN rows where nstd is NaN;
+%             for the AR(p) noise models, sub_setup_records.m)
 % Traces with another sample interval than tg are low-passed (2nd-order
 % Butterworth at the new Nyquist frequency, zero phase, as in A1) and
 % interpolated (spline).
@@ -37,6 +40,7 @@ if isfield(event, 'isgood') && ~event.isgood, return; end
 tg = tg(:); dt = tg(2) - tg(1); Nst = numel(sta_names);
 tc = (ev.t_cent - datenum(1970, 1, 1))*86400;    % centroid time (epoch s)
 D.U = NaN(numel(tg), Nst); D.present = false(Nst, 1); D.dist = NaN(Nst, 1); D.nstd = NaN(Nst, 1);
+maxlag = optget(opt, 'noise_maxlag', 12); D.nacf = NaN(Nst, maxlag + 1);
 fc = optget(opt, 'fc', [1/112 1/100 1/20 1/17]);
 D.winpara = []; if isfield(event, 'winpara') && numel(event.winpara) == 4, D.winpara = event.winpara; end
 D.toff = event.otime - tc;
@@ -63,17 +67,21 @@ for k = 1:numel(event.stadata)
     ip = find(to < s.dist/13.5 - 60);            % before the first arrival (P)
     if ~optget(opt, 'noise_pre_origin', true), ip = ip(to(ip) >= 0); end
     if numel(ip) >= optget(opt, 'noise_min_n', 40)
-        D.nstd(j) = noise_std_(s.data(ip), s.delta, fc);
+        [D.nstd(j), D.nacf(j, :)] = noise_std_(s.data(ip), s.delta, fc, maxlag);
     end
 end
 end
 
-function sd = noise_std_(x, dt, fc)
+function [sd, ac] = noise_std_(x, dt, fc, maxlag)
 % std of x band-passed as the data (Tukey taper, one-sided band-pass taper),
-% central 80% of the samples
+% central 80% of the samples, and its autocorrelation at lags 0..maxlag
+% (biased estimator; NaN beyond the available lags)
 x = x(:) - mean(x); n = numel(x);
 f = (0:n-1)'/(n*dt); ib = find(f > fc(1) & f < fc(4));
 X = fft(x .* tukeywin_(n, 0.1)); Y = zeros(n, 1); Y(ib) = X(ib) .* bp_taper(f(ib), fc);
 u = 2*real(ifft(Y)); k = round(0.1*n) + 1 : round(0.9*n);
 sd = std(u(k));
+uk = u(k) - mean(u(k)); nk = numel(uk); ac = NaN(1, maxlag + 1);
+for L = 0:min(maxlag, nk - 1), ac(L+1) = sum(uk(1:nk-L) .* uk(1+L:nk)) / nk; end
+ac = ac / ac(1);
 end

@@ -18,7 +18,7 @@ if nargin < 9, update = false; end
 K = size(cfg.Phi, 2); Ka = size(cfg.Psi, 2); nb = 2*nm*K;
 G = event_G_spec(ev, Cf, lr, cfg, sig(2*ev.wave-1:2*ev.wave), mc.sb);
 [mu, sb2, it, ith] = spec_layout(lr, nm, K, Ka, mc.sb, mc.taup, mc.dthp);
-[L, xh] = event_loglike_ar(ev.d, G, ev.wt, ev.first, sig, rho, mu, sb2, rec_nlev(ev));
+[L, xh] = event_loglike_ar(ev.d, G, ev.wt, ev.first, sig, rho, mu, sb2, rec_nlev(ev), rec_W(ev), rec_wld(ev));
 if update
     lr.b0   = reshape(xh(1:2:nb) + 1i*xh(2:2:nb), K, nm).';
     lr.tau0 = lr.tau0 + max(min(reshape(xh(it), size(it)), mc.max_dtau), -mc.max_dtau);
