@@ -141,6 +141,7 @@ fprintf('linearized PA5 - true PA5 (rms, km/s)      Love %s Rayleigh %s\n', ...
 sta = P.sta.name; lat = P.sta.lat; lon = P.sta.lon;
 lat0 = mean(lat); lon0 = mean(lon);
 cfg.xy = og('aperture', 1) * [(lon - lon0)*111.195*cosd(lat0), (lat - lat0)*111.195];
+cfg.exact_geom = og('exact_geom', true);     % moveout from great-circle distances (event_G_spec.m)
 Nst = numel(sta);
 
 %% ---- time / frequency ----

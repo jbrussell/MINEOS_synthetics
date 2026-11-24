@@ -112,6 +112,8 @@ opt = opt_defaults(opt, struct( ...
     'fund_margin', [0.4 0.2], ...        % 'fund' window start margin (km/s) [Love Rayleigh]
     'U_start',  [], ...                  % window start group velocity (km/s; scalar or [Love Rayleigh]);
     ...                                  %   [] = max U of branches 1..nm-1 of the reference + 0.6 km/s
+    'exact_geom', true, ...              % moveout across the array from great-circle distances (false: local
+    ...                                  %   plane wave in x-y, as before; event_G_spec.m)
     'N',        800, ...                 % samples per record (N*dt = 3200 s: earliest overtone to slowest fundamental)
     'noise',    0.03, ...                % synthetic noise std, fraction of the peak band-passed amplitude of each
     ...                                  %   event and wave type (D0; 'internal': of each record's peak)

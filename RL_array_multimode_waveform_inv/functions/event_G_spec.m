@@ -40,11 +40,22 @@ if isfield(cfg, 'Psit'), Psit = cfg.Psit(:, 1:Kt); else, Psit = ones(numel(w), 1
 nb  = 2*nm*K;
 G   = zeros(numel(ev.idx), nb + nm*Kt + nm*Ka);
 x1 = cfg.xy(:,1)'; y1 = cfg.xy(:,2)';
-dD0 = sind(ev.az_prop)*x1 + cosd(ev.az_prop)*y1;          % 1 x Nst
+dD0 = sind(ev.az_prop)*x1 + cosd(ev.az_prop)*y1;          % 1 x Nst (plane wave, local x-y)
+% exact geometry (cfg.exact_geom, default true): the moveout relative to the
+% array centre is the great-circle distance difference Dj - Del0 (ev.Dj,
+% ev.Del0, spherical, as for the idagrn6 reference); the local plane-wave
+% x-y projection is used only for the change with the arrival angle dth.
+% (With the plane wave alone, wavefront curvature and the projection's
+% distortion grow with the square of the aperture: up to ~7 km of distance
+% error at 559 km aperture, ~65 km at ~1700 km.)
+dDp0 = dD0;
+if (~isfield(cfg, 'exact_geom') || cfg.exact_geom) && isfield(ev, 'Dj') && ~isempty(ev.Dj)
+    dD0 = ev.Dj(:)' - ev.Del0;
+end
 S = cell(nm, 1); cc = cell(nm, 1); dDa = cell(nm, 1);
 for n = 1:nm
     az = ev.az_prop + Psi * lin.dth0(n, :).';              % Nf x 1 (deg)
-    dD     = sind(az)*x1 + cosd(az)*y1;                     % Nf x Nst
+    dD     = dD0 + (sind(az)*x1 + cosd(az)*y1 - dDp0);      % Nf x Nst (exact at dth = 0)
     dDa{n} = (cosd(az)*x1 - sind(az)*y1) * pi/180;          % d dD / d az(deg)
     c  = Cf(:, n); c0 = ev.cref(:, n);
     ok = ~isnan(c) & ~isnan(c0);
