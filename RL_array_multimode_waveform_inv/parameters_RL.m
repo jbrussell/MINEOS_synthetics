@@ -70,7 +70,7 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   pooled), 'emp' (AR(p) per station and record). Test (band-passed noise,
     ...                                  %   4 s sampling): none whitens it well (residual lag-1 correlation 0.6-0.65
     ...                                  %   vs 0.56 for AR(1)); the noise covariance is nearly singular (the band is
-    ...                                  %   ~1/3 of the Nyquist range), high orders are unstable. See README.
+    ...                                  %   ~1/3 of the Nyquist range), high orders are unstable.
     'noise_arp',    8, ...               % 'arp', 'emp': AR order
     'noise_nugget', 0.05, ...            % white-noise fraction added before the AR fits (stability)
     'synth_pre_s',  0, ...               % D0: noise before the origin (s; 0: records start at the origin)
