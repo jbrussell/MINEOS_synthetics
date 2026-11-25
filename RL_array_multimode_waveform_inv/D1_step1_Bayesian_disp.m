@@ -84,8 +84,8 @@ if isempty(fdat)
     cd(mdir); cobs = run_mineos_phv_kernels(opt.trueid, 'R', periods, 0, 0); cd(here);
     cstd = opt.s1_cstd * cobs;
     if g('s1b_noise', true)
-        rs_ = randn('state'); randn('state', g('s1b_noise_seed', 1));
-        cobs = cobs + cstd .* randn(size(cobs)); randn('state', rs_);
+        rs_ = rng; rng(g('s1b_noise_seed', 1));        % (rng, not the legacy randn('state'): MATLAB forbids rng after it)
+        cobs = cobs + cstd .* randn(size(cobs)); rng(rs_);
     end
     dlabel = sprintf('synthetic (PA5), %.2f%% error', 100*opt.s1_cstd);
     if g('s1b_noise', true), dlabel = [dlabel sprintf(' + noise (seed %d)', g('s1b_noise_seed', 1))]; end
