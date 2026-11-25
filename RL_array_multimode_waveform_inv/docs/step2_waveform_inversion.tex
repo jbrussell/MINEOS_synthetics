@@ -548,36 +548,67 @@ holds $t$ at zero, leaving $\beta$ and $\theta$ free
 (\texttt{apply\_fixed\_tau.m}).
 
 \subsection{Noise model}\label{sec:noise}
-The noise of record $r$ is $\mathbf{e}_r\sim\mathcal{N}(\mathbf{0},\mathbf{C}_{d,r})$.
+The data are modeled as $\mathbf{d}_r=\mathbf{u}_r+\mathbf{e}_r$ with
+Gaussian noise $\mathbf{e}_r\sim\mathcal{N}(\mathbf{0},\mathbf{C}_{d,r})$.
+The noise is \emph{not} assumed white: real noise, and the band-limited
+noise of the synthetic test (Section~\ref{sec:synth}), is correlated in
+time. The covariance $\mathbf{C}_{d,r}$ has a fixed form with unknown
+parameters, the noise level $\sigma_q$ and the lag-one correlation $r_q$ of
+each window type $q$, which are sampled together with the structure
+(Section~\ref{sec:mcmc}). Nothing is done to the data themselves; the
+whitening below is only a way to evaluate the likelihood for a given
+$(\sigma_q,r_q)$.
 
 \emph{Noise levels} (\texttt{opt.noise\_levels}). With \texttt{'pre'}
 (default) the standard deviation of a sample of station $j$ is
 $\sigma_q\,\nu_{rj}$, where $\nu_{rj}=\nu^{\rm abs}_{rj}/s_r$ is the pre-P
 noise level of the station relative to the record peak
 (Section~\ref{sec:aswms}; the median of the record for stations without a
-measurement). The sampled $\sigma_q$ is then a scale factor of order 1.
-With \texttt{'none'}, $\nu_{rj}=1$ and $\sigma_q$ is the noise level of the
-window type.
+measurement). The $\nu_{rj}$ are measured and fixed; the sampled $\sigma_q$
+is then a scale factor of order 1. With \texttt{'none'}, $\nu_{rj}=1$ and
+$\sigma_q$ is the noise level of the window type.
 
 \emph{AR(1) correlation} (\texttt{opt.noise\_model = 'ar1'}, default).
 $\mathbf{C}_{d,r}$ is block diagonal over segments, and within a segment of
 window type $q$ and station $j$ it is an AR(1) (exponential) covariance:
-\begin{equation}
+\begin{equation}\label{eq:Cd}
  [\mathbf{C}_{d}]_{il}=\sigma_q^2\,\nu_{rj}^2\,r_q^{|i-l|},\qquad 0\le r_q<1 .
 \end{equation}
-Its inverse is tridiagonal, so the data and every column of $\mathbf{G}$
-are divided by $\nu_{rj}$ and \emph{whitened} segment by segment:
+
+\emph{Evaluating the likelihood by whitening.} The Gaussian density with
+this full covariance is evaluated through an exact change of variables.
+For AR(1) noise there is a simple linear operator $\mathbf{W}_r$ (it
+depends on the current $r_q$ and on $\nu_{rj}$) such that
+$\mathbf{W}_r\mathbf{e}_r$ is white with variance $\sigma_q^2$: divide by
+$\nu_{rj}$, then within each segment
 \begin{equation}
- \tilde y_{1}=y_{1},\qquad \tilde y_i=\frac{y_i-r_q\,y_{i-1}}{\sqrt{1-r_q^2}}\quad(i>1\text{ within the segment}).
+ \tilde y_{1}=y_{1},\qquad \tilde y_i=\frac{y_i-r_q\,y_{i-1}}{\sqrt{1-r_q^2}}\quad(i>1),
 \end{equation}
-The whitened noise is white with variance $\sigma_q^2$, and
+i.e.\ $\mathbf{W}_r^\T\mathbf{W}_r=\sigma_q^2\,\mathbf{C}_{d,r}^{-1}$
+segment by segment (the inverse of an AR(1) covariance is tridiagonal).
+Applying $\mathbf{W}_r$ to the data and to every column of $\mathbf{G}_r$
+gives the same likelihood,
+\begin{equation}
+ \mathcal{N}\big(\mathbf{d}_r;\mathbf{G}_r\mathbf{x},\mathbf{C}_{d,r}\big)
+ =\mathcal{N}\big(\mathbf{W}_r\mathbf{d}_r;\mathbf{W}_r\mathbf{G}_r\mathbf{x},\mathbf{D}_r\big)\,|\det\mathbf{W}_r|,
+\end{equation}
+where $\mathbf{D}_r$ is diagonal with entries $\sigma_{q(i)}^2$. The
+Jacobian $|\det\mathbf{W}_r|$ makes the normalization equal to that of
+$\mathbf{C}_{d,r}$:
 \begin{equation}
  \ln|\mathbf{C}_{d,r}|=\sum_q\big[n_{rq}\ln\sigma_q^2+(n_{rq}-m_{rq})\ln(1-r_q^2)\big]+2\sum_{i}\ln\nu_{r,j(i)},
 \end{equation}
 where $n_{rq}$ is the number of samples and $m_{rq}$ the number of
-segments of window type $q$ in record $r$. Below, $\mathbf{d}$ and
-$\mathbf{G}$ denote the whitened quantities and $\mathbf{C}_d$ is diagonal
-with entries $\sigma_{q(i)}^2$.
+segments of window type $q$ in record $r$. The correlation is therefore not
+dropped: it is carried by $\mathbf{W}_r$, which is rebuilt whenever a
+noise move changes $r_q$.
+
+\emph{Notation below.} In the rest of Section~\ref{sec:like},
+$\mathbf{d}_r$ and $\mathbf{G}_r$ denote the transformed quantities
+$\mathbf{W}_r\mathbf{d}_r$ and $\mathbf{W}_r\mathbf{G}_r$, and
+$\mathbf{C}_d$ denotes their noise covariance $\mathbf{D}_r$, which is
+diagonal; $\ln|\mathbf{C}_{d,r}|$ in Eq.~\eqref{eq:logL} is the full
+determinant above.
 
 \emph{Frequency-domain likelihood} (\texttt{opt.noise\_model = 'fdom'}).
 In every segment the residual is tapered (Tukey, 20\%) and transformed to
