@@ -879,9 +879,9 @@ even. A swap is accepted with probability
 \begin{equation}
  \alpha_{\rm swap}=\min\!\Big\{1,\exp\Big[\big(\ln\mathcal{L}_{p+1}-\ln\mathcal{L}_p\big)\Big(\frac1{T_p}-\frac1{T_{p+1}}\Big)\Big]\Big\}.
 \end{equation}
-Only the $T=1$ chain is saved. The defaults are $N_{\rm ens}=2$, $K_T=6$,
-$T_{\max}=20$ and $1500$ iterations with $750$ burn-in; the 4-branch tests
-used $N_{\rm ens}=4$ and $1600/800$ iterations. With fixed nuisance
+Only the $T=1$ chain is saved. The defaults are $N_{\rm ens}=4$ (enough for a
+between-ensemble $\hat R$), $K_T=6$, $T_{\max}=20$ and $1500$ iterations
+with $750$ burn-in; the 4-branch tests used $1600/800$ iterations. With fixed nuisance
 parameters (oracle tests) the likelihood is much more sharply peaked and
 the swaps need a wider ladder ($K_T=8$, $T_{\max}=100$).
 

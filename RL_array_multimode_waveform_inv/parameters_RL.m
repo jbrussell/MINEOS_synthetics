@@ -179,7 +179,7 @@ opt = opt_defaults(opt, struct( ...
     'noise',    0.03, ...                % synthetic noise std, fraction of the peak band-passed amplitude of each
     ...                                  %   event and wave type (A0; 'internal': of each record's peak)
     'nchains',  4, 'nit', 3000, 'burn', 1500, ...           % plain sampler
-    'nens',     2, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750, ... % parallel tempering
+    'nens',     4, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750, ... % parallel tempering (4 ensembles: R-hat between them)
     'plot_fontsize', 15 ...              % font size (pt) of all plot axes (tick labels, axis labels, titles);
     ...                                  %   set as the default for new axes (plot_font_defaults.m)
     ));
