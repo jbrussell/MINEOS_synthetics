@@ -25,6 +25,7 @@ if isfield(S, 'method') && strcmp(S.method, 'linearized')
     warning('vsv_ref_sigz: the step-1 uncertainty of %s is linearized (not a posterior; usually too narrow)', opt.s1_file);
 end
 U = S.s1_unc; ok = isfinite(U.vsv_std);
+if isfield(U, 'zmin'), ok = ok & U.z >= U.zmin - 1e-6 & U.z <= U.zmax + 1e-6; end   % model domain only (not the crust)
 zg = (cfg.zmin:1:cfg.zmax)';
 sigz = interp1(U.z(ok), U.vsv_std(ok), zg, 'linear', 'extrap') * optget(opt, 'vsv_ref_scale', 1);
 sigz = max(sigz, optget(opt, 'vsv_ref_sig_min', 0.01));

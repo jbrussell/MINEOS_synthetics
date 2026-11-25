@@ -127,7 +127,7 @@ for stg = 0:nup
     end
     V = cell2mat(cellfun(@(x) x.vsv, R', 'UniformOutput', false));
     vmean = mean(V, 2);
-    vnew = interp1(zplot, vmean, zn, 'linear', 'extrap');
+    vnew = s1_vsv_at_nodes(zplot, vmean, zn, zmin, zmax);
     dv = vnew - lin.vsv0;
     CRs = cell2mat(cellfun(@(x) squeeze(x.CR), R', 'UniformOutput', false));
     chi2 = mean(((mean(CRs, 2) - cobs)./cstd).^2);
@@ -157,7 +157,7 @@ s1_unc = struct('z', zplot, 'vsv_mean', vmean, 'vsv_std', std(V, 0, 2), 'vsv_p05
     'vsv_p50', pc(0.5), 'vsv_p84', pc(0.84), 'vsv_p95', pc(0.95), 'vsv_samples', V(:, 1:max(1, floor(ns/400)):end), ...
     'c_p05', pcc(0.05), 'c_p16', pcc(0.16), 'c_p84', pcc(0.84), 'c_p95', pcc(0.95), ...
     'rhat', rh, 'stages', hist_, 'zmin', zmin, 'zmax', zmax, 'data', dlabel, 'noise_mult', nml, 'smooth_sig', sms, 'kv', kvst);
-card_final = s1_card_from_vsv(card_start, idx, interp1(zplot, vmean, zn, 'linear', 'extrap'));
+card_final = s1_card_from_vsv(card_start, idx, s1_vsv_at_nodes(zplot, vmean, zn, zmin, zmax));
 write_MINEOS_mod(card_final, fullfile(mdir, 'CARDS', [opt.s1_final '.card']));
 copyfile(fullfile(mdir, 'CARDS', [opt.ref_qmod '.qmod']), fullfile(mdir, 'CARDS', [opt.s1_final '.qmod']));
 cd(mdir); cpre = run_mineos_phv_kernels(opt.s1_final, 'R', periods, 0, 0); cd(here);

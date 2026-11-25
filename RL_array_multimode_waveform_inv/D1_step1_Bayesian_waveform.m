@@ -126,7 +126,7 @@ s1_unc = struct('z', zplot, 'vsv_mean', vmean, 'vsv_std', std(V, 0, 2), 'vsv_p05
 % the card: the starting card's nodes between zmin and zmax (the inversion
 % nodes of the setup, whose reference card is the starting card) get the
 % posterior mean Vsv
-card_final = s1_card_from_vsv(card_start, cfg.lin.idx, interp1(zplot, vmean, cfg.lin.z, 'linear', 'extrap'));
+card_final = s1_card_from_vsv(card_start, cfg.lin.idx, s1_vsv_at_nodes(zplot, vmean, cfg.lin.z, cfg.zmin, cfg.zmax));
 write_MINEOS_mod(card_final, fullfile(mdir, 'CARDS', [opt.s1_final '.card']));
 copyfile(fullfile(mdir, 'CARDS', [opt.ref_qmod '.qmod']), fullfile(mdir, 'CARDS', [opt.s1_final '.qmod']));
 periods = opt.s1_periods(:);
