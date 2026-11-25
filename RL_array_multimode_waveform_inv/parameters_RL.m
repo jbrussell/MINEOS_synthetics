@@ -196,6 +196,15 @@ if ~pa5iso_ && ~strcmp(opt.s1_start_model, 'prem'), error('opt.s1_start_model mu
 if isempty(opt.s1_start), if pa5iso_, opt.s1_start = 'RLinv_pa5iso'; else, opt.s1_start = 'RLinv_prem_iso'; end, end
 if isempty(opt.ref_qmod), if pa5iso_, opt.ref_qmod = opt.trueid; else, opt.ref_qmod = opt.premid; end, end
 clear pa5iso_
-if ~isfield(opt, 'tag'), opt.tag = ['_' opt.sampler]; end
-if ~isfield(opt, 'outdir'), opt.outdir = ['figs' opt.tag]; end
+% run tag and figure folder: set automatically from the sampler unless given.
+% An automatic value is remembered (opt.tag_auto_, opt.outdir_auto_) and
+% recomputed on the next call, so an opt left in the (MATLAB) workspace by an
+% earlier run does not keep a stale tag after opt.sampler changes; a tag or
+% outdir set by hand is kept.
+if ~isfield(opt, 'tag') || (isfield(opt, 'tag_auto_') && strcmp(opt.tag, opt.tag_auto_))
+    opt.tag = ['_' opt.sampler]; opt.tag_auto_ = opt.tag;
+end
+if ~isfield(opt, 'outdir') || (isfield(opt, 'outdir_auto_') && strcmp(opt.outdir, opt.outdir_auto_))
+    opt.outdir = ['figs' opt.tag]; opt.outdir_auto_ = opt.outdir;
+end
 clear here_ mdir_
