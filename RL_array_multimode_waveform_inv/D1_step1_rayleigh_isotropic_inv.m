@@ -26,8 +26,8 @@
 %
 % Next: D2_step2_prep_mineos_idagrn.m
 
-close all;
 parameters_RL;
+if fig_close_mode, close all; end
 mdir = opt.mdir;
 here = pwd;
 cleanupObj = onCleanup(@() cd(here));

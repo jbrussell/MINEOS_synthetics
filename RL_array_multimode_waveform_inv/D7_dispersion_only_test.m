@@ -126,7 +126,7 @@ for ic = 1:numel(cases)
     axes('position', [0 0.95 1 0.04], 'visible', 'off');
     text(0.5, 0.5, sprintf(['Dispersion-only inversion of the %s dispersion of the true model (Love + Rayleigh branches %s, sig %s); ' ...
         'thin colour lines: chain means, dashed: 5-95%%'], cases{ic}, mat2str(ifelse_br(br_, S0.nm)), sdesc_), 'horizontalalignment', 'center');
-    print(fig, '-dpng', '-r110', fullfile(od, ['disp_' cases{ic} '.png'])); close(fig);
+    print(fig, '-dpng', '-r110', fullfile(od, ['disp_' cases{ic} '.png'])); if fig_close_mode, close(fig); end
     save(fullfile(od, ['disp_' cases{ic} '.mat']), 'R', '-v7');
 end
 fclose(fid);

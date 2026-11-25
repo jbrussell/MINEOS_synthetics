@@ -68,7 +68,7 @@ for wv = 1:2
     title(sprintf('%s, PA5 full mode sum (branches 0-%d), %g-%g s, traces normalized', ...
         wname{wv}, P.nbranch_data - 1, round(1/fc(4)), round(1/fc(1))));
     print(fig, '-dpng', '-r130', fullfile(outdir, ['record_section_all_' comp{wv} '.png']));
-    close(fig);
+    if fig_close_mode, close(fig); end
     % ---- one panel per event ----
     fig = figure('position', [50 50 1900 1250]);
     nr = 3; nc = ceil(nev/nr);
@@ -99,6 +99,6 @@ for wv = 1:2
             wname{wv}, round(1/fc(4)), round(1/fc(1)), P.nbranch_data - 1));
     end
     print(fig, '-dpng', '-r130', fullfile(outdir, ['record_section_events_' comp{wv} '.png']));
-    close(fig);
+    if fig_close_mode, close(fig); end
 end
 end

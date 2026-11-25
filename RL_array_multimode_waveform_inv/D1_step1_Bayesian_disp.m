@@ -59,8 +59,8 @@
 %
 % Next: D2_step2_prep_mineos_idagrn.m
 
-close all;
 parameters_RL;
+if fig_close_mode, close all; end
 if exist('OCTAVE_VERSION', 'builtin'), set(0, 'defaultfigurevisible', 'off'); end
 mdir = opt.mdir; here = pwd;
 cleanupObj = onCleanup(@() cd(here));
@@ -214,5 +214,5 @@ for ic_ = 1:numel(KVC)
 end
 xlim([-0.5 KVMAX+0.5]); xlabel('interior V_{SV} control points'); ylabel('fraction of samples');
 legend(hk_, lk_, 'location', 'northeast'); title('V_{SV} control points per chain');
-print(fig, '-dpng', '-r110', fullfile(od, 'step1_bayes_disp.png')); close(fig);
+print(fig, '-dpng', '-r110', fullfile(od, 'step1_bayes_disp.png')); if fig_close_mode, close(fig); end
 fprintf('step-1 model CARDS/%s.card, %s, figures in %s/\n', opt.s1_final, opt.s1_file, od);

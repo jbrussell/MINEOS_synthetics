@@ -180,10 +180,14 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   event and wave type (A0; 'internal': of each record's peak)
     'nchains',  4, 'nit', 3000, 'burn', 1500, ...           % plain sampler
     'nens',     4, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750, ... % parallel tempering (4 ensembles: R-hat between them)
+    'close_figs', [], ...                % close figures after saving them (and 'close all' at the start):
+    ...                                  %   [] = auto (true headless: Octave or MATLAB -batch/-nodisplay;
+    ...                                  %   false in interactive MATLAB), or true / false (fig_close_mode.m)
     'plot_fontsize', 15 ...              % font size (pt) of all plot axes (tick labels, axis labels, titles);
     ...                                  %   set as the default for new axes (plot_font_defaults.m)
     ));
 plot_font_defaults(opt.plot_fontsize);
+setappdata(0, 'RL_close_figs', opt.close_figs);      % read by fig_close_mode.m
 pa5iso_ = strcmp(opt.s1_start_model, 'pa5_iso');
 if ~pa5iso_ && ~strcmp(opt.s1_start_model, 'prem'), error('opt.s1_start_model must be ''pa5_iso'' or ''prem'''); end
 if isempty(opt.s1_start), if pa5iso_, opt.s1_start = 'RLinv_pa5iso'; else, opt.s1_start = 'RLinv_prem_iso'; end, end

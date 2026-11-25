@@ -65,8 +65,8 @@
 % when all chains/ensembles exist, the figures (D4).
 % Previous: D2_step2_prep_mineos_idagrn.m. Next: D4_step2_plot_results.m
 
-close all;
 parameters_RL;
+if fig_close_mode, close all; end
 sub_setup_records;
 tag = opt.tag;
 setupf = ['setup' tag '.mat'];
