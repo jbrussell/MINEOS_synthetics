@@ -52,7 +52,10 @@
 % zmin (7), zmax (350; km below the seafloor), vsmin/vsmax (3.8/5.0 km/s),
 % kvmax (15), smooth_sig (4e-4; fixed curvature strength on Vsv, 0 = off,
 % lr_common.m), smooth_hier (false),
-% chains (4), nit (20000), burn (10000), lin_updates (2).
+% chains (4), nit (20000), burn (10000), lin_updates (2),
+% parallel (false; true = the chains of each stage in parallel over a MATLAB
+% parallel pool, s1b_run_chains.m; see D1_step1_Bayesian_disp_parallel.m),
+% workers (= chains; maximum number of pool workers).
 %
 % Next: D2_step2_prep_mineos_idagrn.m
 
@@ -109,6 +112,8 @@ mc = struct('kvmin', 0, 'kvmax', g('s1b_kvmax', 15), 'kxmin', 0, 'kxmax', 0, ...
     'disp_noise_hier', g('s1b_noise_hier', true), 'disp_noise_range', g('s1b_noise_range', [0.1 10]));
 nch = g('s1b_chains', 4); nit = g('s1b_nit', 20000); burn = g('s1b_burn', 10000); thin = 20;
 nup = g('s1b_lin_updates', 2);
+nwork = 0;                                          % parallel chains (MATLAB Parallel Computing Toolbox)
+if g('s1b_parallel', false), nwork = g('s1b_workers', nch); end
 sig = {NaN(numel(periods), 1), cstd ./ cobs};      % relative errors; Love not used (w = [0 1])
 
 %% sampling, re-linearized about the posterior mean
@@ -120,11 +125,9 @@ for stg = 0:nup
         [~, ib_] = max(lin.z); cfg.vbot = lin.vsv0(ib_); cfg.xbot = (lin.vsh0(ib_)/lin.vsv0(ib_))^2;
         cstart = cR0; idx = lin.idx; zn = lin.z;
     end
-    R = cell(nch, 1); tic;
-    for k = 1:nch
-        R{k} = run_disp_inv(NaN(numel(periods), 1), cobs, sig, cfg, mc, periods, 1./periods, 1, zplot, ...
-                            nit, burn, thin, 500 + 10*stg + k, [0 1]);
-    end
+    tic;                                            % the chains (in parallel with opt.s1b_parallel)
+    R = s1b_run_chains(nch, 500 + 10*stg + (1:nch), nwork, NaN(numel(periods), 1), cobs, sig, cfg, mc, ...
+                       periods, 1./periods, 1, zplot, nit, burn, thin, [0 1]);
     V = cell2mat(cellfun(@(x) x.vsv, R', 'UniformOutput', false));
     vmean = mean(V, 2);
     vnew = s1_vsv_at_nodes(zplot, vmean, zn, zmin, zmax);
