@@ -81,6 +81,8 @@ opt = opt_defaults(opt, struct( ...
     'noise_nugget', 0.05, ...            % white-noise fraction added before the AR fits (stability)
     'synth_pre_s',  0, ...               % A0: noise before the origin (s; 0: records start at the origin)
     'synth_noise_spread', 0, ...         % A0: noise level per station x 10^(spread*U[-1,1]) (0: all equal)
+    'synth_arrival_shift', [], ...       % A0: arrival-angle anomalies: sources moved along the small circle about the
+    ...                                  %   array centre by +-U[min max] deg (e.g. [2 5]); [] = none (truth.dth_true)
     ... % ---- step 2: MINEOS + idagrn6 (D2) ----
     'prepfile',     'prep_step2.mat', ...
     'refid',        'RLinv_step1', ...   % reference card of step 2 (= s1_final)
