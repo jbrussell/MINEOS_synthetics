@@ -203,6 +203,14 @@ What the second run shows:
   | linearization error at the (projected) truth | 0.010 | 0.004–0.040 | 0.020 | 0.006–0.008 |
   | not representable (projected truth − PA5) | 0.001 | 0.017–0.030 | 0.027 | 0.051–0.065 |
   | … after adding PA5's η | 0.001 | 0.017–0.030 | 0.025 | 0.022–0.042 |
+
+  *Caveat (found later):* these D5 numbers were computed with a bug in D5:
+  the profiles were interpolated to the linearization nodes across the Moho,
+  which slowed the uppermost-mantle node in the linearized prediction (not
+  in the MINEOS card). Re-evaluated on the `_b1pt`/`_b4ptsm2` runs, that
+  alone changes the linearized dispersion by 0.005–0.013 km/s rms
+  (fundamental modes), so the rows "linearization error" above overstate it,
+  mostly for Rayleigh n = 0. Fixed in D5 (`s1_vsv_at_nodes.m`).
   | … and PA5's Vp and ρ (no ratio scaling) | 0.003 | 0.011–0.023 | 0.003 | 0.009–0.017 |
   | … and PA5 below 350 km | 0.002 | 0.003–0.007 | 0.003 | 0.002–0.005 |
 

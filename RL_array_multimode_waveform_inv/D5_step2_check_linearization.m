@@ -77,9 +77,11 @@ Clin = cell(2, 2); Cmin = cell(2, 2);           % {model, wave}
 zn = cfg.lin.z;
 for k = 1:2
     M = models{k};
-    vsv_n = interp1(zplot, M.vsv, zn, 'linear', 'extrap');
-    vsh_n = interp1(zplot, M.vsh, zn, 'linear', 'extrap');
-    eta_n = []; if ~isempty(M.eta), eta_n = interp1(zplot, M.eta, zn, 'linear', 'extrap'); end
+    % profiles at the linearization nodes, interpolated within the model
+    % domain only (not across the Moho; s1_vsv_at_nodes.m)
+    vsv_n = s1_vsv_at_nodes(zplot, M.vsv, zn, cfg.zmin, cfg.zmax);
+    vsh_n = s1_vsv_at_nodes(zplot, M.vsh, zn, cfg.zmin, cfg.zmax);
+    eta_n = []; if ~isempty(M.eta), eta_n = s1_vsv_at_nodes(zplot, M.eta, zn, cfg.zmin, cfg.zmax); end
     [Clin{k,1}, Clin{k,2}] = mineos_lin_disp(cfg.lin, vsv_n, vsh_n, eta_n, 'both');
     card = ref_card_update(cfg.card_ref, cfg.zw, cfg.zmin, cfg.zmax, zplot, M.vsv, M.vsh, M.eta);
     write_MINEOS_mod(card, fullfile(opt.mdir, 'CARDS', [cardid{k} '.card']));
