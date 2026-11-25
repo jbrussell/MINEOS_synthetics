@@ -55,7 +55,7 @@ cobs = run_mineos_phv_kernels(opt.trueid, 'R', periods, 0, 0);
 cstd = opt.s1_cstd * cobs;
 if optget(opt, 's1b_noise', true)             % Gaussian data noise (opt.s1b_noise; as D1_step1_Bayesian_disp.m)
     rs_ = randn('state'); randn('state', optget(opt, 's1b_noise_seed', 1));
-    cobs = cobs + optget(opt, 's1b_noise_scale', 0.5) * cstd .* randn(size(cobs)); randn('state', rs_);
+    cobs = cobs + cstd .* randn(size(cobs)); randn('state', rs_);
 end
 card_start = read_model_card(['./CARDS/' opt.s1_start '.card']);   % fname relative to run_MINEOS
 % break the smoothing only at the crustal discontinuities (water bottom,
