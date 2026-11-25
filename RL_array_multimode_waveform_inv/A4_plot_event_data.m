@@ -83,7 +83,7 @@ for icomp = 1:numel(opt.aswms_components)
             k = so(q); c = [0.2 0.4 0.8]; if ~good(k), c = [0.6 0.6 0.6]; end
             if isfinite(snr(k)), plot([q q], [1 snr(k)], '-', 'color', c, 'linewidth', 3); plot(q, snr(k), 'o', 'color', c, 'markerfacecolor', c); end
         end
-        set(gca, 'yscale', 'log', 'xtick', 1:ns, 'xticklabel', stn(so), 'fontsize', 7); xlim([0 ns + 1]);
+        set(gca, 'yscale', 'log', 'xtick', 1:ns, 'xticklabel', stn(so)); xlim([0 ns + 1]);
         if any(isfinite(snr)), ylim([1, 10^ceil(log10(max(snr)))]); end
         ylabel('SNR (window peak / pre-P noise std)'); title('SNR per station (sorted by distance)');
         subplot(2, 2, 3); hold on; box on;
@@ -117,10 +117,10 @@ for icomp = 1:numel(opt.aswms_components)
             if isKey(SNR{ie}, allsta{j}), M(ie, j) = SNR{ie}(allsta{j}); end
         end
     end
-    fig = figure('position', [0 0 1500 700]);
+    fig = figure('position', [0 0 2300 800]);
     subplot(1, 2, 1);
     imagesc(1:numel(allsta), 1:numel(evids), log10(M)); c = colorbar; ylabel(c, 'log_{10} SNR');
-    set(gca, 'xtick', 1:numel(allsta), 'xticklabel', allsta, 'ytick', 1:numel(evids), 'yticklabel', evids, 'fontsize', 6);
+    set(gca, 'xtick', 1:numel(allsta), 'xticklabel', allsta, 'ytick', 1:numel(evids), 'yticklabel', evids);
     title(sprintf('%s: SNR per event and station', comp));
     subplot(1, 2, 2); hold on; box on;
     for j = 1:numel(allsta)
@@ -129,7 +129,7 @@ for icomp = 1:numel(opt.aswms_components)
         plot([j j], [min(v) max(v)], '-', 'color', [0.6 0.6 0.6], 'linewidth', 2);
         plot(j, median(v), 'o', 'color', [0.2 0.4 0.8], 'markerfacecolor', [0.2 0.4 0.8]);
     end
-    set(gca, 'yscale', 'log', 'xtick', 1:numel(allsta), 'xticklabel', allsta, 'fontsize', 7); xlim([0 numel(allsta) + 1]);
+    set(gca, 'yscale', 'log', 'xtick', 1:numel(allsta), 'xticklabel', allsta); xlim([0 numel(allsta) + 1]);
     ylabel('SNR'); title(sprintf('%s: per-station SNR, median and range over %d events', comp, numel(evids)));
     print(fig, '-dpng', '-r110', [od 'summary.png']); close(fig);
     fprintf('%s: event figures and summary in %s\n', comp, od);

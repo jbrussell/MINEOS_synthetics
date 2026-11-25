@@ -27,7 +27,7 @@ lag = (0:size(rec(1).nacf_, 2) - 1) * cfg.dt;
 col = lines(Nst);
 
 % ---- 1: levels relative to the record peak ----
-fig = figure('position', [0 0 1500 900]);
+fig = figure('position', [0 0 2300 1000]);
 for wv = 1:2
     rr = find([rec.wave] == wv);
     Lv = NaN(numel(rr), Nst);
@@ -35,7 +35,7 @@ for wv = 1:2
     subplot(2, 2, 2*wv - 1);
     imagesc(1:Nst, 1:numel(rr), log10(Lv)); axis tight; c = colorbar;
     ylabel(c, 'log_{10}(noise std / record peak)');
-    set(gca, 'xtick', 1:Nst, 'xticklabel', sta, 'ytick', 1:numel(rr), 'yticklabel', {ev([rec(rr).event]).id}, 'fontsize', 6);
+    set(gca, 'xtick', 1:Nst, 'xticklabel', sta, 'ytick', 1:numel(rr), 'yticklabel', {ev([rec(rr).event]).id});
     title(sprintf('%s: pre-P noise relative to each record''s peak', wn{wv}));
     subplot(2, 2, 2*wv); hold on; box on;
     for j = 1:Nst
@@ -44,7 +44,7 @@ for wv = 1:2
         plot([j j], [min(v) max(v)], '-', 'color', [0.6 0.6 0.6], 'linewidth', 2);
         plot(j, median(v), 'o', 'color', col(j, :), 'markerfacecolor', col(j, :));
     end
-    set(gca, 'yscale', 'log', 'xtick', 1:Nst, 'xticklabel', sta, 'fontsize', 7); xlim([0 Nst + 1]);
+    set(gca, 'yscale', 'log', 'xtick', 1:Nst, 'xticklabel', sta); xlim([0 Nst + 1]);
     ylabel('noise std / record peak'); title(sprintf('%s: per station, median and range over %d events (1/SNR)', wn{wv}, numel(rr)));
 end
 print(fig, '-dpng', '-r110', fullfile(outdir, 'noise_levels.png')); close(fig);
@@ -107,7 +107,7 @@ for wv = 1:2
         plot(j + 0.15*randn(size(v)), v, '.', 'color', col(j, :), 'markersize', 10);
         plot(j + [-0.3 0.3], median(v)*[1 1], 'k-', 'linewidth', 2);
     end
-    set(gca, 'yscale', 'log', 'xtick', 1:Nst, 'xticklabel', sta, 'fontsize', 7); xlim([0 Nst + 1]);
+    set(gca, 'yscale', 'log', 'xtick', 1:Nst, 'xticklabel', sta); xlim([0 Nst + 1]);
     ylabel('pre-P noise std (data units)'); title(sprintf('%s: absolute noise per station (dots: events, bar: median)', wn{wv}));
 end
 print(fig, '-dpng', '-r110', fullfile(outdir, 'noise_absolute.png')); close(fig);

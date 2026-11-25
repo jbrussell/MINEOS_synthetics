@@ -151,7 +151,7 @@ end
 fclose(fid);
 
 %% 1) posteriors of Vsv, Vsh, xi
-fig = figure('position', [50 50 1300 560]);
+fig = figure('position', [50 50 1500 650]);
 ranges = {3.5:0.02:5.3, 3.5:0.02:5.3, 0.88:0.005:1.22};
 for q = 1:3
     subplot(1, 3, q); hold on; box on;
@@ -181,7 +181,7 @@ end
 print(fig, '-dpng', '-r130', fullfile(outdir, 'fig1_posteriors.png'));
 
 %% 2) per-chain means and starts, model dimensions
-fig = figure('position', [50 50 1300 520]);
+fig = figure('position', [50 50 1900 700]);
 xr = {[3.9 5.1], [3.9 5.4], [0.88 1.22]};
 for q = 1:3
     subplot(1, 5, q); hold on; box on; hc = zeros(nc, 1);
@@ -206,7 +206,7 @@ end
 print(fig, '-dpng', '-r130', fullfile(outdir, 'fig2_chains_dimensions.png'));
 
 %% 3) dispersion fits: Love and Rayleigh, absolute and minus truth
-fig = figure('position', [50 50 1200 1000]);
+fig = figure('position', [50 50 max(1200, 520*nm) 1500]);   % (room for 15-pt axes)
 Csets = {CLs, CRs}; Ct = {CtrueL, CtrueR}; Cr = {CrefL, CrefR}; wn = {'Love', 'Rayleigh'};
 for wv = 1:2
     for n = 1:nm
@@ -294,7 +294,7 @@ end
 % (MINEOS true - reference phase velocity over the distance to the array
 % center), which the nuisance model (tau_n and B_n(w)) has to absorb;
 % right: posterior tau_n vs that delay at 40 s
-fig = figure('position', [50 50 1200 420]);
+fig = figure('position', [50 50 1500 600]);
 subplot(1, 2, 1); hold on; box on;
 for r = 1:nrec
     for n = 1:nm, plot(1./fb, pd.true_delay{r}(:, n), '-', 'color', mcol(n,:)); end
@@ -315,7 +315,7 @@ title('Time shifts (Love + Rayleigh)');
 print(fig, '-dpng', '-r130', fullfile(outdir, 'fig5_path_nuisance.png'));
 
 %% 6) convergence and noise diagnostics
-fig = figure('position', [50 50 1500 380]);
+fig = figure('position', [50 50 1900 600]);
 subplot(1, 4, 1); hold on; box on;
 for ic = 1:nc, plot(svc{ic}.L - Ltrue, 'color', ccol(ic,:)); end
 Lall = cell2mat(cellfun(@(x) x.L(round(mc.burn/2):end), svc, 'uniformoutput', false)) - Ltrue;
@@ -343,7 +343,7 @@ legend('V_{SV}', 'V_{SH}', '\xi', 'location', 'southeast');
 print(fig, '-dpng', '-r130', fullfile(outdir, 'fig6_diagnostics.png'));
 
 %% 8) individual posterior samples (each is a smooth B-spline profile)
-fig = figure('position', [50 50 1300 560]);
+fig = figure('position', [50 50 1500 650]);
 pickS = round(linspace(1, ns, min(40, ns)));
 for q = 1:3
     subplot(1, 3, q); hold on; box on;
@@ -378,7 +378,7 @@ end
 
 %% 7) parallel-tempering diagnostics
 if ~isempty(infc{1}) && numel(infc{1}.T) > 1
-    fig = figure('position', [50 50 1100 360]);
+    fig = figure('position', [50 50 1600 560]);
     subplot(1, 3, 1); hold on; box on;
     for ic = 1:nc
         T = infc{ic}.T; sw = infc{ic}.swap(:,2) ./ max(infc{ic}.swap(:,1), 1);

@@ -86,10 +86,9 @@ for wv = 1:2
         plot(dl/km2deg/Uov, dl, 'b--', dl/km2deg/Ub, dl, 'b-', dl/km2deg/Uf + 60, dl, 'b:');
         t1 = max(0, min(de)/km2deg/Uov - 300); t2 = min(t(end), max(de)/km2deg/Uf + 400);
         xlim([t1 t2]); ylim(dl);
-        title(sprintf('%s  %.0f-%.0f deg', P.ev(e).id, min(de), max(de)), 'fontsize', 8, 'interpreter', 'none');
+        title(sprintf('%s  %.0f-%.0f deg', P.ev(e).id, min(de), max(de)), 'interpreter', 'none');
         if mod(e - 1, nc) == 0, ylabel('\Delta (deg)'); end
         if e > (nr - 1)*nc, xlabel('Time (s)'); end
-        set(gca, 'fontsize', 7);
     end
     if exist('OCTAVE_VERSION', 'builtin')
         axes('position', [0 0.965 1 0.03], 'visible', 'off');

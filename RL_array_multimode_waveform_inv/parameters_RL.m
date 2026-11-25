@@ -149,8 +149,11 @@ opt = opt_defaults(opt, struct( ...
     'noise',    0.03, ...                % synthetic noise std, fraction of the peak band-passed amplitude of each
     ...                                  %   event and wave type (D0; 'internal': of each record's peak)
     'nchains',  4, 'nit', 3000, 'burn', 1500, ...           % plain sampler
-    'nens',     2, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750 ... % parallel tempering
+    'nens',     2, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750, ... % parallel tempering
+    'plot_fontsize', 15 ...              % font size (pt) of all plot axes (tick labels, axis labels, titles);
+    ...                                  %   set as the default for new axes (plot_font_defaults.m)
     ));
+plot_font_defaults(opt.plot_fontsize);
 pa5iso_ = strcmp(opt.s1_start_model, 'pa5_iso');
 if ~pa5iso_ && ~strcmp(opt.s1_start_model, 'prem'), error('opt.s1_start_model must be ''pa5_iso'' or ''prem'''); end
 if isempty(opt.s1_start), if pa5iso_, opt.s1_start = 'RLinv_pa5iso'; else, opt.s1_start = 'RLinv_prem_iso'; end, end
