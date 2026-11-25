@@ -1,7 +1,7 @@
 % D1_STEP1_RAYLEIGH_ISOTROPIC_INV  Step 1 of the two-step inversion (driver).
 %
 % Linearized MINEOS inversion of fundamental-mode Rayleigh wave phase
-% velocities (20-100 s) for an ISOTROPIC Vs model (xi = 1), with the
+% velocities (opt.s1_periods, 20-150 s) for an ISOTROPIC Vs model (xi = 1), with the
 % inversion engine of ../run_MINEOS/c2_RLphv_inv_vsvh_vpvh_rho_eta.m
 % (run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Eta.m):
 %   - data: MINEOS phase velocities of the true model (PA5), branch 0
