@@ -39,6 +39,7 @@ calling a driver).
 | `D1_step1_rayleigh_isotropic_inv.m` | step 1: Rayleigh n = 0 phase velocities → isotropic Vs; writes the step-2 reference card `../run_MINEOS/CARDS/RLinv_step1.card` | ~5 min |
 | `D2_step2_prep_mineos_idagrn.m` | MINEOS tables, dispersion and kernels; idagrn6 data (PA5, branches 0–15), reference spectra (step-1 model, branches 0–7) and seismograms of the step-1 starting model (all branches, for the figures); cached in `prep_step2.mat`; record sections of the full mode-sum synthetics (PA5 and the step-1 start, T and Z, with the window bounds) in `figs_step2/` | ~10 min |
 | `D3_step2_waveform_inv.m` | the waveform inversion with the parallel-tempering (`opt.sampler = 'pt'`, default) or plain (`'plain'`) sampler | hours |
+| `D3_step2_waveform_inv_parallel.m` | D3 with the chains/ensembles in parallel in one MATLAB session (Parallel Computing Toolbox; `opt.parallel = true`, `opt.par_workers`) | hours / N |
 | `D4_step2_plot_results.m` | figures and `summary.txt` in `figs_<sampler>/`; compares the two samplers if both were run (`figs_compare.png`) | 1 min |
 | `D5_step2_check_linearization.m` | full MINEOS vs the linearized dispersion at the posterior mean and at the (projected) truth: linearization error vs what the parameterization cannot represent (`d5_linearization.txt`, `fig10_linearization.png`) | ~5 min |
 | `D6_step2_update_reference_and_rerun.m` | optional outer iteration: new reference from the posterior mean of a run (MINEOS + idagrn6), then D3/D4 again about it (tag `<tag>_it2`) | ~10 min + D3 |

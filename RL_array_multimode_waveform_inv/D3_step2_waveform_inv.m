@@ -55,6 +55,14 @@
 %   $ ENSEMBLES="1 2" octave-cli --eval D3_step2_waveform_inv &  % ensembles in parallel
 %   $ CHAINS="1" octave-cli --eval "opt.sampler='plain'; D3_step2_waveform_inv" &   % plain chains
 %
+% Parallel (MATLAB, Parallel Computing Toolbox): the chains/ensembles run in
+% parfor loops (one per phase/stage; the MINEOS updates between them run in
+% the client). opt.parallel = [] (default): MATLAB's own pool rule (an open
+% pool, or an automatically created one); true: a pool of opt.par_workers
+% (default: one per chain/ensemble) is started (D3_step2_waveform_inv_parallel.m);
+% false: serial. In Octave the loops run serially (use separate processes,
+% ENSEMBLES/CHAINS, as above).
+%
 % Checkpoints: every opt.ckpt_every (100) iterations each chain/ensemble
 % saves ckpt<tag>_XX_<phase>.mat (run_pt_LR.m); rerunning the same command
 % after an interruption resumes from them (and skips finished stages).
@@ -118,6 +126,7 @@ end
 if pt_, envc = getenv('ENSEMBLES'); else, envc = getenv('CHAINS'); end
 runs = 1:mc.nchains;
 if ~isempty(envc), runs = str2num(envc); end %#ok<ST2NM>
+parw_ = par_workers(optget(opt, 'parallel', []), optget(opt, 'par_workers', []), numel(runs));   % (MATLAB pool)
 chainf = @(i) sprintf('chain%s_%02d.mat', tag, i);
 burnf  = @(i) sprintf('chain%s_%02d_burn.mat', tag, i);
 updf   = ['refupd' tag '.mat'];
@@ -125,7 +134,7 @@ ckf    = @(i, ph) sprintf('ckpt%s_%02d_%s.mat', tag, i, ph);   % checkpoints (ru
 pt.ckpt_every = optget(opt, 'ckpt_every', 100);
 rmck   = @rm_if_exists;
 if ~upd_
-    parfor q = 1:numel(runs)
+    parfor (q = 1:numel(runs), parw_)
         ic = runs(q);
         if sample_
             [sv, st] = run_chain_LR(rec, cfg, mc, Tdisp, fb, nm, zplot, 1000 + ic, ic, lin0);
@@ -147,7 +156,7 @@ elseif linonly_ && nlu_ > 1 && ~isempty(runs)
     for k = 1:nlu_
         ptk = pt; ptk.nit = nk(k); ptk.jump_last = nk(k);   % cycle-skip checks over the whole burn-in
         ptk.burn = nk(k) - max(pt.thin, pt.thin*round(opt.upd_frac*nk(k)/pt.thin));
-        parfor q = 1:numel(runs)
+        parfor (q = 1:numel(runs), parw_)
             ic = runs(q);
             if exist(chainf(ic), 'file') == 2 || exist(stgf(ic, k), 'file') == 2, continue; end
             if k == 1, S0 = {}; else, B = load(stgf(ic, k - 1)); S0 = B.Sf; end
@@ -165,7 +174,7 @@ elseif linonly_ && nlu_ > 1 && ~isempty(runs)
         tmpf = tmp_name('refupd'); save(tmpf, 'U'); movefile(tmpf, updf);
     end
     pt2 = pt; pt2.nit = pt.nit - pt.burn; pt2.burn = 0; pt2.jump_last = 0;
-    parfor q = 1:numel(runs)
+    parfor (q = 1:numel(runs), parw_)
         ic = runs(q);
         if exist(chainf(ic), 'file') == 2, continue; end
         B = load(stgf(ic, nlu_)); S0 = B.Sf;
@@ -184,7 +193,7 @@ elseif ~isempty(runs)
     % the last opt.upd_frac of the burn-in is saved (T = 1) for the update
     pt1 = pt; pt1.nit = pt.burn; pt1.jump_last = pt.burn;   % cycle-skip checks over the whole burn-in
     pt1.burn = pt.burn - max(pt.thin, pt.thin*round(opt.upd_frac*pt.burn/pt.thin));
-    parfor q = 1:numel(runs)
+    parfor (q = 1:numel(runs), parw_)
         ic = runs(q);
         if exist(chainf(ic), 'file') == 2 || exist(burnf(ic), 'file') == 2, continue; end
         [sv1, ~, info1, Sf] = run_pt_LR(rec, cfg, mc, Tdisp, fb, nm, zplot, 2000 + ic, lin0, setfield(pt1, 'ckpt', ckf(ic, 'burn')), ic);
@@ -292,7 +301,7 @@ elseif ~isempty(runs)
     end
     clear Pu
     pt2 = pt; pt2.nit = pt.nit - pt.burn; pt2.burn = 0; pt2.jump_last = 0;
-    parfor q = 1:numel(runs)
+    parfor (q = 1:numel(runs), parw_)
         ic = runs(q);
         if exist(chainf(ic), 'file') == 2, continue; end
         B = load(burnf(ic)); S0 = B.Sf;

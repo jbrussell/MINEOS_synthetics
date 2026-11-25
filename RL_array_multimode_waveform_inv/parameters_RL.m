@@ -180,6 +180,9 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   event and wave type (A0; 'internal': of each record's peak)
     'nchains',  4, 'nit', 3000, 'burn', 1500, ...           % plain sampler
     'nens',     4, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750, ... % parallel tempering (4 ensembles: R-hat between them)
+    'parallel', [], ...                  % D3 chains/ensembles over a MATLAB pool: [] = MATLAB's rule (open or
+    ...                                  %   auto-created pool), true = start one (par_workers.m), false = serial
+    'par_workers', [], ...               % maximum pool workers for D3 ([] = one per chain/ensemble)
     'close_figs', [], ...                % close figures after saving them (and 'close all' at the start):
     ...                                  %   [] = auto (true headless: Octave or MATLAB -batch/-nodisplay;
     ...                                  %   false in interactive MATLAB), or true / false (fig_close_mode.m)
