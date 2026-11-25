@@ -144,7 +144,7 @@ lam = sort(cell2mat(cellfun(@(x) x.lam(:, 2), R, 'UniformOutput', false)));   % 
 nml = struct('median', median(lam), 'p05', lam(max(1, round(0.05*numel(lam)))), 'p95', lam(round(0.95*numel(lam))), ...
     'sampled', mc.disp_noise_hier);
 kvs = cell2mat(cellfun(@(x) x.kv(:), R, 'UniformOutput', false));   % interior Vsv control points
-kvst = struct('median', median(kvs), 'p05', prctile_(kvs, 5), 'p95', prctile_(kvs, 95));
+kvst = struct('median', median(kvs), 'p05', prctile_(kvs', 5), 'p95', prctile_(kvs', 95));
 ssv = sort(cell2mat(cellfun(@(x) x.ss(:, 1), R, 'UniformOutput', false)));   % sampled Vsv curvature strength (NaN if fixed)
 ssv = ssv(isfinite(ssv)); sms = struct('sampled', mc.smooth_hier, 'median', NaN, 'p05', NaN, 'p95', NaN);
 if ~isempty(ssv), sms.median = median(ssv); sms.p05 = ssv(max(1, round(0.05*numel(ssv)))); sms.p95 = ssv(round(0.95*numel(ssv))); end
@@ -174,8 +174,8 @@ save(opt.s1_file, 'card_prem', 'card_start', 'card_final', 'card_true', 'cobs', 
 
 %% figures
 cpt = @(c, f) card_at_depth(c, f, zplot + zw)/1000;
-fig = figure('position', [50 50 1500 650]);
-subplot(1, 2, 1); hold on; box on;
+fig = figure('position', [50 50 2100 650]);
+subplot(1, 3, 1); hold on; box on;
 fill([s1_unc.vsv_p05(in); flipud(s1_unc.vsv_p95(in))], [zplot(in); flipud(zplot(in))], [0.80 0.88 1], 'edgecolor', 'none');
 fill([s1_unc.vsv_p16(in); flipud(s1_unc.vsv_p84(in))], [zplot(in); flipud(zplot(in))], [0.55 0.70 0.95], 'edgecolor', 'none');
 h1 = plot(cpt(card_true, 'vsv'), zplot, 'r-', 'linewidth', 2);
@@ -185,7 +185,7 @@ set(gca, 'ydir', 'reverse'); ylim([0 400]); xlim([3.8 5]);
 xlabel('V_{SV} (km/s)'); ylabel('Depth below seafloor (km)');
 legend([h1 h2 h3], {'true (PA5)', 'start', 'posterior mean'}, 'location', 'southwest');
 title('Step 1, Bayesian (dispersion): V_{SV} (shaded: 5-95%, 16-84%)');
-subplot(1, 2, 2); hold on; box on;
+subplot(1, 3, 2); hold on; box on;
 fill([periods; flipud(periods)], [s1_unc.c_p05; flipud(s1_unc.c_p95)], [0.80 0.88 1], 'edgecolor', 'none');
 fill([periods; flipud(periods)], [s1_unc.c_p16; flipud(s1_unc.c_p84)], [0.55 0.70 0.95], 'edgecolor', 'none');
 hd = errorbar(periods, cobs, 2*cstd, 'ko');
@@ -196,5 +196,15 @@ xlabel('Period (s)'); ylabel('Rayleigh phase velocity (km/s)');
 legend([hd hn hs hp], {'data, assumed 2\sigma', ['posterior scaled 2\sigma (x' sprintf('%.2f', nml.median) ')'], 'start', ...
     'posterior mean model (MINEOS)'}, 'location', 'southeast');
 title({sprintf('Data: %s', dlabel), 'shaded: posterior predicted 5-95%, 16-84% (linearized)'}, 'interpreter', 'none');
+KVC = cellfun(@(x) x.kv, R, 'UniformOutput', false); KVMAX = mc.kvmax;
+subplot(1, 3, 3); hold on; box on;                     % control points per chain (as D4's fig2)
+cc_ = lines(max(numel(KVC), 7)); hk_ = zeros(1, numel(KVC)); lk_ = cell(1, numel(KVC));
+for ic_ = 1:numel(KVC)
+    cnt_ = accumarray(KVC{ic_}(:) + 1, 1, [KVMAX+1 1]) / numel(KVC{ic_});
+    hk_(ic_) = plot(0:KVMAX, cnt_, '-o', 'color', cc_(ic_,:), 'markerfacecolor', cc_(ic_,:), 'markersize', 4);
+    lk_{ic_} = sprintf('chain %d (median %g)', ic_, median(KVC{ic_}));
+end
+xlim([-0.5 KVMAX+0.5]); xlabel('interior V_{SV} control points'); ylabel('fraction of samples');
+legend(hk_, lk_, 'location', 'northeast'); title('V_{SV} control points per chain');
 print(fig, '-dpng', '-r110', fullfile(od, 'step1_bayes_disp.png')); close(fig);
 fprintf('step-1 model CARDS/%s.card, %s, figures in %s/\n', opt.s1_final, opt.s1_file, od);
