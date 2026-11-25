@@ -19,6 +19,8 @@ function varargout = lr_common(action, varargin)
 % Prior: uniform on the allowed numbers of interior points with the HARD
 % CONSTRAINTS kx <= kv and ke <= kv (xi and eta never have more control
 % points than Vsv). Without mc.eta_free, eta is the reference model's.
+% With cfg.xi_fixed = true (Vsv-only inversions, step 1) xi is the
+% reference model's everywhere (set mc.p_xi = 0, mc.kxmax = 0).
 % Moves (xi with prob p_xi, eta with p_eta if free, Vsv otherwise):
 % 1 birth, 2 death, 3 move of an interior point, 4 value change of an
 % interior point or the top end.
@@ -146,7 +148,7 @@ switch action
         if ~any(sg > 0) && ~(sr > 0) && ~(sx > 0), varargout = {0}; return; end
         dz = 1; zg = (cfg.zmin:dz:cfg.zmax)';
         vs = bspline_profile([cfg.zmin; m.V.zc(:); cfg.zmax], [m.V.ev(1); m.V.vc(:); m.V.ev(2)], zg);
-        xi = bspline_profile([cfg.zmin; m.X.zc(:); cfg.zmax], [m.X.ev(1); m.X.vc(:); m.X.ev(2)], zg);
+        xi = xi_of(m, cfg, zg);
         if sx > 0                                   % prior on xi toward a fixed value
             xm = 1; if isfield(mc, 'xi_ref_mean') && ~isempty(mc.xi_ref_mean), xm = mc.xi_ref_mean; end
             lx = 10; if isfield(mc, 'xi_ref_len') && ~isempty(mc.xi_ref_len), lx = mc.xi_ref_len; end
@@ -197,7 +199,7 @@ switch action
         vsh = interp1(cfg.refp.z, cfg.refp.vsh, zplot);
         in = zplot >= cfg.zmin & zplot < cfg.zmax; m = S.m;
         vs = bspline_profile([cfg.zmin; m.V.zc(:); cfg.zmax], [m.V.ev(1); m.V.vc(:); m.V.ev(2)], zplot(in));
-        xi = bspline_profile([cfg.zmin; m.X.zc(:); cfg.zmax], [m.X.ev(1); m.X.vc(:); m.X.ev(2)], zplot(in));
+        xi = xi_of(m, cfg, zplot(in));
         vsv(in) = vs; vsh(in) = vs .* sqrt(xi);
         if isfield(cfg.refp, 'eta'), eta = interp1(cfg.refp.z, cfg.refp.eta, zplot); else, eta = ones(size(zplot)); end
         if isfield(m, 'E') && ~isempty(m.E)
@@ -231,4 +233,14 @@ end
 function xs = draw_xs(mc)
 % draw from the log-uniform hyperprior
 rg = xs_range(mc); xs = exp(log(rg(1)) + (log(rg(2)) - log(rg(1)))*rand);
+end
+
+function xi = xi_of(m, cfg, z)
+% xi profile at depths z: the model's B-spline, or the reference model's
+% xi when it is held fixed (cfg.xi_fixed, Vsv-only inversions)
+if isfield(cfg, 'xi_fixed') && cfg.xi_fixed
+    xi = interp1(cfg.refp.z, (cfg.refp.vsh ./ cfg.refp.vsv).^2, z, 'linear', 'extrap');
+else
+    xi = bspline_profile([cfg.zmin; m.X.zc(:); cfg.zmax], [m.X.ev(1); m.X.vc(:); m.X.ev(2)], z);
+end
 end

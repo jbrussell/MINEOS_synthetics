@@ -41,7 +41,7 @@ if nargin >= 10 && ~isempty(lin0)
 end
 tauo = @(r, s_) reshape(s_.tauc(r,:,:), nm, Kt);
 st.sig = zeros(1, 4);
-for wv = 1:2, st.sig(2*wv-1:2*wv) = std(rec(find(wave == wv, 1)).d); end
+for wv = 1:2, r1_ = find(wave == wv, 1); if isempty(r1_), st.sig(2*wv-1:2*wv) = 1; else, st.sig(2*wv-1:2*wv) = std(rec(r1_).d); end, end
 st.rho = 0.5*ones(1, 4);
 G = cell(nrec, 1); Le = zeros(nrec, 1);
 for r = 1:nrec

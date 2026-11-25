@@ -157,6 +157,8 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   toward xi_ref_mean; xi_ref_sig is then not used. false: xi_ref_sig as set
     ...                                  %   (a user-chosen fixed strength, or 0 = off)
     'xi_ref_sig_range', [0.005 0.2], ... % range of the sampled sigma_xi (xi_ref_hier = true)
+    'waves', [1 2], ...                  % wave types inverted: 1 = Love, 2 = Rayleigh ([2] = Rayleigh only)
+    'xi_fixed', false, ...               % true: xi held at the reference model, Vsv only (step-1 waveform version)
     'fund_margin', [0.4 0.2], ...        % 'fund' window start margin (km/s) [Love Rayleigh]
     'U_start',  [], ...                  % window start group velocity (km/s; scalar or [Love Rayleigh]);
     ...                                  %   [] = max U of branches 1..nm-1 of the reference + 0.6 km/s

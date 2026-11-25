@@ -78,6 +78,9 @@ mc.xi_ref_mean = og('xi_ref_mean', 1);       % ... its mean (1 = isotropic)
 mc.xi_ref_len = og('xi_ref_len', 10);        % ... one N(xi_ref_mean, sig^2) term per xi_ref_len km
 mc.xi_ref_hier = og('xi_ref_hier', false);   % ... strength sampled (hierarchical) instead of xi_ref_sig
 mc.xi_ref_sig_range = og('xi_ref_sig_range', [0.005 0.2]);   % ... log-uniform hyperprior on it
+% Vsv-only inversion (opt.xi_fixed, step 1 waveform version): xi held at
+% the reference model's (cfg.xi_fixed below; no xi moves, no xi control points)
+if og('xi_fixed', false), mc.p_xi = 0; mc.kxmax = 0; end
 % eta (opt.eta_free): held at the reference model by default; if free, a
 % third transdimensional B-spline profile (ke <= kv, bottom tied to the
 % reference, U prior), updated in a fraction p_eta of the moves
@@ -121,6 +124,7 @@ cfg.Tdisp = Tdisp;
 % bottom end values tied to the reference model at zmax
 [~, ib_] = max(cfg.lin.z);
 cfg.vbot = cfg.lin.vsv0(ib_); cfg.xbot = (cfg.lin.vsh0(ib_)/cfg.lin.vsv0(ib_))^2;
+cfg.xi_fixed = og('xi_fixed', false);       % xi = the reference model's (Vsv-only; lr_common.m, mineos_dispersion.m)
 cfg.ebot = cfg.lin.eta0(ib_);
 CrefL = P.phv_ref_T; CrefR = P.phv_ref_S;     % reference (step-1 model) dispersion
 CtrueL = P.phv_true_T; CtrueR = P.phv_true_S; % true (PA5) dispersion, MINEOS
@@ -210,7 +214,8 @@ single_ = any(strcmp(wmode_, {'single', 'fund', 'auto'}));
 U_start_ = og('U_start', []);
 mc.single_window = single_;
 segtap = tukeywin_(cfg.N, 0.1);          % taper of the time segments (data and Uref)
-for wv = 1:2
+waves_ = og('waves', [1 2]);             % wave types used: 1 = Love, 2 = Rayleigh ([2]: Rayleigh only, step 1)
+for wv = waves_(:)'
     % reference group velocities -> window boundaries for this wave type
     U = P.(['grv_ref_' uname{wv}]);
     U0 = U(:,1); Uov = U(:, 2:end);

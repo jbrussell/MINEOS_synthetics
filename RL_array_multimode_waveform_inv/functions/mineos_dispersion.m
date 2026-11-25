@@ -8,7 +8,8 @@ function [CL, CR, vsv, vsh, eta] = mineos_dispersion(m, cfg, which)
 % the reference card at the nodes between cfg.zmin and cfg.zmax below the
 % seafloor, with Vpv, Vph and density scaled to Vsv and Vsh by the
 % reference ratios and eta at the reference unless it is a model
-% parameter. which = 'both' (default), 'love' or 'rayleigh' ([] for the
+% parameter; with cfg.xi_fixed = true xi is the reference model's (Vsh =
+% Vsv (Vsh/Vsv)_ref; Vsv-only inversions). which = 'both' (default), 'love' or 'rayleigh' ([] for the
 % other). vsv, vsh (km/s), eta: the model at the nodes. m = [] gives the
 % reference.
 %
@@ -19,8 +20,12 @@ if isempty(m)
     vsv = L.vsv0; vsh = L.vsh0; eta = L.eta0;
 else
     vsv = bspline_profile([cfg.zmin; m.V.zc(:); cfg.zmax], [m.V.ev(1); m.V.vc(:); m.V.ev(2)], L.z);
-    xi  = bspline_profile([cfg.zmin; m.X.zc(:); cfg.zmax], [m.X.ev(1); m.X.vc(:); m.X.ev(2)], L.z);
-    vsh = vsv .* sqrt(xi);
+    if isfield(cfg, 'xi_fixed') && cfg.xi_fixed      % xi held at the reference (Vsv-only inversions, step 1)
+        vsh = vsv .* (L.vsh0 ./ L.vsv0);
+    else
+        xi  = bspline_profile([cfg.zmin; m.X.zc(:); cfg.zmax], [m.X.ev(1); m.X.vc(:); m.X.ev(2)], L.z);
+        vsh = vsv .* sqrt(xi);
+    end
     if isfield(m, 'E') && ~isempty(m.E)
         eta = bspline_profile([cfg.zmin; m.E.zc(:); cfg.zmax], [m.E.ev(1); m.E.vc(:); m.E.ev(2)], L.z);
     else
