@@ -4,6 +4,7 @@
 \usepackage{booktabs,longtable,array}
 \usepackage[hidelinks]{hyperref}
 
+\setlength{\emergencystretch}{3em}
 \newcommand{\dd}{\mathrm{d}}
 \newcommand{\ii}{\mathrm{i}}
 \newcommand{\T}{\mathsf{T}}
@@ -16,23 +17,27 @@
 \newcommand{\vpv}{V_{PV}}
 \newcommand{\vph}{V_{PH}}
 
-\title{Step 2: Joint Love--Rayleigh multimode array waveform inversion\\
-\large\texttt{RL\_array\_multimode\_waveform\_inv} (drivers \texttt{D2}--\texttt{D4})}
+\title{Joint Love--Rayleigh multimode array waveform inversion\\
+\large\texttt{RL\_array\_multimode\_waveform\_inv}: data preparation (\texttt{A0}--\texttt{A4}),
+step 1 (\texttt{D1}) and step 2 (\texttt{D2}--\texttt{D4}), tests (\texttt{D5}--\texttt{D7})}
 \date{}
 
 \begin{document}
 \maketitle
 
-\noindent This note describes the second step of the two-step inversion:
-a transdimensional Bayesian (reversible-jump Markov chain Monte Carlo,
-rjMcMC) inversion of multimode Love and Rayleigh waveforms recorded across
-an ocean-bottom array for the depth profiles of the vertically polarized
-shear velocity $\vsv(z)$ and the radial anisotropy $\xi(z)$. The reference
-model is the isotropic model produced by step 1 (an inversion of
-fundamental-mode Rayleigh phase velocities). Every symbol is defined where
-it first appears and is collected in the table of
-Section~\ref{sec:notation}. Default values are those of
-\texttt{parameters\_RL.m} and \texttt{functions/sub\_setup\_records.m}.
+\noindent This note describes the two-step inversion and its data
+preparation. Step 2 is a transdimensional Bayesian (reversible-jump Markov
+chain Monte Carlo, rjMcMC) inversion of multimode Love and Rayleigh
+waveforms recorded across an ocean-bottom array for the depth profiles of
+the vertically polarized shear velocity $\vsv(z)$ and the radial
+anisotropy $\xi(z)$. Its reference model is the isotropic model produced by
+step 1, an inversion of fundamental-mode Rayleigh waves for $\vsv$ alone
+(Section~\ref{sec:step1}; linearized, or Bayesian from dispersion or from
+waveforms). The data are processed with ASWMS-Q
+(Section~\ref{sec:aswms}), so that the same scripts serve real and
+synthetic data. Every symbol is defined where it first appears and is
+collected in the table of Section~\ref{sec:notation}. Default values are
+those of \texttt{parameters\_RL.m} and \texttt{functions/sub\_setup\_records.m}.
 
 \tableofcontents
 
@@ -57,23 +62,56 @@ The unknowns are split into three groups:
   (Section~\ref{sec:forward}).
 \end{enumerate}
 The structure and the noise hyperparameters are sampled by Markov chain
-Monte Carlo. The nuisance parameters are integrated out of the likelihood
+Monte Carlo, together with optional prior hyperparameters
+(Section~\ref{sec:prior}). The nuisance parameters are integrated out of the likelihood
 (Section~\ref{sec:like}): $B_n$ exactly, because it enters linearly, and
 $\tau_n$ and $\delta\theta_n$ by linearizing the waveforms about a
 \emph{linearization point}. Each chain state carries its own linearization
 point, which is moved to the conditional posterior mean every
 $n_{\rm relin}$ iterations (Section~\ref{sec:relin}). The sampler is either
 a set of independent chains (``plain'') or parallel tempering
-(Section~\ref{sec:mcmc}).
+(Section~\ref{sec:mcmc}). The linearized dispersion can be re-linearized in
+stages during burn-in (Section~\ref{sec:refupd}).
+
+%======================================================================
+\section{Workflow and scripts}\label{sec:workflow}
+%======================================================================
+
+{\small
+\begin{longtable}{>{\ttfamily\raggedright}p{0.40\textwidth}p{0.54\textwidth}}
+\toprule
+\normalfont Script & Purpose \\
+\midrule
+\endhead
+A0\_synth\_make\_sac\_data & synthetic test only: SAC ``data'' of the true model (PA5) with noise (Section~\ref{sec:synth})\\
+A1\_sac2eventmat & ASWMS-Q: SAC files $\to$ event files (Section~\ref{sec:aswms})\\
+A2\_cleanup\_events & ASWMS-Q: quality control of the event files\\
+A3\_run\_autowinpick & ASWMS-Q: automatic surface-wave window per event (A3b: interactive review)\\
+A4\_plot\_event\_data & record sections, SNR and pre-P noise diagnostics per event\\
+D1\_step1\_rayleigh\_isotropic\_inv & step 1, linearized least squares (Section~\ref{sec:step1})\\
+D1\_step1\_Bayesian\_disp & step 1, Bayesian from Rayleigh dispersion\\
+D1\_step1\_Bayesian\_waveform & step 1, Bayesian from Rayleigh waveforms\\
+D2\_step2\_prep\_mineos\_idagrn & MINEOS modes and kernels, \texttt{idagrn6} branch synthetics of the reference\\
+D3\_step2\_waveform\_inv & step 2 setup and sampling (chains or PT ensembles in parallel processes)\\
+D4\_step2\_plot\_results & figures and \texttt{summary.txt}\\
+D5\_step2\_check\_linearization & linearization error of the posterior mean and of the projected truth\\
+D6\_step2\_update\_reference\_and\_rerun & outer iteration with a new reference\\
+D7\_dispersion\_only\_test & dispersion-only inversion of the true dispersion (Section~\ref{sec:tests})\\
+\bottomrule
+\end{longtable}}
+Long runs write checkpoints every \texttt{opt.ckpt\_every} $=100$ iterations
+and resume from them when rerun.
 
 %======================================================================
 \section{Data}\label{sec:data}
 %======================================================================
 
 \subsection{Geometry}
-The events are indexed $e=1,\dots,N_e$ ($N_e=15$ real 2012 Pacific-rim
-earthquakes with Global CMT moment tensors, $M_w$ 6.4--7.8, 33--86$^\circ$
-from the array). The stations are indexed $j=1,\dots,N_s$ ($N_s=16$
+The events are indexed $e=1,\dots,N_e$: the 2012 Pacific-rim earthquakes
+of \texttt{events\_nomelt\_2012.cmt} (Global CMT moment tensors, $M_w$
+6.4--7.8, 33--86$^\circ$ from the array) that have ASWMS-Q event files
+after quality control (Section~\ref{sec:aswms}; 14 of 15 in the synthetic
+test). The stations are indexed $j=1,\dots,N_s$ ($N_s=16$
 NoMelt ocean-bottom seismometers). Station latitudes and longitudes
 $(\phi_j,\lambda_j)$ are projected to local Cartesian coordinates (km,
 east and north) about the array center $(\phi_0,\lambda_0)$, the mean
@@ -83,22 +121,63 @@ station position:
   y_j = (\phi_j-\phi_0)\,a_\circ,\qquad a_\circ = 111.195~\text{km/deg}.
 \end{equation}
 $\Delta_e$ is the great-circle distance (km) from event $e$ to the array
-center, and $\Delta_{ej}$ the distance to station $j$. The propagation
+center, and $\Delta_{ej}$ the distance to station $j$, both on the sphere
+with geocentric latitudes (as for the \texttt{idagrn6} synthetics). The propagation
 azimuth $\varphi_e$ (degrees clockwise from north) is the back azimuth from
 the array center to the event plus $180^\circ$.
 
 The wave type is $w\in\{L,R\}$. Love waves ($L$) are recorded on the
 transverse component and Rayleigh waves ($R$) on the vertical component. A
 \emph{record} $r=(e,w)$ is one event on one component across all stations,
-so there are $N_r=2N_e=30$ records.
+so there are $N_r=2N_e$ records (28 in the synthetic test). With
+\texttt{opt.waves = 2} only the Rayleigh records are used (step-1 waveform
+version, Section~\ref{sec:step1}).
 
-\subsection{Synthetic data}
-The ``observed'' seismograms $u^{\rm obs}_{ej}(t)$ are \texttt{idagrn6}
-normal-mode synthetics for the true model (PA5) with the mode branches
-$n=0,\dots,N_b^{\rm data}-1$, where $N_b^{\rm data}=16$, at sampling
-interval $\Delta t=4$~s. The inversion models only the branches
-$n=0,\dots,n_m-1$, with $n_m=8$. Branches 8--15 are present in the data
-but not in the model.
+\subsection{Synthetic data (A0)}\label{sec:synth}
+For the synthetic test, \texttt{A0\_synth\_make\_sac\_data.m} computes
+\texttt{idagrn6} normal-mode seismograms for the true model (PA5) with the
+mode branches $n=0,\dots,N_b^{\rm data}-1$ (\texttt{opt.nbranch\_data},
+default 16; tests use 1, 2 and 4) at sampling interval $\Delta t=4$~s,
+transverse and vertical displacement, starting at the origin time. Noise
+is added: white noise through the processing band-pass $H$
+(Section~\ref{sec:proc}), with standard deviation \texttt{opt.noise} $=0.03$
+times the peak band-passed amplitude of the event and wave type (optionally
+times a station factor $10^{s\,U[-1,1]}$, \texttt{opt.synth\_noise\_spread}
+$=s$, default 0). The records are written as SAC files in the ASWMS-Q
+layout, so they go through the same processing as real data. A truth file
+keeps the noise-free records for diagnostics; it is never read for real
+data. The inversion models only the branches $n=0,\dots,n_m-1$
+(\texttt{opt.nm}); branches $n\ge n_m$ in the data are not modeled.
+
+\subsection{ASWMS-Q processing (A1--A4)}\label{sec:aswms}
+The scripts A1--A3 are ports of the ASWMS-Q pipeline
+(\texttt{github.com/jbrussell/ASWMS-Q}), with parameters from
+\texttt{aswms\_parameters.m} (overrides in \texttt{opt.aswms}):
+\begin{itemize}
+\item A1: SAC files $\to$ event files (one per event and component);
+  events deeper than 50~km or smaller than $M_w$~5.5 and stations with
+  SNR $\le3$ are skipped; traces are resampled if needed.
+\item A2: events with fewer than 5 stations, or whose surface-wave time
+  windows at the array overlap with another event's, are removed.
+\item A3: the automatic window of every event, from narrow-band Gaussian
+  envelopes at 20 frequencies whose group delays are fitted against
+  distance: $\Delta_{ej}/v_1+t_1\le t-t_e^{\rm orig}\le\Delta_{ej}/v_2+t_2$,
+  \texttt{winpara} $=(v_1,t_1,v_2,t_2)$. Stations outside the main
+  distance range are flagged.
+\item A4: per event, the record section with the window and the end of the
+  pre-P noise window, the SNR of every station, and the spectra and
+  autocorrelation of the pre-P noise; per component, an SNR map.
+\end{itemize}
+The traces of the event files are interpolated to the time grid of the
+reference synthetics (anti-alias low-pass and spline when the sampling
+differs; \texttt{read\_event\_data.m}).
+
+\emph{Pre-P noise.} For every station the samples earlier than
+$\Delta_{ej}/(13.5~\text{km/s})-60$~s after the origin (before the P wave at
+20--100$^\circ$) are band-passed like the data (Tukey taper, central 80\%
+used; \texttt{noise\_stats.m}). They give the noise standard deviation
+$\nu^{\rm abs}_{rj}$, its autocorrelation to lag 12 samples and its power
+spectral density, used by the noise models of Section~\ref{sec:noise}.
 
 \subsection{Time segment, taper and band}\label{sec:proc}
 Each record is cut to a segment of $N=800$ samples, $t_i=t^0_r+i\,\Delta t$
@@ -145,7 +224,19 @@ With \texttt{opt.U\_start} a slower start (e.g.\ 6~km/s) leaves out the
 early, body-wave-like energy (S, SS, \dots), which in mode terms is
 carried mostly by the unmodeled branches $n\ge n_m$.
 
-\emph{Single window} (\texttt{opt.windows = 'single'}, default): at station
+\emph{ASWMS-Q window} (\texttt{opt.windows = 'auto'}, default): at station
+$j$ of event $e$ the data are the window picked by A3 from the data
+(Section~\ref{sec:aswms}), $\Delta_{ej}/v_1+t_1\le t-t^{\rm orig}_e\le\Delta_{ej}/v_2+t_2$,
+one window and one noise class per wave type, $q\in\{1,3\}$. Without a
+picked window the fundamental-mode window below is used.
+
+\emph{Fundamental-mode window} (\texttt{opt.windows = 'fund'}):
+$\Delta_{ej}/U^{\rm w}_w\le t<\Delta_{ej}/U^{\rm f}_w+60$~s with
+$U^{\rm w}_w=\max_TU^{w,\rm ref}_0(T)+$\texttt{opt.fund\_margin}$_w$
+($0.4$, $0.2$~km/s), which cuts the faster higher modes, including the
+unmodeled branches.
+
+\emph{Single window} (\texttt{opt.windows = 'single'}): at station
 $j$ of record $r$ the data are one surface-wave window
 $\Delta_{ej}/U^{\rm ov}_w\le t<\Delta_{ej}/U^{\rm f}_w+60$~s, containing the
 overtones and the fundamental mode. Window types are labelled by wave
@@ -168,19 +259,17 @@ mode, nor the reverse. $q(i)$ is the window type of sample $i$. A
 window type. In the single-window case the samplers keep the four noise
 slots and tie $(\sigma_1,r_1)=(\sigma_2,r_2)$ and $(\sigma_3,r_3)=(\sigma_4,r_4)$.
 
-\subsection{Data vector, normalization and noise}
+\subsection{Data vector and normalization}
 The data vector $\mathbf{d}_r\in\mathbb{R}^{N_{d,r}}$ of record $r$ stacks
-the windowed samples of all stations. It is normalized by the peak
-amplitude of the noise-free windowed record,
-$s_r=\max_i|u^{\rm clean}_{r,i}|$, as is usual with real data:
-\begin{equation}
-  \mathbf{d}_r=\mathbf{u}^{\rm clean}_r/s_r+\bm{\epsilon}_r .
-\end{equation}
-The noise $\bm{\epsilon}_r$ is white Gaussian noise passed through the same
-band-pass $H$, scaled to a standard deviation $\sigma^{\rm true}=0.03$
-(3\% of the record peak). Because it is band-limited, the noise is
-correlated in time; its empirical lag-one correlation is
-$\hat r_q\approx0.67$. $N_d=\sum_rN_{d,r}=181{,}172$ samples.
+the processed, windowed samples of all stations with data over the whole
+segment. As is usual with real data, it is normalized by its peak
+amplitude in the windows, $s_r=\max_i|u^{\rm obs}_{r,i}|$:
+$\mathbf{d}_r=\mathbf{u}^{\rm obs}_r/s_r$. For the synthetic test the
+noise-free records (truth file) are processed in the same way for
+diagnostics, and $\sigma^{\rm true}_q$ is the standard deviation of the
+difference. Because the noise is band-limited it is correlated in time;
+its empirical lag-one correlation is $\hat r_q\approx0.67$--$0.68$.
+$N_d=\sum_rN_{d,r}\approx88{,}000$ samples in the synthetic test.
 
 \subsection{Reference spectra}
 $U^{\rm ref}_{rjn}(\omega_k)$ is the band spectrum (same segment, Tukey
@@ -188,9 +277,12 @@ window, taper $H$ and normalization $s_r$) of the \texttt{idagrn6\_mask}
 single-branch synthetic of branch $n$ in the \emph{reference} model at
 station $j$. It contains the source excitation, the propagation from the
 source to station $j$ in the reference model and the instrument-free
-displacement response. For plotting, the reference prediction is
-$\Ifft[\sum_n U^{\rm ref}_{rjn}]$, and the PREM prediction is the processed
-full PREM synthetic (all 16 branches) divided by $s_r$.
+displacement response. The reference synthetics are computed by D2
+(\texttt{prep\_mineos\_idagrn.m}) one branch at a time with
+\texttt{idagrn6\_mask}, and also written in the ASWMS-Q event-file layout.
+For plotting, the reference prediction is $\Ifft[\sum_n U^{\rm ref}_{rjn}]$,
+and the step-1 starting-model prediction is the processed full synthetic
+of that model divided by $s_r$.
 
 %======================================================================
 \section{Model parameterization}\label{sec:model}
@@ -227,6 +319,10 @@ $\mathbf{m}=\{k_v,\{z^v_i,v^v_i\},v^v_{\rm top};\;k_x,\{z^x_i,v^x_i\},v^x_{\rm t
 plus $\{k_e,\{z^e_i,v^e_i\},v^e_{\rm top}\}$ for $\eta$ when it is free.
 It gives $\vsv(z)$, $\xi(z)$ (and $\eta(z)$) on $[z_{\min},z_{\max}]$. Outside this range
 (water, crust, $z>350$~km) the model is the reference model.
+
+\emph{$\vsv$ only} (\texttt{opt.xi\_fixed = true}, step~1): $\xi(z)$ is the
+reference model's at every depth, there are no $\xi$ control points or
+moves ($k_x=0$, $p_\xi=0$), and $\vsh=\vsv\,(\vsh^0/\vsv^0)$.
 
 \subsection{Derived parameters}\label{sec:derived}
 \begin{equation}
@@ -310,11 +406,18 @@ band spectrum is
   \exp\!\left\{-\ii\omega\left[\frac{\Delta D_j\big(\varphi_e+\delta\theta_{rn}(\omega)\big)}{c^w_n(\omega;\mathbf{m})}
   -\frac{\Delta D_j(\varphi_e)}{c^{w,\rm ref}_n(\omega)}\right]\right\}\chi^w_n(\omega).
 \end{equation}
-The plane-wave path difference of station $j$ relative to the array center
-for a wave propagating toward azimuth $\varphi$ is
-\begin{equation}
-  \Delta D_j(\varphi)=x_j\sin\varphi+y_j\cos\varphi .
+$\Delta D_j(\varphi)$ is the path difference of station $j$ relative to
+the array center for a wave arriving with propagation azimuth $\varphi$.
+With \texttt{opt.exact\_geom = true} (default) it is the great-circle
+distance difference at the great-circle azimuth, and the local plane wave
+describes only its change with the arrival angle:
+\begin{equation}\label{eq:geom}
+  \Delta D_j(\varphi)=\big(\Delta_{ej}-\Delta_e\big)+\big[p_j(\varphi)-p_j(\varphi_e)\big],\qquad
+  p_j(\varphi)=x_j\sin\varphi+y_j\cos\varphi .
 \end{equation}
+With \texttt{exact\_geom = false} it is the plane-wave term $p_j(\varphi)$
+alone, whose wavefront-curvature and projection errors grow with the square
+of the aperture (about 7~km of distance at 559~km aperture).
 The factors in Eq.~\eqref{eq:forward} mean:
 \begin{itemize}
 \item $U^{\rm ref}_{rjn}$ already contains the full reference-model
@@ -395,7 +498,7 @@ $\delta\bm\theta_r=\bm\theta_r-\bm\theta^0_r$. The columns of $\mathbf{G}_r$ are
 \item \emph{Time-shift columns}: $\Ifft\big[-\ii\omega P_{a-1}(\zeta)\,\tilde B_{rn}S_{rjn}\big]$.
 \item \emph{Arrival-angle columns}:
   $\Ifft\big[-\ii\omega\,c^w_n(\omega)^{-1}\,\partial_\varphi\Delta D_j(\varphi^0_{rn})\,\tfrac{\pi}{180}\,P_{a-1}(\zeta)\,\tilde B_{rn}S_{rjn}\big]$,
-  with $\partial_\varphi\Delta D_j=x_j\cos\varphi-y_j\sin\varphi$.
+  with $\partial_\varphi\Delta D_j=\partial_\varphi p_j=x_j\cos\varphi-y_j\sin\varphi$.
 \end{itemize}
 In the last two, $\tilde B_{rn}=\sum_k\tilde\beta_{rnk}\Phi_k$ is the
 amplitude at which the derivatives are taken. $\tilde\beta_r$ is
@@ -405,7 +508,8 @@ amplitude columns $\mathbf{G}^\beta_r$:
  \tilde{\bm\beta}_r=\arg\min_{\bm\beta}\|\mathbf{d}_r-\mathbf{G}^\beta_r\bm\beta\|^2+\lambda\|\bm\beta-\bm\mu_\beta\|^2,\qquad
  \lambda=(\bar\sigma/\sigma_b)^2 .
 \end{equation}
-Here $\bar\sigma$ is the mean of the four $\sigma_q$, and $\bm\mu_\beta$ and
+The data and columns are divided by the station levels $\nu_{rj}$ (and
+whitened) as in the likelihood. Here $\bar\sigma$ is the mean of the four $\sigma_q$, and $\bm\mu_\beta$ and
 $\sigma_b$ are the prior mean and standard deviation of
 Section~\ref{sec:nuisprior}. Equation~\eqref{eq:lin} is the first-order
 (Gauss--Newton) expansion of $\mathbf{u}_r$ about
@@ -414,6 +518,7 @@ $(\tilde{\bm\beta}_r,\mathbf{t}^0_r,\bm\theta^0_r)$ in $t$ and $\theta$.
 %======================================================================
 \section{Likelihood with the nuisance parameters integrated out}\label{sec:like}
 %======================================================================
+
 
 \subsection{Prior of the nuisance parameters}\label{sec:nuisprior}
 The prior is Gaussian and independent, $\tilde{\mathbf{x}}_r\sim\mathcal{N}(\bm\mu_r,\mathbf{C}_x)$:
@@ -433,26 +538,66 @@ The prior is Gaussian and independent, $\tilde{\mathbf{x}}_r\sim\mathcal{N}(\bm\
 Centering the prior on the total value makes it independent of where the
 linearization point is.
 
-\subsection{Correlated noise}
+Synthetic-test (oracle) options: \texttt{opt.fix\_nuisance} holds $\beta=1$,
+$t=0$ and $\theta=0$ by prior standard deviations of $10^{-3}$ (their true
+values when the reference is the true model and the data contain only the
+modeled branches); \texttt{opt.fix\_tau} multiplies every reference
+spectrum by $e^{-\ii\omega\tau^{\rm true}_{rn}(\omega)}$, the true path
+delay $\Delta_e[1/c^{\rm true}_n-1/c^{\rm ref}_n]$ at every frequency, and
+holds $t$ at zero, leaving $\beta$ and $\theta$ free
+(\texttt{apply\_fixed\_tau.m}).
+
+\subsection{Noise model}\label{sec:noise}
 The noise of record $r$ is $\mathbf{e}_r\sim\mathcal{N}(\mathbf{0},\mathbf{C}_{d,r})$.
+
+\emph{Noise levels} (\texttt{opt.noise\_levels}). With \texttt{'pre'}
+(default) the standard deviation of a sample of station $j$ is
+$\sigma_q\,\nu_{rj}$, where $\nu_{rj}=\nu^{\rm abs}_{rj}/s_r$ is the pre-P
+noise level of the station relative to the record peak
+(Section~\ref{sec:aswms}; the median of the record for stations without a
+measurement). The sampled $\sigma_q$ is then a scale factor of order 1.
+With \texttt{'none'}, $\nu_{rj}=1$ and $\sigma_q$ is the noise level of the
+window type.
+
+\emph{AR(1) correlation} (\texttt{opt.noise\_model = 'ar1'}, default).
 $\mathbf{C}_{d,r}$ is block diagonal over segments, and within a segment of
-window type $q$ it is an AR(1) (exponential) covariance:
+window type $q$ and station $j$ it is an AR(1) (exponential) covariance:
 \begin{equation}
- [\mathbf{C}_{d}]_{il}=\sigma_q^2\,r_q^{|i-l|},\qquad 0\le r_q<1 .
+ [\mathbf{C}_{d}]_{il}=\sigma_q^2\,\nu_{rj}^2\,r_q^{|i-l|},\qquad 0\le r_q<1 .
 \end{equation}
 Its inverse is tridiagonal, so the data and every column of $\mathbf{G}$
-are \emph{whitened} segment by segment:
+are divided by $\nu_{rj}$ and \emph{whitened} segment by segment:
 \begin{equation}
  \tilde y_{1}=y_{1},\qquad \tilde y_i=\frac{y_i-r_q\,y_{i-1}}{\sqrt{1-r_q^2}}\quad(i>1\text{ within the segment}).
 \end{equation}
 The whitened noise is white with variance $\sigma_q^2$, and
 \begin{equation}
- \ln|\mathbf{C}_{d,r}|=\sum_q\big[n_{rq}\ln\sigma_q^2+(n_{rq}-m_{rq})\ln(1-r_q^2)\big],
+ \ln|\mathbf{C}_{d,r}|=\sum_q\big[n_{rq}\ln\sigma_q^2+(n_{rq}-m_{rq})\ln(1-r_q^2)\big]+2\sum_{i}\ln\nu_{r,j(i)},
 \end{equation}
 where $n_{rq}$ is the number of samples and $m_{rq}$ the number of
 segments of window type $q$ in record $r$. Below, $\mathbf{d}$ and
 $\mathbf{G}$ denote the whitened quantities and $\mathbf{C}_d$ is diagonal
 with entries $\sigma_{q(i)}^2$.
+
+\emph{Frequency-domain likelihood} (\texttt{opt.noise\_model = 'fdom'}).
+In every segment the residual is tapered (Tukey, 20\%) and transformed to
+its DFT coefficients at the in-band frequencies $f_k$; the real and
+imaginary parts are divided by $\sqrt{c_k}$,
+$c_k=\tfrac12\sum_iw_i^2\,S_j(f_k)/\Delta t$, the variance of each part for
+stationary noise with the two-sided power spectral density $S_j$ of the
+station from its pre-P noise (\texttt{opt.noise\_psd}: \texttt{'shape'},
+the pooled spectral shape times the station level, or \texttt{'station'}).
+The transformed coefficients are nearly independent with unit variance,
+$\sigma_q$ is a scale factor and $\ln|\mathbf{C}_d|$ gains
+$\sum\ln c_k$ (\texttt{fdom\_operator.m}). In tests this whitens the
+band-limited noise well, unlike AR models.
+
+\emph{AR($p$) models} (\texttt{'ar2'}, \texttt{'arp'}, \texttt{'emp'};
+experimental): AR models fitted to the pre-P noise autocorrelation, pooled
+per wave type or per station and record, applied by Levinson whitening. The
+noise covariance of band-passed noise sampled at 4~s is nearly singular
+(the band is about a third of the Nyquist range), and these models whiten
+it poorly.
 
 \subsection{Marginal likelihood}
 With the linear model $\mathbf{d}_r=\mathbf{G}_r\tilde{\mathbf{x}}_r+\mathbf{e}_r$
@@ -470,7 +615,7 @@ is solved:
  \ln\mathcal{L}_r=-\tfrac12\Big[\bm\rho_r^\T\mathbf{C}_d^{-1}\bm\rho_r-\mathbf{g}_r^\T\mathbf{A}_r^{-1}\mathbf{g}_r
  +\ln|\mathbf{C}_{d,r}|+\ln|\mathbf{C}_x|+\ln|\mathbf{A}_r|+N_{d,r}\ln2\pi\Big].\label{eq:logL}
 \end{gather}
-Here $\ln|\mathbf{C}_{d,r}|$ includes the correlation term above. The total
+Here $\ln|\mathbf{C}_{d,r}|$ includes the correlation and level terms above. The total
 log-likelihood is $\ln\mathcal{L}(\mathbf{m},\bm\sigma,\mathbf{r})=\sum_r\ln\mathcal{L}_r$.
 
 The conditional posterior mean of the nuisance parameters is
@@ -502,22 +647,41 @@ the chain, the sampled distribution is an approximation to the exact
 marginal posterior. The approximation error vanishes as the linearization
 becomes exact at the conditional mode.
 
-\subsection{Initial linearization points (continuation)}
+\subsection{Initial linearization points}\label{sec:start}
 The initial points $\bm\ell^{(0)}_r$ come from Gauss--Newton iterations of
 Eq.~\eqref{eq:relin} at the reference dispersion
 $c^w_n=c^{w,\rm ref}_n$, starting from $\mathbf{t}^0=\bm\theta^0=0$ and
-$\mathbf{b}^0=1$, with $\sigma_q=\sigma^{\rm true}$ and $r_q=\hat r_q$.
-The iterations use a continuation in two stages of 30 steps each:
+$\mathbf{b}^0=1$, with $\sigma_q=\sigma^{\rm true}_q$ (or
+\texttt{opt.noise\_guess}) and $r_q=\hat r_q$ (\texttt{spec\_refine.m}).
+Three strategies guard against cycle skipping of $\tau_n(\omega)$:
 \begin{enumerate}
-\item The higher time-shift terms are held at zero by a tight prior,
+\item \emph{direct}: two stages of 30 steps over the whole band. In the
+  first, the higher time-shift terms are held at zero by a tight prior,
   $\mathbf{s}_\tau=(15,10^{-3},10^{-3})$~s, so only a constant $\tau_n$ is
-  fitted.
-\item All terms are freed with the full prior.
+  fitted; then all terms are freed. Freeing all terms at once lets
+  overlapping branches trade delays, and Gauss--Newton then ends in poorer
+  local minima.
+\item \emph{continuation\_global}: frequency continuation. The fit starts
+  at the long periods, where the path delays are a small fraction of a
+  cycle, and the band is widened toward the short periods in
+  \texttt{opt.fcont\_stages} $=4$ stages (zero-phase low-pass of data and
+  operator columns, corners log-spaced over the band), each stage starting
+  from the previous time shifts, with the Legendre basis of the whole band.
+\item \emph{continuation\_banded}: the same, with a time-shift basis on
+  each stage's band, held constant at shorter periods, so the terms fitted
+  at long periods do not extrapolate freely to the short ones.
 \end{enumerate}
-Freeing all terms at once lets overlapping branches trade delays, and
-Gauss--Newton then ends in poorer local minima. At the true structure, the
-median $\chi^2$ of the Love fundamental windows is 2.0 without the
-continuation and 1.13 with it.
+With \texttt{opt.nuis\_start = 'best'} (default) all three are run and the
+one with the highest $\ln\mathcal{L}_r$ is kept for every record.
+
+\emph{Cycle-skip check.} A time shift off by a whole number of cycles at
+all frequencies is harmless; the harmful kind is off by a cycle at the
+short periods but not at the long ones. Every \texttt{opt.jump\_every}
+$=100$ iterations during burn-in, for every branch and both signs,
+$\tau_n(\omega)\to\tau_n(\omega)\pm T(\omega)\,\varrho(\omega)$ is tried,
+with $\varrho=0$ at the longest and 1 at the shortest period (linear in
+$\ln f$), projected on the time-shift basis; after one Gauss--Newton step
+the change is kept if $\ln\mathcal{L}_r$ increases (\texttt{cycle\_jump.m}).
 
 The same procedure applied at the true dispersion gives the reference
 log-likelihood $\ln\mathcal{L}^{\rm true}$ of the true structure, reported
@@ -527,6 +691,7 @@ in the summaries; idagrn data have no ``true'' nuisance parameters.
 \section{Prior on the structure and the noise}\label{sec:prior}
 %======================================================================
 
+\subsection{Uniform priors}
 \begin{itemize}
 \item \textbf{Numbers of control points:} uniform on the set
   $\{(k_v,k_x):0\le k_x\le k_v\le k_{\max}\}$, with $k_{\max}=15$
@@ -534,18 +699,85 @@ in the summaries; idagrn data have no ``true'' nuisance parameters.
   $\xi$ and $\eta$ never have more interior control points than $\vsv$.
 \item \textbf{Control depths:} independent, uniform on $(z_{\min},z_{\max})$.
 \item \textbf{Values:} $\vsv$ values (interior and top) uniform on
-  $[4.0,5.0]$~km/s; $\xi$ values uniform on $[0.90,1.20]$; $\eta$ values
-  (if free) uniform on $[0.80,1.05]$ (\texttt{opt.etamin},
-  \texttt{opt.etamax}); bottom values fixed to the reference.
+  $[4.0,5.0]$~km/s; $\xi$ values uniform on $[\xi_{\min},\xi_{\max}]=[0.85,1.15]$
+  (\texttt{opt.ximin}, \texttt{opt.ximax}; symmetric about 1, so the prior
+  mean is isotropic; runs before 11/2026 used $[0.90,1.20]$, whose induced
+  prior mean of the B-spline profile was about 1.05 in the lid and 1.02 at
+  depth); $\eta$ values (if free) uniform on $[0.80,1.05]$; bottom values
+  fixed to the reference.
 \item \textbf{Noise:} $\ln\sigma_q$ uniform (scale-invariant; implied by
   the symmetric proposal in $\ln\sigma_q$ with acceptance on the
   likelihood ratio alone). $r_q$ uniform on $[0,r_{\max})$, with $r_{\max}=0.98$.
 \end{itemize}
-The tempered target at temperature $T\ge1$ is
+
+\subsection{Optional priors}\label{sec:optprior}
+These multiply the uniform priors; each is off by default. They are
+functions of the profiles on a 1~km grid $z_g\in[z_{\min},z_{\max}]$, not
+of the control points, so they apply the same way for any number of
+control points (\texttt{lr\_common.m}, \texttt{'logprior'}). Each Gaussian
+term counts once per correlation length $\ell$ (default 10~km), i.e.\ a sum
+over the grid is weighted by $\Delta z/\ell$.
+\begin{itemize}
+\item \textbf{Smoothness} (\texttt{opt.smooth\_sig} $=(\sigma_{s,1},\sigma_{s,2})$,
+  km/s/km$^2$):
+  \begin{equation}
+   \ln p_s=-\frac12\sum_{c=1}^{2}\sum_{z_g}\Big(\frac{X_c''(z_g)}{\sigma_{s,c}}\Big)^2\frac{\Delta z}{\ell_s},
+  \end{equation}
+  with $(X_1,X_2)=(\vsv,\vsh)$ (\texttt{opt.smooth\_param = 'vsv\_vsh'},
+  default; $\xi$ is smoothed only through $\vsh$) or $(\vsv,\xi)$
+  (\texttt{'vsv\_xi'}, $\sigma_{s,2}$ in km$^{-2}$; $\sigma_{s,2}\approx2\sigma_{s,1}/\vsv$
+  is about as strong). $X''$ is the second finite difference.
+  $\sigma_s$ is the standard deviation of the allowed curvature:
+  a \emph{larger} $\sigma_s$ is a \emph{weaker} prior; $\sigma_{s,c}=0$
+  switches the term off.
+\item \textbf{$\vsv$ toward the reference} (\texttt{opt.vsv\_ref\_sig} $=\sigma_v$):
+  $\ln p_v=-\tfrac12\sum_{z_g}\big[(\vsv-\vsv^{0})/\sigma_v(z_g)\big]^2\Delta z/\ell_v$,
+  with $\vsv^0$ the reference model of the prep file (fixed through the
+  linearization updates). $\sigma_v$ is a number, or, with
+  \texttt{'step1'}, the posterior standard deviation of the step-1 $\vsv$
+  (Section~\ref{sec:step1}) times \texttt{opt.vsv\_ref\_scale}, floored at
+  \texttt{opt.vsv\_ref\_sig\_min} $=0.01$~km/s (where the step-1 model is
+  tied to its start the std vanishes; \texttt{vsv\_ref\_sigz.m}): the
+  step-1 posterior carried forward.
+\item \textbf{$\xi$ toward a fixed value} (\texttt{opt.xi\_ref\_sig} $=\sigma_\xi$,
+  \texttt{opt.xi\_ref\_mean} $=\bar\xi=1$):
+  $\ln p_\xi=-\tfrac12\sum_{z_g}\big[(\xi-\bar\xi)/\sigma_\xi\big]^2\Delta z/\ell_\xi$.
+  $\bar\xi$ is a fixed value, not the reference model's $\xi$, so an oracle
+  test is not pulled toward the truth.
+\end{itemize}
+
+\subsection{Hierarchical priors}\label{sec:hier}
+The strengths $\sigma_\xi$ (\texttt{opt.xi\_ref\_hier}) and
+$(\sigma_{s,1},\sigma_{s,2})$ (\texttt{opt.smooth\_hier}) can be sampled
+with the model instead of being set. Each has a log-uniform hyperprior on a
+range (\texttt{opt.xi\_ref\_sig\_range} $=[0.005,0.2]$,
+\texttt{opt.smooth\_sig\_range} $=[5\times10^{-5},5\times10^{-3}]$), and the
+prior then includes its normalization,
 \begin{equation}
- \pi_T(\mathbf{m},\bm\sigma,\mathbf{r}\mid\mathbf{d})\propto p(\mathbf{m})\,p(\bm\sigma)\,p(\mathbf{r})\;\mathcal{L}(\mathbf{m},\bm\sigma,\mathbf{r})^{1/T},
+ \ln p_\xi=-\frac12\sum_{z_g}\Big(\frac{\xi-\bar\xi}{\sigma_\xi}\Big)^2\frac{\Delta z}{\ell_\xi}-N_\xi\ln\sigma_\xi,\qquad
+ N_\xi=\frac{z_{\max}-z_{\min}}{\ell_\xi},
 \end{equation}
-and $T=1$ is the posterior.
+and likewise $-N_c\ln\sigma_{s,c}$ for the curvature terms ($N_c$ the number
+of curvature terms per $\ell_s$). Given a profile, the conditional
+posterior of the strength peaks at the profile's own rms departure (or rms
+curvature). The data therefore decide how strongly $\xi$ is pulled toward
+$\bar\xi$; in a dispersion-only test the sampled $\sigma_\xi$ was about 0.03.
+Hierarchical smoothing has an unfavourable feedback: smooth profiles give a
+small sampled $\sigma_s$, which favours smoother profiles. In the step-1
+tests it ran down to the lower bound of its range, the posterior collapsed
+to two interior control points and its uncertainty became far too small
+(Section~\ref{sec:step1}). The same can happen to $\sigma_\xi$ in single
+chains (all $\xi\to\bar\xi$), so the lower bounds of the ranges matter.
+With \texttt{xi\_ref\_hier = false} and \texttt{smooth\_hier = false} the
+user-set strengths are used.
+
+\subsection{Target}
+With $p_o=p_s\,p_v\,p_\xi$ the optional priors, the tempered target at
+temperature $T\ge1$ is
+\begin{equation}
+ \pi_T(\mathbf{m},\bm\sigma,\mathbf{r}\mid\mathbf{d})\propto p(\mathbf{m})\,p_o(\mathbf{m})\,p(\bm\sigma)\,p(\mathbf{r})\;\mathcal{L}(\mathbf{m},\bm\sigma,\mathbf{r})^{1/T},
+\end{equation}
+and $T=1$ is the posterior. Only the likelihood is tempered.
 
 %======================================================================
 \section{Sampling}\label{sec:mcmc}
@@ -556,6 +788,8 @@ and $T=1$ is the posterior.
 \item \textbf{Relinearization} (if the iteration number $i$ satisfies
   $(i-1)\bmod n_{\rm relin}=0$): apply Eq.~\eqref{eq:relin} to every record
   and update $\ln\mathcal{L}$.
+\item \textbf{Cycle-skip check} (burn-in, every \texttt{opt.jump\_every}
+  iterations; Section~\ref{sec:start}).
 \item \textbf{Structural move.} With probability $p_\xi=0.4$ the move acts
   on $\xi$, with probability $p_\eta=0.2$ on $\eta$ (only if it is free),
   otherwise on $\vsv$. One of four move types is chosen with
@@ -576,20 +810,28 @@ and $T=1$ is the posterior.
   operators $\mathbf{G}_r$ at the current $\bm\ell_r$ and the likelihood
   are recomputed, and the move is accepted with probability
   \begin{equation}
-   \alpha=\min\!\Big\{1,\exp\Big[\frac{\ln\mathcal{L}(\mathbf{m}')-\ln\mathcal{L}(\mathbf{m})}{T}\Big]\Big\}.
+   \alpha=\min\!\Big\{1,\exp\Big[\frac{\ln\mathcal{L}(\mathbf{m}')-\ln\mathcal{L}(\mathbf{m})}{T}+\ln p_o(\mathbf{m}')-\ln p_o(\mathbf{m})\Big]\Big\}.
   \end{equation}
-  Birth values come from the prior and deaths are uniform, so the prior and
-  proposal terms cancel and only the likelihood ratio remains. The
-  $T^{1/4}$ factor widens the steps at high temperature.
+  Birth values come from the uniform prior and deaths are uniform, so the
+  uniform-prior and proposal terms cancel; the optional priors $p_o$
+  (Section~\ref{sec:optprior}) enter untempered, so they cancel in the
+  parallel-tempering swaps. The $T^{1/4}$ factor widens the steps at high
+  temperature.
+\item \textbf{Prior hyperparameters} (if hierarchical, Section~\ref{sec:hier}):
+  five Metropolis updates of each sampled strength,
+  $\ln\sigma'=\ln\sigma+0.3\varepsilon$, rejected outside the range and
+  accepted on the ratio of $p_o$ including its normalization. These need
+  no forward calculation.
 \item \textbf{Noise move.} Choose $q$ uniformly. With probability
   $\tfrac12$ propose $\sigma_q'=\sigma_q\,e^{0.05\varepsilon}$, otherwise
   $r_q'=r_q+0.02\varepsilon$. Re-evaluate Eq.~\eqref{eq:logL} for the
   records of that wave type ($\mathbf{G}_r$ is unchanged) and accept with
   the same rule.
 \end{enumerate}
-Initial states are independent draws from the structural prior, with
-$\sigma_q$ equal to the standard deviation of the data of one record of
-the wave type, $r_q=0.5$, and $\bm\ell_r=\bm\ell^{(0)}_r$.
+Initial states are independent draws from the structural prior (and the
+hyperpriors), with $\sigma_q$ equal to the standard deviation of the data
+(divided by $\nu_{rj}$) of one record of the wave type, $r_q=0.5$, and
+$\bm\ell_r=\bm\ell^{(0)}_r$.
 
 \subsection{Plain sampler}
 $N_c$ independent chains at $T=1$ (\texttt{opt.sampler='plain'};
@@ -607,8 +849,10 @@ even. A swap is accepted with probability
  \alpha_{\rm swap}=\min\!\Big\{1,\exp\Big[\big(\ln\mathcal{L}_{p+1}-\ln\mathcal{L}_p\big)\Big(\frac1{T_p}-\frac1{T_{p+1}}\Big)\Big]\Big\}.
 \end{equation}
 Only the $T=1$ chain is saved. The defaults are $N_{\rm ens}=2$, $K_T=6$,
-$T_{\max}=20$ and $1500$ iterations with $750$ burn-in. The current test
-uses $K_T=4$, $T_{\max}=10$ and $1200/600$ iterations.
+$T_{\max}=20$ and $1500$ iterations with $750$ burn-in; the 4-branch tests
+used $N_{\rm ens}=4$ and $1600/800$ iterations. With fixed nuisance
+parameters (oracle tests) the likelihood is much more sharply peaked and
+the swaps need a wider ladder ($K_T=8$, $T_{\max}=100$).
 
 \subsection{Alternative: sampled nuisance parameters}
 With \texttt{opt.nuisance='sample'} (plain sampler only), $t_{rna}$ and
@@ -661,6 +905,23 @@ moves, so the reference is updated only at the end of burn-in. With
 \texttt{opt.update\_ref = 'none'} the step-1 reference is used
 throughout.
 
+\subsection{Staged re-linearization of the dispersion (\texttt{'lin'})}
+With \texttt{opt.update\_ref = 'lin'} only the MINEOS linearization of the
+dispersion (Eq.~\ref{eq:disp}: $c^{\rm ref}$ and kernels at the dispersion
+nodes) is recomputed; the waveform reference ($U^{\rm ref}_{rjn}$ and the
+$c^{w,\rm ref}_n$ in Eq.~\eqref{eq:forward}) is kept, so the nuisance
+parameters keep their meaning and the likelihood of a given dispersion is
+unchanged; only the mapping from the model to its dispersion becomes more
+accurate (\texttt{apply\_linearization.m}). The burn-in is split into
+\texttt{opt.lin\_updates} equal stages. At the end of each, all chains or
+ensembles wait for each other, the mean of their late-stage samples (last
+$f_{\rm upd}$) gives a new linearization card (as above, with MINEOS only,
+no \texttt{idagrn6}), and every state continues from where it stopped.
+The sampling phase then uses the last linearization. The summary reports,
+for every stage, the change of the states' dispersion and of their
+log-likelihoods. In the tests three stages reduced the dispersion change to
+0.03--0.12\% rms.
+
 \subsection{Checking the linearization (D5)}
 \texttt{D5\_step2\_check\_linearization.m} evaluates, by full MINEOS and
 by Eq.~\eqref{eq:disp} about the run's (post-burn-in) reference:
@@ -689,6 +950,124 @@ and sampler settings are unchanged, and the tag is \texttt{\_it2}. It can
 be repeated until the posterior mean stops changing.
 
 %======================================================================
+\section{Step 1: the reference model}\label{sec:step1}
+%======================================================================
+
+Step 1 estimates an isotropic $\vsv(z)$ from fundamental-mode Rayleigh
+waves; its result is the reference model of step 2
+(\texttt{CARDS/RLinv\_step1.card}, \texttt{step1\_result.mat}). Three
+versions write the same outputs, so D2 can follow any of them. All start
+from the same model (\texttt{opt.s1\_start\_model}: \texttt{'pa5\_iso'},
+isotropic PA5 without its lid and low-velocity zone, $\vsv$ linear from the
+Moho to 250~km, PA5's $V_P/V_S$, $\rho/V_S$, $\eta$ and $Q$; or isotropic
+PREM) and keep its $\xi$, $\vpv/\vsv$, $\vph/\vsh$, $\rho/\vsv$ and $\eta$
+exactly, so only $\vsv$ changes (\texttt{s1\_card\_from\_vsv.m}).
+
+\emph{Synthetic dispersion data} (linearized and Bayesian dispersion
+versions): MINEOS branch-0 Rayleigh phase velocities of the true model at
+12 periods log-spaced over 20--100~s, with an assumed relative error
+\texttt{opt.s1\_cstd} $=0.25\%$ and Gaussian noise of that standard
+deviation (\texttt{opt.s1b\_noise}, seed \texttt{opt.s1b\_noise\_seed}).
+The Bayesian version can also read measured dispersion (period, $c$,
+$\sigma_c$) from a file (\texttt{opt.s1b\_disp\_file}).
+
+\subsection{Linearized (\texttt{D1\_step1\_rayleigh\_isotropic\_inv.m})}
+Damped, smoothed least squares with the MINEOS kernels recomputed after
+each of 4 iterations (\texttt{run\_mineos\_inv\_RaylLove\_Vsvh\_Vpvh\_Rho\_Eta.m}).
+Its uncertainty is the data covariance propagated through the generalized
+inverse, $\mathbf{C}_m=\mathbf{G}^{-g}\mathbf{C}_c\mathbf{G}^{-g\T}$, which
+does not include the damping and smoothing as a prior covariance; it is
+saved in the same format as the Bayesian versions for comparison.
+
+\subsection{Bayesian, dispersion (\texttt{D1\_step1\_Bayesian\_disp.m})}
+The dispersion-only rjMcMC of D7 (\texttt{run\_disp\_inv.m}) for $\vsv$ only
+(\texttt{xi\_fixed}): the B-spline profile of Section~\ref{sec:model}
+between $z_{\min}=7$ and $z_{\max}=350$~km, bottom tied to the starting
+model, $\vsv$ uniform on $[3.8,5.0]$~km/s, $k_{\max}=15$; the dispersion
+linearized about the starting model with MINEOS kernels
+(\texttt{s1\_lin\_at.m}) and re-linearized \texttt{opt.s1b\_lin\_updates}
+$=2$ times about the posterior mean (each stage a new set of chains; 4
+chains of 20{,}000 iterations, 10{,}000 burn-in). The likelihood is
+Gaussian in the relative errors, with a sampled error multiplier $\kappa$
+(\texttt{opt.s1b\_noise\_hier}, default on; log-uniform on $[0.1,10]$):
+\begin{equation}
+ \ln\mathcal{L}=-\frac12\sum_\ell\Big(\frac{c_\ell(\mathbf{m})-c^{\rm obs}_\ell}{\kappa\,\sigma_{c,\ell}}\Big)^2-N_\ell\ln\kappa ,
+\end{equation}
+so the data decide how well they can be fit; the figure shows the
+posterior-scaled error bars $2\kappa\sigma_c$ next to the assumed ones.
+Smoothing is hierarchical by default (\texttt{opt.s1b\_smooth\_hier});
+there is no prior toward a reference $\vsv$. The step-1 card is the
+posterior mean; \texttt{s1\_unc} holds the posterior mean, standard
+deviation, 5/16/50/84/95\% quantiles, samples, $\hat R$, the sampled
+$\kappa$ and smoothing strength and the numbers of control points. The
+figure shows the profile with its 5--95\% and 16--84\% bands, the data
+with the predicted 5--95\% and 16--84\% bands, and the interior control
+points per chain.
+
+\subsection{Bayesian, waveforms (\texttt{D1\_step1\_Bayesian\_waveform.m})}
+The step-2 machinery set up for step 1: D2's prep about the starting
+model with \texttt{opt.s1w\_nm} $=1$ branch (fundamental-mode synthetics),
+D3 with Rayleigh records only (\texttt{waves = 2}), $\vsv$ only
+(\texttt{xi\_fixed}), staged re-linearization (\texttt{update\_ref = 'lin'},
+2 stages), parallel tempering (4 ensembles, 1600 iterations, 800 burn-in),
+nuisance and noise as in step 2, hierarchical smoothing by default; then
+D4's figures. The step-1 card is the posterior-mean $\vsv$ on the starting
+card's nodes. Runs can be launched as parallel background Octave processes
+(\texttt{opt.s1w\_launch = 'parallel'}).
+
+\subsection{Verification of the uncertainties}
+Six noise realizations of the synthetic dispersion (noise of the full
+assumed error, 0.5\% at the time), inverted by the linearized and the
+Bayesian dispersion versions (fixed smoothing off). Truth = PA5 $\vsv$
+between the Moho and 350~km:
+
+\begin{center}\small
+\begin{tabular}{lcccc}
+\toprule
+ & in 16--84\% & in 5--95\% & rms $(v^{\rm true}-\bar v)/s_v$ & median $s_v$ (km/s)\\
+\midrule
+ideal & 68\% & 90\% & 1 & \\
+linearized & 28\% (13--48) & 53\% (40--62) & 2.6 (2.2--3.4) & 0.048\\
+Bayesian, dispersion & 81\% (71--90) & 95\% (92--97) & 0.8 (0.66--0.90) & 0.15\\
+\bottomrule
+\end{tabular}
+\end{center}
+The linearized uncertainties are about 2.6 times too narrow; the Bayesian
+ones are honest and slightly conservative. With hierarchical smoothing the
+sampled curvature strength ran down to the lower bound of its range
+($5\times10^{-5}$~km/s/km$^2$), the chains kept two interior control points
+and the posterior standard deviation fell to about 0.03~km/s, with the
+truth's lid and low-velocity zone outside the 5--95\% band
+(Section~\ref{sec:hier}). The waveform version has not yet been verified
+with full-length runs.
+
+%======================================================================
+\section{Diagnostic tests}\label{sec:tests}
+%======================================================================
+
+\paragraph{Dispersion-only inversion (D7).} \texttt{D7\_dispersion\_only\_test.m}
+inverts the true dispersion of the modeled branches directly, with the
+model space, priors, proposals and linearization of a step-2 setup and no
+waveforms or nuisance parameters (\texttt{run\_disp\_inv.m}). Two data
+sets: \texttt{'lin'}, the linearized dispersion of the true model (exactly
+representable: tests resolution and parameterization only), and
+\texttt{'mineos'}, its exact MINEOS dispersion (adds the linearization
+error). The relative error is a number or, with \texttt{disp\_sig\_from},
+the posterior std/mean of a waveform run's phase velocities per period and
+branch (the precision the waveforms deliver). With
+\texttt{disp\_prior\_from\_opt} the prior options of \texttt{opt} replace
+those of the setup, and \texttt{disp\_noise\_hier} samples an error
+multiplier per wave type. If $\xi$ is recovered here but not by the
+waveform inversion, the problem is in the waveform and nuisance part;
+otherwise in the resolution, the parameterization or the linearization.
+
+\paragraph{Oracle runs.} With the true model as reference
+(\texttt{prep\_trueref}) and \texttt{opt.fix\_nuisance}, or with
+\texttt{opt.fix\_tau}, the nuisance parameters are held at their true
+values (Section~\ref{sec:nuisprior}), separating the structural problem
+from the nuisance trade-offs.
+
+%======================================================================
 \section{Outputs and diagnostics}\label{sec:out}
 %======================================================================
 
@@ -696,7 +1075,8 @@ After burn-in every 5th iteration is saved (thinning). Each sample stores:
 \begin{itemize}
 \item $\vsv$, $\vsh$, $\xi$ and $\eta$ on a 2-km depth grid (0--400~km);
 \item the dispersion curves $c^w_n(T_\ell)$;
-\item $k_v$, $k_x$, $\bm\sigma$ and $\mathbf{r}$;
+\item $k_v$, $k_x$, $\bm\sigma$ and $\mathbf{r}$, and the sampled prior
+  strengths $\sigma_\xi$ and $\sigma_{s,c}$ if hierarchical;
 \item the conditional posterior means of the nuisance coefficients,
   $\mathbf{t}^0+\widehat{\delta\mathbf{t}}$ and
   $\bm\theta^0+\widehat{\delta\bm\theta}$, per record and branch.
@@ -710,10 +1090,22 @@ the chain variances) and between-chain variance $B=n\,\mathrm{Var}(\text{chain m
 \end{equation}
 and $\hat R\to1$ at convergence.
 
+\texttt{summary.txt} reports, among others, $\hat R$, the coverage of the
+truth by the 5--95\% bands, the posterior logL per chain against
+$\ln\mathcal{L}^{\rm true}$, the numbers of control points, the noise
+parameters, the prior settings (and sampled strengths), the linearization
+updates and $\xi$ averaged over depth bands. The figures are: posteriors;
+chain means and numbers of control points; dispersion fits per branch;
+waveform fits; path delays and time shifts; diagnostics (logL, noise,
+$\hat R$); parallel-tempering diagnostics; posterior samples; and the
+pre-P noise diagnostics (noise levels relative to each record's peak,
+noise spectra, autocorrelation with the AR(1) model, absolute levels per
+station). All axes use 15-pt text (\texttt{opt.plot\_fontsize}).
+
 The waveform figures show, for each record:
 \begin{itemize}
 \item the data $\mathbf{d}_r$;
-\item the PREM synthetic;
+\item the step-1 starting-model synthetic;
 \item the reference prediction $\Ifft[\sum_nU^{\rm ref}_{rjn}]$, with no
   nuisance correction;
 \item the final prediction: the exact waveforms of Eq.~\eqref{eq:forward}
@@ -729,12 +1121,20 @@ The waveform figures show, for each record:
   (Eq.~\ref{eq:disp}). MINEOS and \texttt{idagrn6} are rerun only when the
   reference is updated (Section~\ref{sec:refupd}), never for individual
   proposals.
-\item The array is treated as flat and the wavefield as locally plane
-  across it. Amplitude variations across the array come only from
-  $U^{\rm ref}$.
-\item Data branches $n_m,\dots,N_b^{\rm data}-1$ (8--15) are not modeled.
-  Their energy in the overtone windows acts as additional noise, which the
-  hierarchical $\sigma_q$ and $r_q$ absorb.
+\item The moveout across the array uses great-circle distances; the
+  arrival-angle anomaly perturbs it as a local plane wave
+  (Eq.~\ref{eq:geom}). Amplitude variations across the array come only
+  from $U^{\rm ref}$.
+\item Data branches $n\ge n_m$ are not modeled. Their energy in the
+  windows acts as additional noise, which the hierarchical $\sigma_q$ and
+  $r_q$ absorb.
+\item The per-branch nuisance functions can trade phase between
+  overlapping branches. In 4-branch synthetic tests the Love fundamental
+  mode came out 1--1.7\% fast with free nuisance parameters; with the
+  nuisance fixed at its true values the long-period bias fell to 0.2\%,
+  and with stronger smoothing the short-period bias as well.
+\item The AR(1) model does not whiten band-limited noise well (residual
+  lag-one correlation about 0.6); the frequency-domain likelihood does.
 \item The time shifts $\tau_n(\omega)$ and arrival angles
   $\delta\theta_n(\omega)$ are common to all stations of a record. Their
   variation across the array is described by the structure only.
@@ -748,12 +1148,14 @@ The waveform figures show, for each record:
 \text{Symbol} & Meaning \\
 \midrule
 \endhead
-e,\;N_e & event index; number of events (15)\\
+e,\;N_e & event index; number of events (14 in the synthetic test)\\
 j,\;N_s & station index; number of stations (16)\\
 w & wave type: $L$ (Love, transverse) or $R$ (Rayleigh, vertical)\\
-r=(e,w),\;N_r & record (one event, one component, all stations); number of records (30)\\
-n,\;n_m & mode branch index ($0$ = fundamental); number of modeled branches (8)\\
-N_b^{\rm data} & number of branches in the synthetic data (16)\\
+r=(e,w),\;N_r & record (one event, one component, all stations); number of records\\
+n,\;n_m & mode branch index ($0$ = fundamental); number of modeled branches (\texttt{opt.nm})\\
+N_b^{\rm data} & number of branches in the synthetic data (\texttt{opt.nbranch\_data})\\
+(v_1,t_1,v_2,t_2) & ASWMS-Q window of an event (A3)\\
+\nu^{\rm abs}_{rj},\;\nu_{rj} & pre-P noise std of station $j$; relative to the record peak\\
 q & window type: 1 Love overtone, 2 Love fundamental, 3 Rayleigh overtone, 4 Rayleigh fundamental\\
 (x_j,y_j) & station east/north coordinates relative to the array center (km)\\
 \Delta_e,\;\Delta_{ej} & epicentral distance to the array center and to station $j$ (km)\\
@@ -765,10 +1167,11 @@ f_1\dots f_4 & band-pass corners (1/112, 1/100, 1/20, 1/17 Hz)\\
 h,\;H & time-domain Tukey window; frequency-domain cosine band-pass taper\\
 \Ifft & band spectrum $\to$ real time series, Eq.~\eqref{eq:ifft}\\
 U^{w,\rm ref}_n(T) & reference-model group velocity of branch $n$\\
-U^{\rm b}_w,U^{\rm ov}_w,U^{\rm f}_w & group-velocity bounds of the windows (km/s)\\
+U^{\rm b}_w,U^{\rm ov}_w,U^{\rm f}_w,U^{\rm w}_w & group-velocity bounds of the windows (km/s)\\
 \mathbf{d}_r,\;N_{d,r},\;N_d & data vector of record $r$; its length; total number of data\\
-s_r & normalization of record $r$ (peak of the noise-free windowed data)\\
-\sigma^{\rm true},\;\hat r_q & noise level of the synthetic noise (0.03); empirical lag-one correlation\\
+s_r & normalization of record $r$ (peak of the windowed data)\\
+\sigma^{\rm true}_q,\;\hat r_q & noise level of the synthetic noise; empirical lag-one correlation\\
+p_j(\varphi) & local plane-wave path term of station $j$ (km)\\
 U^{\rm ref}_{rjn}(\omega) & reference spectrum: single-branch synthetic of the reference model\\
 z,\;z_w & depth below the seafloor; water depth (km)\\
 z_{\min},z_{\max} & inverted depth range (7, 350 km)\\
@@ -810,6 +1213,12 @@ n_{\rm relin} & iterations between relinearizations (default 1)\\
 \Delta_\tau^{\max},\Delta_\theta^{\max} & maximum relinearization steps (2 s, 3$^\circ$)\\
 T,\;T_k,\;T_{\max},\;K_T & temperature; ladder; maximum; number of temperatures\\
 \pi_T & tempered posterior\\
+p_o=p_sp_vp_\xi & optional priors: smoothness, $\vsv$ toward the reference, $\xi$ toward $\bar\xi$\\
+\sigma_{s,c},\;\ell_s & curvature strength of smoothed profile $c$ (km/s/km$^2$); its correlation length (10 km)\\
+\sigma_v(z),\;\ell_v & width of the $\vsv$ prior (km/s; number or step-1 std); its correlation length\\
+\sigma_\xi,\;\bar\xi,\;\ell_\xi,\;N_\xi & strength, mean (1) and correlation length of the $\xi$ prior; number of its terms\\
+\xi_{\min},\xi_{\max} & bounds of the uniform $\xi$ prior (0.85, 1.15)\\
+\kappa & sampled multiplier of the dispersion errors (step 1, D7)\\
 p_\xi,\;p_\eta,\;s_z,\;s_v & probabilities of a $\xi$ (0.4) and an $\eta$ move (0.2, if free); depth step (10 km); value steps\\
 N_{\rm burn},\;f_{\rm upd} & burn-in iterations; fraction of the burn-in averaged for the reference update (0.2)\\
 \varepsilon & standard normal random number\\
