@@ -7,7 +7,7 @@ function varargout = lr_common(action, varargin)
 %   [m, ok, set, mv] = lr_common('propose', m, cfg, mc, T)
 %   [S, ok] = lr_common('disp', S, m, cfg, Tdisp, fb, nm, which)
 %   v = lr_common('profiles', S, zplot, cfg)        [vsv vsh xi eta] on zplot
-%   lp = lr_common('logprior', m, cfg, mc)          smoothness log prior
+%   lp = lr_common('logprior', m, cfg, mc)          smoothness + reference log prior
 %
 % Each of m.V (Vsv), m.X (xi) and, with mc.eta_free, m.E (eta) is one
 % clamped cubic B-spline from the Moho (cfg.zmin) to cfg.zmax:
@@ -41,6 +41,18 @@ function varargout = lr_common(action, varargin)
 % k: it favours fewer, smoother control points). The acceptance ratio of
 % the structural moves includes its change (untempered, so it cancels in
 % the parallel-tempering swaps).
+%
+% Optional prior toward the reference Vsv (mc.vsv_ref_sig, km/s; 0 = off):
+% a Gaussian penalty on the departure of Vsv from the reference model of
+% the prep file (cfg.refp: the step-1 model, or the true model in an
+% oracle test; fixed through the linearization updates), between the Moho
+% and zmax,
+%   log p_r(m) = -1/2 int ((Vsv(z) - Vsv_ref(z))/vsv_ref_sig)^2 dz / mc.vsv_ref_len,
+% i.e. independent N(Vsv_ref, vsv_ref_sig^2) every mc.vsv_ref_len km
+% (default 10 km), on the same 1 km grid. LARGER vsv_ref_sig = WEAKER
+% prior. xi is not affected. It multiplies the uniform prior on Vsv
+% (mc.vsmin..vsmax still bounds it) and enters the acceptance ratios like
+% the smoothness prior.
 switch action
     case 'draw_prior'
         [cfg, mc] = varargin{:};
@@ -107,11 +119,18 @@ switch action
         varargout = {S, ok};
     case 'logprior'
         [m, cfg, mc] = varargin{:};
-        lp = 0; sg = [0 0];
+        lp = 0; sg = [0 0]; sr = 0;
         if isfield(mc, 'smooth_sig') && ~isempty(mc.smooth_sig), sg = mc.smooth_sig(:)' .* [1 1]; end
+        if isfield(mc, 'vsv_ref_sig') && ~isempty(mc.vsv_ref_sig), sr = mc.vsv_ref_sig; end
+        if ~any(sg > 0) && ~(sr > 0), varargout = {0}; return; end
+        dz = 1; zg = (cfg.zmin:dz:cfg.zmax)';
+        vs = bspline_profile([cfg.zmin; m.V.zc(:); cfg.zmax], [m.V.ev(1); m.V.vc(:); m.V.ev(2)], zg);
+        if sr > 0                                   % prior toward the reference Vsv
+            vr = interp1(cfg.refp.z, cfg.refp.vsv, zg, 'linear', 'extrap');
+            lr = 10; if isfield(mc, 'vsv_ref_len') && ~isempty(mc.vsv_ref_len), lr = mc.vsv_ref_len; end
+            lp = lp - 0.5*sum(((vs - vr)/sr).^2)*dz/lr;
+        end
         if any(sg > 0)
-            dz = 1; zg = (cfg.zmin:dz:cfg.zmax)';
-            vs = bspline_profile([cfg.zmin; m.V.zc(:); cfg.zmax], [m.V.ev(1); m.V.vc(:); m.V.ev(2)], zg);
             xi = bspline_profile([cfg.zmin; m.X.zc(:); cfg.zmax], [m.X.ev(1); m.X.vc(:); m.X.ev(2)], zg);
             sp = 'vsv_vsh'; if isfield(mc, 'smooth_param') && ~isempty(mc.smooth_param), sp = mc.smooth_param; end
             switch sp

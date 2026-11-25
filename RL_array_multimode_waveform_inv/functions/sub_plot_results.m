@@ -123,6 +123,11 @@ for fo = [1 fid]
     kv = cell2mat(cellfun(@(x) x.kv, svc, 'uniformoutput', false));
     fprintf(fo, 'interior control points: Vsv median %g (5-95%%: %g-%g); xi median %g (5-95%%: %g-%g)\n', ...
         median(kv), round(prctile_(kv', 5)), round(prctile_(kv', 95)), median(kx), round(prctile_(kx', 5)), round(prctile_(kx', 95)));
+    pr_ = struct('smooth_sig', [0 0], 'smooth_param', 'vsv_vsh', 'smooth_len', 10, 'vsv_ref_sig', 0, 'vsv_ref_len', 10);
+    for f_ = fieldnames(pr_)', if isfield(mc, f_{1}) && ~isempty(mc.(f_{1})), pr_.(f_{1}) = mc.(f_{1}); end, end
+    pf_ = @(f, d) pr_.(f);
+    fprintf(fo, 'priors: smoothness smooth_sig %s (%s, per %g km); reference Vsv vsv_ref_sig %g km/s (per %g km; 0 = off)\n', ...
+        mat2str(pf_('smooth_sig', [0 0])), pf_('smooth_param', 'vsv_vsh'), pf_('smooth_len', 10), pf_('vsv_ref_sig', 0), pf_('vsv_ref_len', 10));
 end
 R4 = cell2mat(cellfun(@(x) x.rho, svc, 'uniformoutput', false));
 S4 = cell2mat(cellfun(@(x) x.sig, svc, 'uniformoutput', false));

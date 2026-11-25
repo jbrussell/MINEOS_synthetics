@@ -140,6 +140,11 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   'vsv_xi': [Vsv (km/s/km^2), xi (1/km^2)], independent; sig_xi ~ 2*sig_sv/Vsv
     ...                                  %     (about 2e-4 for 4e-4) is comparable to the 'vsv_vsh' prior
     'smooth_len', 10, ...                % depth interval (km) of one Gaussian curvature term (larger = weaker prior)
+    'vsv_ref_sig', 0, ...                % prior toward the reference Vsv (km/s; 0 = off): N(Vsv_ref(z), vsv_ref_sig^2)
+    ...                                  %   every vsv_ref_len km between the Moho and zmax, Vsv_ref = the reference
+    ...                                  %   model of the prep file (step-1 model; true model in an oracle test).
+    ...                                  %   LARGER vsv_ref_sig = WEAKER prior. xi is not affected (lr_common.m)
+    'vsv_ref_len', 10, ...               % depth interval (km) of one Gaussian term of that prior (larger = weaker prior)
     'fund_margin', [0.4 0.2], ...        % 'fund' window start margin (km/s) [Love Rayleigh]
     'U_start',  [], ...                  % window start group velocity (km/s; scalar or [Love Rayleigh]);
     ...                                  %   [] = max U of branches 1..nm-1 of the reference + 0.6 km/s

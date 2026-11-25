@@ -71,6 +71,8 @@ mc.p_xi  = 0.4;                              % fraction of moves on xi
 mc.smooth_sig = og('smooth_sig', [0 0]);     % curvature prior on the smooth_param profiles (0 = off; lr_common)
 mc.smooth_len = og('smooth_len', 10);        % ... one N(0, sig^2) curvature term per smooth_len km
 mc.smooth_param = og('smooth_param', 'vsv_vsh'); % ... profiles smoothed: 'vsv_vsh' or 'vsv_xi'
+mc.vsv_ref_sig = og('vsv_ref_sig', 0);       % prior toward the reference Vsv (km/s; 0 = off; lr_common)
+mc.vsv_ref_len = og('vsv_ref_len', 10);      % ... one N(Vsv_ref, sig^2) term per vsv_ref_len km
 % eta (opt.eta_free): held at the reference model by default; if free, a
 % third transdimensional B-spline profile (ke <= kv, bottom tied to the
 % reference, U prior), updated in a fraction p_eta of the moves
