@@ -6,7 +6,7 @@ function D = read_event_data(opt, ev, sta_names, comp, tg)
 % (s after the CMT centroid time ev.t_cent, i.e. the time axis of the
 % idagrn6 reference synthetics), in the station order sta_names.
 %
-% ev        : one event of read_cmtsolution.m (id, t_cent)
+% ev        : one event of rl_read_cmtsolution.m (id, t_cent)
 % D         : [] if there is no event file or event.isgood == 0
 %             (A3b_run_exam_winpara.m); otherwise
 %   U       : [numel(tg) x Nst] traces; NaN where a trace does not reach
@@ -42,6 +42,9 @@ if exist(f, 'file') ~= 2, return; end
 S = load(f); event = S.event;
 if isfield(event, 'isgood') && ~event.isgood, return; end
 tg = tg(:); dt = tg(2) - tg(1); Nst = numel(sta_names);
+if ~isfield(ev, 't_cent')
+    error('read_event_data: the event struct has no t_cent (read it with rl_read_cmtsolution.m; check which -all rl_read_cmtsolution)');
+end
 tc = (ev.t_cent - datenum(1970, 1, 1))*86400;    % centroid time (epoch s)
 D.U = NaN(numel(tg), Nst); D.present = false(Nst, 1); D.dist = NaN(Nst, 1); D.nstd = NaN(Nst, 1);
 maxlag = optget(opt, 'noise_maxlag', 12); D.nacf = NaN(Nst, maxlag + 1);

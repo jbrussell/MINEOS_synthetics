@@ -39,7 +39,7 @@ addpath(fullfile(opt.mdir, 'functions'));
 % stations and events
 fid = fopen(opt.stationfile); S = textscan(fid, '%s %f %f %f'); fclose(fid);
 sta = struct('name', {S{1}}, 'lat', S{2}, 'lon', S{3}, 'elev', S{4});
-ev = read_cmtsolution(opt.eventfile);
+ev = rl_read_cmtsolution(opt.eventfile);
 nev = numel(ev); Nst = numel(sta.name);
 % optional arrival-angle anomalies (opt.synth_arrival_shift = [min max], deg;
 % [] = none): each source is moved along the small circle about the array

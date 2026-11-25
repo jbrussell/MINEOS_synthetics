@@ -75,7 +75,7 @@ P.len_hr = og('len_hr', 1);
 fid = fopen(og('stationfile', fullfile(here, 'stations_nomelt.txt')));
 S = textscan(fid, '%s %f %f %f'); fclose(fid);
 P.sta = struct('name', {S{1}}, 'lat', S{2}, 'lon', S{3}, 'elev', S{4});
-P.ev = read_cmtsolution(og('eventfile', fullfile(here, 'events_nomelt_2012.cmt')));
+P.ev = rl_read_cmtsolution(og('eventfile', fullfile(here, 'events_nomelt_2012.cmt')));
 
 % 1. reference card
 rc = og('ref_card', []);

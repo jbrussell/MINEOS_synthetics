@@ -306,4 +306,4 @@ windows).
 | `update_reference.m` | new reference card from Vsv/Vsh(/η) profiles (e.g. a posterior mean), MINEOS + idagrn6 rerun (end-of-burn-in update, D6) |
 | `compare_runs.m` | posteriors of several runs in one figure |
 | `plot_record_sections.m` | record sections of the full mode-sum synthetics (D2) |
-| `read_cmtsolution.m`, `gc_dist_az.m`, `tukeywin_.m`, … | helpers |
+| `rl_read_cmtsolution.m`, `gc_dist_az.m`, `tukeywin_.m`, … | helpers |

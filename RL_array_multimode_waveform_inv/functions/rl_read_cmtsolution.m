@@ -1,5 +1,5 @@
-function ev = read_cmtsolution(fname)
-% ev = read_cmtsolution(fname)
+function ev = rl_read_cmtsolution(fname)
+% ev = rl_read_cmtsolution(fname)
 % Read Global CMT solutions in CMTSOLUTION format (blocks separated by
 % blank lines; lines starting with # are comments).
 % ev(k): id, region, lat, lon, dep (km, centroid), M = [Mrr Mtt Mpp Mrt
@@ -7,6 +7,8 @@ function ev = read_cmtsolution(fname)
 % mt (mt in units of 1e20 dyne-cm / fac), and the times (datenum, UTC)
 % t_pde (hypocentral origin time of the first line) and t_cent = t_pde +
 % tshift (centroid time; time zero of the idagrn6 synthetics).
+% (Named rl_... so that no other read_cmtsolution / read_CMTSOLUTION on the
+% MATLAB path - file names are case-insensitive on macOS - can shadow it.)
 txt = fileread(fname);
 lines = regexp(txt, '\r?\n', 'split');
 ev = struct('id', {}, 'region', {}, 'lat', {}, 'lon', {}, 'dep', {}, 'M', {}, ...
