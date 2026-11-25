@@ -145,6 +145,13 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   model of the prep file (step-1 model; true model in an oracle test).
     ...                                  %   LARGER vsv_ref_sig = WEAKER prior. xi is not affected (lr_common.m)
     'vsv_ref_len', 10, ...               % depth interval (km) of one Gaussian term of that prior (larger = weaker prior)
+    'ximin', 0.85, 'ximax', 1.15, ...    % uniform prior on the xi control points (default symmetric about 1, prior
+    ...                                  %   mean 1 = isotropic; runs before 11/2026 used 0.90-1.20, prior mean 1.05)
+    'xi_ref_sig', 0, ...                 % Gaussian prior on xi toward xi_ref_mean (0 = OFF): N(xi_ref_mean, xi_ref_sig^2)
+    ...                                  %   every xi_ref_len km between the Moho and zmax, on top of the uniform
+    ...                                  %   ximin-ximax. LARGER xi_ref_sig = WEAKER prior (e.g. 0.03-0.05; lr_common.m)
+    'xi_ref_mean', 1, ...                % its mean (1 = isotropic; a fixed value, not the reference model's xi)
+    'xi_ref_len', 10, ...                % depth interval (km) of one Gaussian term of that prior (larger = weaker prior)
     'fund_margin', [0.4 0.2], ...        % 'fund' window start margin (km/s) [Love Rayleigh]
     'U_start',  [], ...                  % window start group velocity (km/s; scalar or [Love Rayleigh]);
     ...                                  %   [] = max U of branches 1..nm-1 of the reference + 0.6 km/s

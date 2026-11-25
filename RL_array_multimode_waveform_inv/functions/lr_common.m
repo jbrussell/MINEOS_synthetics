@@ -7,7 +7,7 @@ function varargout = lr_common(action, varargin)
 %   [m, ok, set, mv] = lr_common('propose', m, cfg, mc, T)
 %   [S, ok] = lr_common('disp', S, m, cfg, Tdisp, fb, nm, which)
 %   v = lr_common('profiles', S, zplot, cfg)        [vsv vsh xi eta] on zplot
-%   lp = lr_common('logprior', m, cfg, mc)          smoothness + reference log prior
+%   lp = lr_common('logprior', m, cfg, mc)          smoothness, Vsv and xi log priors
 %
 % Each of m.V (Vsv), m.X (xi) and, with mc.eta_free, m.E (eta) is one
 % clamped cubic B-spline from the Moho (cfg.zmin) to cfg.zmax:
@@ -53,6 +53,12 @@ function varargout = lr_common(action, varargin)
 % prior. xi is not affected. It multiplies the uniform prior on Vsv
 % (mc.vsmin..vsmax still bounds it) and enters the acceptance ratios like
 % the smoothness prior.
+%
+% Optional prior on xi toward a fixed value (mc.xi_ref_sig; 0 = off, the
+% default): log p_x(m) = -1/2 int ((xi(z) - xi_ref_mean)/xi_ref_sig)^2 dz /
+% mc.xi_ref_len, with xi_ref_mean default 1 (isotropic; a fixed value, not
+% the reference model's xi, so an oracle test does not pull toward the
+% truth). It multiplies the uniform prior mc.ximin..ximax.
 switch action
     case 'draw_prior'
         [cfg, mc] = varargin{:};
@@ -119,19 +125,25 @@ switch action
         varargout = {S, ok};
     case 'logprior'
         [m, cfg, mc] = varargin{:};
-        lp = 0; sg = [0 0]; sr = 0;
+        lp = 0; sg = [0 0]; sr = 0; sx = 0;
         if isfield(mc, 'smooth_sig') && ~isempty(mc.smooth_sig), sg = mc.smooth_sig(:)' .* [1 1]; end
         if isfield(mc, 'vsv_ref_sig') && ~isempty(mc.vsv_ref_sig), sr = mc.vsv_ref_sig; end
-        if ~any(sg > 0) && ~(sr > 0), varargout = {0}; return; end
+        if isfield(mc, 'xi_ref_sig') && ~isempty(mc.xi_ref_sig), sx = mc.xi_ref_sig; end
+        if ~any(sg > 0) && ~(sr > 0) && ~(sx > 0), varargout = {0}; return; end
         dz = 1; zg = (cfg.zmin:dz:cfg.zmax)';
         vs = bspline_profile([cfg.zmin; m.V.zc(:); cfg.zmax], [m.V.ev(1); m.V.vc(:); m.V.ev(2)], zg);
+        xi = bspline_profile([cfg.zmin; m.X.zc(:); cfg.zmax], [m.X.ev(1); m.X.vc(:); m.X.ev(2)], zg);
+        if sx > 0                                   % prior on xi toward a fixed value
+            xm = 1; if isfield(mc, 'xi_ref_mean') && ~isempty(mc.xi_ref_mean), xm = mc.xi_ref_mean; end
+            lx = 10; if isfield(mc, 'xi_ref_len') && ~isempty(mc.xi_ref_len), lx = mc.xi_ref_len; end
+            lp = lp - 0.5*sum(((xi - xm)/sx).^2)*dz/lx;
+        end
         if sr > 0                                   % prior toward the reference Vsv
             vr = interp1(cfg.refp.z, cfg.refp.vsv, zg, 'linear', 'extrap');
             lr = 10; if isfield(mc, 'vsv_ref_len') && ~isempty(mc.vsv_ref_len), lr = mc.vsv_ref_len; end
             lp = lp - 0.5*sum(((vs - vr)/sr).^2)*dz/lr;
         end
         if any(sg > 0)
-            xi = bspline_profile([cfg.zmin; m.X.zc(:); cfg.zmax], [m.X.ev(1); m.X.vc(:); m.X.ev(2)], zg);
             sp = 'vsv_vsh'; if isfield(mc, 'smooth_param') && ~isempty(mc.smooth_param), sp = mc.smooth_param; end
             switch sp
                 case 'vsv_vsh', P = [vs, vs .* sqrt(xi)];

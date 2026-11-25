@@ -66,13 +66,16 @@ mc.nit   = og('nit', 8000);  mc.burn = og('burn', 3000);  mc.thin = 5;
 mc.kvmin = 0;  mc.kvmax = og('kvmax', 15);   % interior Vsv control points
 mc.kxmin = 0;  mc.kxmax = og('kxmax', 15);   % interior xi control points
 mc.vsmin = 4.0; mc.vsmax = 5.0;              % U prior on Vsv (km/s)
-mc.ximin = 0.90; mc.ximax = 1.20;            % U prior on xi
+mc.ximin = og('ximin', 0.85); mc.ximax = og('ximax', 1.15);   % U prior on xi (control points; default symmetric about 1)
 mc.p_xi  = 0.4;                              % fraction of moves on xi
 mc.smooth_sig = og('smooth_sig', [0 0]);     % curvature prior on the smooth_param profiles (0 = off; lr_common)
 mc.smooth_len = og('smooth_len', 10);        % ... one N(0, sig^2) curvature term per smooth_len km
 mc.smooth_param = og('smooth_param', 'vsv_vsh'); % ... profiles smoothed: 'vsv_vsh' or 'vsv_xi'
 mc.vsv_ref_sig = og('vsv_ref_sig', 0);       % prior toward the reference Vsv (km/s; 0 = off; lr_common)
 mc.vsv_ref_len = og('vsv_ref_len', 10);      % ... one N(Vsv_ref, sig^2) term per vsv_ref_len km
+mc.xi_ref_sig = og('xi_ref_sig', 0);         % Gaussian prior on xi toward xi_ref_mean (0 = off; lr_common)
+mc.xi_ref_mean = og('xi_ref_mean', 1);       % ... its mean (1 = isotropic)
+mc.xi_ref_len = og('xi_ref_len', 10);        % ... one N(xi_ref_mean, sig^2) term per xi_ref_len km
 % eta (opt.eta_free): held at the reference model by default; if free, a
 % third transdimensional B-spline profile (ke <= kv, bottom tied to the
 % reference, U prior), updated in a fraction p_eta of the moves

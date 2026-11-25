@@ -23,12 +23,23 @@
 % relative standard deviation per period and branch is the posterior
 % std/mean of that run's phase velocities, chain<tag>_*.mat, i.e. the
 % precision the waveforms actually deliver; overrides disp_sig;
-% disp_sig_scale (1) multiplies it); summary.txt is appended to. Output: figs_disp<disp_tag>/ (disp_<case>.png, summary.txt).
+% disp_sig_scale (1) multiplies it), disp_prior_from_opt (false: the
+% priors of the setup file; true: the prior options of opt - ximin, ximax,
+% xi_ref_*, vsv_ref_*, smooth_* - replace them, e.g. to test a prior
+% without rerunning D3); summary.txt is appended to. Output: figs_disp<disp_tag>/ (disp_<case>.png, summary.txt).
 
 parameters_RL;
 tg_ = optget(opt, 'disp_tag', '_plain8lin');
 S0 = load(['setup' tg_ '.mat'], 'cfg', 'mc', 'Tdisp', 'fb', 'nm', 'zplot', 'tru', 'refp', ...
            'CtrueL', 'CtrueR', 'ClinL', 'ClinR');
+if optget(opt, 'disp_prior_from_opt', false)    % prior options of opt instead of the setup file's
+    for f_ = {'ximin', 'ximax', 'xi_ref_sig', 'xi_ref_mean', 'xi_ref_len', 'vsv_ref_sig', 'vsv_ref_len', ...
+              'smooth_sig', 'smooth_param', 'smooth_len'}
+        if isfield(opt, f_{1}), S0.mc.(f_{1}) = opt.(f_{1}); end
+    end
+end
+pdesc_ = sprintf('xi U[%g %g], xi_ref_sig %g, vsv_ref_sig %g, smooth_sig %s', S0.mc.ximin, S0.mc.ximax, ...
+    optget(S0.mc, 'xi_ref_sig', 0), optget(S0.mc, 'vsv_ref_sig', 0), mat2str(optget(S0.mc, 'smooth_sig', [0 0])));
 sigd = optget(opt, 'disp_sig', 0.0025);
 sfrom_ = optget(opt, 'disp_sig_from', '');
 if ~isempty(sfrom_)                            % per-period precision of a waveform run
@@ -70,6 +81,7 @@ for ic = 1:numel(cases)
     for o = [1 fid]
         fprintf(o, 'Case %s (data: %s dispersion of the true model, branches %s), sig %s, %d chains x %d it (%.0f s); acceptance %s\n', ...
             cases{ic}, cases{ic}, mat2str(ifelse_br(br_, S0.nm)), sdesc_, nch, nit, toc, mat2str(round(100*cellfun(@(x) x.acc, R'))/100));
+        fprintf(o, '   priors: %s\n', pdesc_);
         fprintf(o, '   final log L per chain %s (0 = exact fit)\n', mat2str(round(cellfun(@(x) x.L(end), R'))));
         fprintf(o, '   xi band averages: posterior mean [5-95%%] | true | chain means\n');
         for b = 1:size(bands, 1)
