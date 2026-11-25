@@ -62,8 +62,9 @@ if ~isempty(ash)
         a = (bz(e) + dth_true(e))*pi/180; d = Dc(e)*pi/180; p0 = gl0*pi/180;
         p2 = asin(sin(p0)*cos(d) + cos(p0)*sin(d)*cos(a));
         l2 = lo0 + atan2(sin(a)*sin(d)*cos(p0), cos(d) - sin(p0)*sin(p2))*180/pi;
-        gc = p2*180/pi; lg = gc;                                  % geocentric -> geographic latitude
-        for it_ = 1:20, lg = lg + (gc - geoc_lat(lg)); end
+        % geocentric -> geographic latitude: tan(lat_g) = tan(lat_c)/(1-f)^2,
+        % f = 1/298.25 as geoc_lat.m (idagrn6's series; they agree to 2e-6 deg)
+        lg = atan(tan(p2)/(1 - 1/298.25)^2)*180/pi;
         ev_src(e).lat = lg; ev_src(e).lon = mod(l2 + 180, 360) - 180;
     end
     fprintf('arrival-angle anomalies (deg, by event): %s\n', mat2str(round(dth_true*100)/100));
