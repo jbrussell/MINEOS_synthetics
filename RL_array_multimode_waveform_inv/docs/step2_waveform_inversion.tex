@@ -996,7 +996,7 @@ exactly, so only $\vsv$ changes (\texttt{s1\_card\_from\_vsv.m}).
 
 \emph{Synthetic dispersion data} (linearized and Bayesian dispersion
 versions): MINEOS branch-0 Rayleigh phase velocities of the true model at
-12 periods log-spaced over 20--100~s, with an assumed relative error
+24 periods log-spaced over 20--100~s, with an assumed relative error
 \texttt{opt.s1\_cstd} $=0.25\%$ and Gaussian noise of that standard
 deviation (\texttt{opt.s1b\_noise}, seed \texttt{opt.s1b\_noise\_seed}).
 The Bayesian version can also read measured dispersion (period, $c$,
@@ -1026,8 +1026,10 @@ Gaussian in the relative errors, with a sampled error multiplier $\kappa$
 \end{equation}
 so the data decide how well they can be fit; the figure shows the
 posterior-scaled error bars $2\kappa\sigma_c$ next to the assumed ones.
-Smoothing is hierarchical by default (\texttt{opt.s1b\_smooth\_hier});
-there is no prior toward a reference $\vsv$. The step-1 card is the
+Smoothing is a fixed curvature strength (\texttt{opt.s1b\_smooth\_sig},
+default off); the hierarchical option (\texttt{opt.s1b\_smooth\_hier}) is
+not recommended (Section~\ref{sec:hier}). There is no prior toward a
+reference $\vsv$. The step-1 card is the
 posterior mean; \texttt{s1\_unc} holds the posterior mean, standard
 deviation, 5/16/50/84/95\% quantiles, samples, $\hat R$, the sampled
 $\kappa$ and smoothing strength and the numbers of control points. The
@@ -1041,7 +1043,7 @@ model with \texttt{opt.s1w\_nm} $=1$ branch (fundamental-mode synthetics),
 D3 with Rayleigh records only (\texttt{waves = 2}), $\vsv$ only
 (\texttt{xi\_fixed}), staged re-linearization (\texttt{update\_ref = 'lin'},
 2 stages), parallel tempering (4 ensembles, 1600 iterations, 800 burn-in),
-nuisance and noise as in step 2, hierarchical smoothing by default; then
+nuisance and noise as in step 2, smoothing as in the dispersion version; then
 D4's figures. The step-1 card is the posterior-mean $\vsv$ on the starting
 card's nodes. Runs can be launched as parallel background Octave processes
 (\texttt{opt.s1w\_launch = 'parallel'}).

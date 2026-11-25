@@ -38,15 +38,17 @@
 % (opt.s1b_noise_hier, default true; log-uniform hyperprior on
 % opt.s1b_noise_range, default [0.1 10]), so the data decide how well they
 % can be fit; its posterior is saved (s1_unc.noise_mult) and the scaled
-% error bars are drawn next to the assumed ones. Smoothing: hierarchical by
-% default (opt.s1b_smooth_hier = true; strength sampled on
-% opt.smooth_sig_range). No prior toward a reference Vsv.
+% error bars are drawn next to the assumed ones. Smoothing: a fixed
+% curvature strength opt.s1b_smooth_sig (default 0 = off); opt.s1b_smooth_hier
+% = true samples it instead (not recommended: in tests the sampled strength
+% ran down to the bottom of opt.smooth_sig_range and the posterior became
+% overconfident). No prior toward a reference Vsv.
 %
 % Options (opt.s1b_*): disp_file (''), noise (true), noise_seed (1),
 % noise_hier (true), noise_range ([0.1 10]),
 % zmin (7), zmax (350; km below the seafloor), vsmin/vsmax (3.8/5.0 km/s),
-% kvmax (15), smooth_hier (true; false = smooth_sig, default 0 = off, a
-% fixed curvature strength on Vsv, lr_common.m),
+% kvmax (15), smooth_sig (0 = off; fixed curvature strength on Vsv,
+% lr_common.m), smooth_hier (false),
 % chains (4), nit (20000), burn (10000), lin_updates (2).
 %
 % Next: D2_step2_prep_mineos_idagrn.m
@@ -100,7 +102,7 @@ mc = struct('kvmin', 0, 'kvmax', g('s1b_kvmax', 15), 'kxmin', 0, 'kxmax', 0, ...
     'vsmin', g('s1b_vsmin', 3.8), 'vsmax', g('s1b_vsmax', 5.0), 'ximin', 0.85, 'ximax', 1.15, 'p_xi', 0, ...
     'step_vs', 0.03, 'step_xi', 0.01, 'step_z', 10, 'eta_free', false, ...
     'smooth_sig', g('s1b_smooth_sig', 0)*[1 1], 'smooth_param', 'vsv_vsh', 'smooth_len', 10, ...
-    'smooth_hier', g('s1b_smooth_hier', true), 'smooth_sig_range', g('smooth_sig_range', [5e-5 5e-3]), ...
+    'smooth_hier', g('s1b_smooth_hier', false), 'smooth_sig_range', g('smooth_sig_range', [5e-5 5e-3]), ...
     'disp_noise_hier', g('s1b_noise_hier', true), 'disp_noise_range', g('s1b_noise_range', [0.1 10]));
 nch = g('s1b_chains', 4); nit = g('s1b_nit', 20000); burn = g('s1b_burn', 10000); thin = 20;
 nup = g('s1b_lin_updates', 2);
