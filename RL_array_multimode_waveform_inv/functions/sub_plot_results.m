@@ -333,6 +333,35 @@ xlabel('path delay at 40 s (s)'); ylabel('posterior \tau_n (s)');
 title('Time shifts (Love + Rayleigh)');
 print(fig, '-dpng', '-r130', fullfile(outdir, 'fig5_path_nuisance.png'));
 
+%% 5b) nuisance parameters: true vs recovered (synthetic test only;
+% plot_nuisance_truth.m): tau_n and dth_n Legendre coefficients and B_n(w);
+% the true arrival angles come from the A0 truth file (opt.synth_arrival_shift)
+if any(isfinite(CtrueL(:)))          % (real data: no true model)
+    try
+        dth_tr_ = [];
+        tf_ = '';
+        if isfield(opt, 'aswms_dir') && isfield(opt, 'truthfile'), tf_ = fullfile(opt.aswms_dir, opt.truthfile); end
+        if exist(tf_, 'file') == 2
+            T_ = load(tf_);
+            if isfield(T_.truth, 'dth_true')
+                dth_tr_ = zeros(1, nrec);
+                for r = 1:nrec
+                    e_ = find(strcmp(T_.truth.ev_id, rec(r).id), 1);
+                    if ~isempty(e_), dth_tr_(r) = T_.truth.dth_true(e_); end
+                end
+            end
+        end
+        Ctrue_f_ = {disp_to_band(CtrueL, Tdisp, fb), disp_to_band(CtrueR, Tdisp, fb)};
+        ntxt_ = plot_nuisance_truth(rec, cfg, mc, pd, svc, stc, Ctrue_f_, sig_true, rho_emp, nm, dth_tr_, ...
+                                    outdir, ['nuis_true' tag '.mat']);
+        fprintf('%s', ntxt_);
+        fid_ = fopen(fullfile(outdir, 'summary.txt'), 'a'); fprintf(fid_, '%s', ntxt_); fclose(fid_);
+        clear T_ tf_ dth_tr_ Ctrue_f_ ntxt_ fid_ e_
+    catch err_
+        fprintf('nuisance truth figure not made: %s\n', err_.message);
+    end
+end
+
 %% 6) convergence and noise diagnostics
 fig = figure('position', [50 50 1900 600]);
 subplot(1, 4, 1); hold on; box on;
