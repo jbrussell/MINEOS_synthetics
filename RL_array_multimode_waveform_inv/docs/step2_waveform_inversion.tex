@@ -1027,8 +1027,11 @@ Gaussian in the relative errors, with a sampled error multiplier $\kappa$
 so the data decide how well they can be fit; the figure shows the
 posterior-scaled error bars $2\kappa\sigma_c$ next to the assumed ones.
 Smoothing is a fixed curvature strength (\texttt{opt.s1b\_smooth\_sig},
-default off); the hierarchical option (\texttt{opt.s1b\_smooth\_hier}) is
-not recommended (Section~\ref{sec:hier}). There is no prior toward a
+default $4\times10^{-4}$~km/s/km$^2$; 0 switches it off). With PA5 data it
+gives a smooth step-1 profile whose bands are narrow and miss sharp
+structure such as the lid step (Section~\ref{sec:step1}); without
+smoothing the uncertainties were calibrated. The hierarchical option
+(\texttt{opt.s1b\_smooth\_hier}) is not recommended (Section~\ref{sec:hier}). There is no prior toward a
 reference $\vsv$. The step-1 card is the
 posterior mean; \texttt{s1\_unc} holds the posterior mean, standard
 deviation, 5/16/50/84/95\% quantiles, samples, $\hat R$, the sampled
@@ -1071,8 +1074,12 @@ sampled curvature strength ran down to the lower bound of its range
 ($5\times10^{-5}$~km/s/km$^2$), the chains kept two interior control points
 and the posterior standard deviation fell to about 0.03~km/s, with the
 truth's lid and low-velocity zone outside the 5--95\% band
-(Section~\ref{sec:hier}). The waveform version has not yet been verified
-with full-length runs.
+(Section~\ref{sec:hier}). With 24 periods over 20--150~s, 0.25\% errors and fixed smoothing
+$4\times10^{-4}$, the truth was inside the 16--84\% and 5--95\% bands at 69\%
+and 78\% of depths (rms $z=2.1$, median std 0.028~km/s, 2 interior control
+points, $\kappa=1.31$); without smoothing (20--100~s) 63\% and 92\% (rms
+$z=1.11$, std 0.145~km/s, $\kappa=1.01$). The waveform version has not yet
+been verified with full-length runs.
 
 %======================================================================
 \section{Diagnostic tests}\label{sec:tests}
