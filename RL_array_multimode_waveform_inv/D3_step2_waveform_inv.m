@@ -3,9 +3,10 @@
 % for Vsv, Vsh and xi, with the step-1 model as the reference model.
 %
 % Sampler (opt.sampler in parameters_RL.m):
+%   'pt'    : (default) opt.nens parallel-tempering ensembles of opt.K
+%             temperatures up to opt.Tmax (swaps between neighbouring
+%             temperatures)
 %   'plain' : opt.nchains independent rjMcMC chains from random prior draws
-%   'pt'    : opt.nens parallel-tempering ensembles of opt.K temperatures up
-%             to opt.Tmax (swaps between neighbouring temperatures)
 % Nuisance parameters, per record and branch: spectral amplitudes B_n(w),
 % time shifts tau_n(w) and arrival angles dth_n(w) (opt.nuisance):
 %   'marginal' : all integrated out (B exactly; tau, dth by linearization
@@ -49,10 +50,10 @@
 % The data, windows and normalizations are those of the step-1 reference
 % in all cases, so likelihoods stay comparable.
 %
-%   >> D3_step2_waveform_inv                       % all chains/ensembles here
-%   $ CHAINS="[]" octave-cli --eval D3_step2_waveform_inv     % setup only
-%   $ CHAINS="1 2" octave-cli --eval D3_step2_waveform_inv &  % chains in parallel
-%   $ ENSEMBLES="1" octave-cli --eval "opt.sampler='pt'; D3_step2_waveform_inv" &
+%   >> D3_step2_waveform_inv                       % all ensembles here (parallel tempering)
+%   $ ENSEMBLES="[]" octave-cli --eval D3_step2_waveform_inv     % setup only
+%   $ ENSEMBLES="1 2" octave-cli --eval D3_step2_waveform_inv &  % ensembles in parallel
+%   $ CHAINS="1" octave-cli --eval "opt.sampler='plain'; D3_step2_waveform_inv" &   % plain chains
 %
 % Checkpoints: every opt.ckpt_every (100) iterations each chain/ensemble
 % saves ckpt<tag>_XX_<phase>.mat (run_pt_LR.m); rerunning the same command

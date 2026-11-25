@@ -95,9 +95,9 @@ opt = opt_defaults(opt, struct( ...
     'start_synth',  1, ...               % idagrn6 seismograms of the step-1 starting model (all branches)
     ...                                  %   for the waveform figures and record sections
     ... % ---- step 2: inversion (D3) ----
-    'sampler',  'plain', ...             % 'plain' (independent rjMcMC chains) or 'pt' (parallel tempering)
+    'sampler',  'pt', ...                % 'pt' (parallel tempering; default) or 'plain' (independent rjMcMC chains)
     'nuisance', 'marginal', ...          % tau_n(w), dth_n(w), B_n(w): 'marginal' (integrated out,
-    ...                                  %   linearized) or 'sample' (tau, dth sampled; plain only)
+    ...                                  %   linearized) or 'sample' (tau, dth sampled; needs sampler 'plain')
     'relin',    1, ...                   % relinearize tau, dth and B every relin iterations (1: per proposal)
     'nuis_start', 'best', ...            % start of the nuisance fit (spec_refine), against cycle skipping of
     ...                                  %   tau_n(w): 'best' = for every record the best of 'direct' (whole band

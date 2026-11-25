@@ -68,9 +68,9 @@ Monte Carlo, together with optional prior hyperparameters
 $\tau_n$ and $\delta\theta_n$ by linearizing the waveforms about a
 \emph{linearization point}. Each chain state carries its own linearization
 point, which is moved to the conditional posterior mean every
-$n_{\rm relin}$ iterations (Section~\ref{sec:relin}). The sampler is either
-a set of independent chains (``plain'') or parallel tempering
-(Section~\ref{sec:mcmc}). The linearized dispersion can be re-linearized in
+$n_{\rm relin}$ iterations (Section~\ref{sec:relin}). The sampler is
+parallel tempering (the default) or a set of independent chains
+(``plain''; Section~\ref{sec:mcmc}). The linearized dispersion can be re-linearized in
 stages during burn-in (Section~\ref{sec:refupd}).
 
 %======================================================================
@@ -865,11 +865,11 @@ hyperpriors), with $\sigma_q$ equal to the standard deviation of the data
 $\bm\ell_r=\bm\ell^{(0)}_r$.
 
 \subsection{Plain sampler}
-$N_c$ independent chains at $T=1$ (\texttt{opt.sampler='plain'};
+$N_c$ independent chains at $T=1$ (\texttt{opt.sampler='plain'}; not the default;
 $N_c=4$, $N_{\rm it}=3000$ iterations, $1500$ burn-in).
 
 \subsection{Parallel tempering}
-$N_{\rm ens}$ independent ensembles (\texttt{opt.sampler='pt'}). Each
+$N_{\rm ens}$ independent ensembles (\texttt{opt.sampler='pt'}, the default). Each
 ensemble has $K_T$ chains at temperatures
 $T_k=T_{\max}^{(k-1)/(K_T-1)}$, $k=1,\dots,K_T$ (log-spaced, $T_1=1$).
 After every iteration, swaps of whole states, including their

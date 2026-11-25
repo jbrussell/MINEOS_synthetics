@@ -4,7 +4,8 @@
 % a comparison of the plain and parallel-tempering posteriors
 % (figs_compare.png). Called automatically by D3 when all chains exist.
 %
-%   >> opt.sampler = 'pt'; D4_step2_plot_results
+%   >> D4_step2_plot_results                            % parallel tempering (default)
+%   >> opt.sampler = 'plain'; D4_step2_plot_results     % plain chains
 %
 % Previous: D3_step2_waveform_inv.m. Next: D5_step2_check_linearization.m
 
