@@ -76,6 +76,8 @@ mc.vsv_ref_len = og('vsv_ref_len', 10);      % ... one N(Vsv_ref, sig^2) term pe
 mc.xi_ref_sig = og('xi_ref_sig', 0);         % Gaussian prior on xi toward xi_ref_mean (0 = off; lr_common)
 mc.xi_ref_mean = og('xi_ref_mean', 1);       % ... its mean (1 = isotropic)
 mc.xi_ref_len = og('xi_ref_len', 10);        % ... one N(xi_ref_mean, sig^2) term per xi_ref_len km
+mc.xi_ref_hier = og('xi_ref_hier', false);   % ... strength sampled (hierarchical) instead of xi_ref_sig
+mc.xi_ref_sig_range = og('xi_ref_sig_range', [0.005 0.2]);   % ... log-uniform hyperprior on it
 % eta (opt.eta_free): held at the reference model by default; if free, a
 % third transdimensional B-spline profile (ke <= kv, bottom tied to the
 % reference, U prior), updated in a fraction p_eta of the moves

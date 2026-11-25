@@ -152,6 +152,11 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   ximin-ximax. LARGER xi_ref_sig = WEAKER prior (e.g. 0.03-0.05; lr_common.m)
     'xi_ref_mean', 1, ...                % its mean (1 = isotropic; a fixed value, not the reference model's xi)
     'xi_ref_len', 10, ...                % depth interval (km) of one Gaussian term of that prior (larger = weaker prior)
+    'xi_ref_hier', false, ...            % true: HIERARCHICAL xi prior - its strength sigma_xi is sampled (log-uniform
+    ...                                  %   hyperprior on xi_ref_sig_range), so the data set how strongly xi is pulled
+    ...                                  %   toward xi_ref_mean; xi_ref_sig is then not used. false: xi_ref_sig as set
+    ...                                  %   (a user-chosen fixed strength, or 0 = off)
+    'xi_ref_sig_range', [0.005 0.2], ... % range of the sampled sigma_xi (xi_ref_hier = true)
     'fund_margin', [0.4 0.2], ...        % 'fund' window start margin (km/s) [Love Rayleigh]
     'U_start',  [], ...                  % window start group velocity (km/s; scalar or [Love Rayleigh]);
     ...                                  %   [] = max U of branches 1..nm-1 of the reference + 0.6 km/s

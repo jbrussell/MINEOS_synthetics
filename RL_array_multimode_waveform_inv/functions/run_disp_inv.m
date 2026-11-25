@@ -9,7 +9,9 @@ function out = run_disp_inv(CLd, CRd, sig, cfg, mc, Tdisp, fb, nm, zplot, nit, b
 %       log L = -1/2 sum ((C(m) - C_data) / (sig * C_data))^2
 % over the Love and Rayleigh branches 0..nm-1 at the periods Tdisp where
 % the reference has the branch (cfg.need), weighted by w = [wL wR]
-% (default [1 1]; 0 drops a wave type).
+% (default [1 1]; 0 drops a wave type). The optional priors of mc
+% (smoothness, Vsv toward the reference, xi toward xi_ref_mean;
+% lr_common 'logprior') enter the acceptance ratio.
 %
 % CLd, CRd : [numel(Tdisp) x nm] data phase velocities (km/s)
 % sig      : relative standard deviation (e.g. 0.0025 = 0.25%), or a cell
@@ -32,26 +34,28 @@ while true
     [S, ok] = lr_common('disp', struct(), m, cfg, Tdisp, fb, nm, 'both');
     if ok, break; end
 end
-L = loglik(S);
+L = loglik(S); lp = lr_common('logprior', S.m, cfg, mc);   % smoothness / Vsv / xi priors (mc; 0 if none)
 nsave = floor((nit - burn)/thin); k = 0;
 out.vsv = zeros(numel(zplot), nsave); out.vsh = out.vsv; out.xi = out.vsv;
 out.kv = zeros(nsave, 1); out.kx = out.kv; out.L = zeros(nit, 1);
-out.CL = zeros(numel(Tdisp), nm, nsave); out.CR = out.CL; nacc = 0;
+out.CL = zeros(numel(Tdisp), nm, nsave); out.CR = out.CL; nacc = 0; out.xs = NaN(nsave, 1);
 for it = 1:nit
     [mn, okp] = lr_common('propose', S.m, cfg, mc, 1);
     if okp
         [Sn, ok] = lr_common('disp', S, mn, cfg, Tdisp, fb, nm, 'both');
         if ok
-            Ln = loglik(Sn);
-            if log(rand) < Ln - L, S = Sn; L = Ln; nacc = nacc + 1; end
+            Ln = loglik(Sn); lpn = lr_common('logprior', mn, cfg, mc);
+            if log(rand) < Ln - L + lpn - lp, S = Sn; L = Ln; lp = lpn; nacc = nacc + 1; end
         end
     end
+    if isfield(mc, 'xi_ref_hier') && mc.xi_ref_hier, [S.m, lp] = lr_common('hyper', S.m, cfg, mc); end
     out.L(it) = L;
     if it > burn && mod(it - burn, thin) == 0
         k = k + 1;
         v = lr_common('profiles', S, zplot, cfg);
         out.vsv(:, k) = v(:, 1); out.vsh(:, k) = v(:, 2); out.xi(:, k) = v(:, 3);
         out.kv(k) = numel(S.m.V.zc); out.kx(k) = numel(S.m.X.zc);
+        if isfield(S.m, 'xs'), out.xs(k) = S.m.xs; end
         out.CL(:, :, k) = S.CL; out.CR(:, :, k) = S.CR;
     end
 end

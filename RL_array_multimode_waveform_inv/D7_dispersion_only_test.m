@@ -33,13 +33,14 @@ tg_ = optget(opt, 'disp_tag', '_plain8lin');
 S0 = load(['setup' tg_ '.mat'], 'cfg', 'mc', 'Tdisp', 'fb', 'nm', 'zplot', 'tru', 'refp', ...
            'CtrueL', 'CtrueR', 'ClinL', 'ClinR');
 if optget(opt, 'disp_prior_from_opt', false)    % prior options of opt instead of the setup file's
-    for f_ = {'ximin', 'ximax', 'xi_ref_sig', 'xi_ref_mean', 'xi_ref_len', 'vsv_ref_sig', 'vsv_ref_len', ...
+    for f_ = {'ximin', 'ximax', 'xi_ref_sig', 'xi_ref_mean', 'xi_ref_len', 'xi_ref_hier', 'xi_ref_sig_range', 'vsv_ref_sig', 'vsv_ref_len', ...
               'smooth_sig', 'smooth_param', 'smooth_len'}
         if isfield(opt, f_{1}), S0.mc.(f_{1}) = opt.(f_{1}); end
     end
 end
-pdesc_ = sprintf('xi U[%g %g], xi_ref_sig %g, vsv_ref_sig %g, smooth_sig %s', S0.mc.ximin, S0.mc.ximax, ...
-    optget(S0.mc, 'xi_ref_sig', 0), optget(S0.mc, 'vsv_ref_sig', 0), mat2str(optget(S0.mc, 'smooth_sig', [0 0])));
+pdesc_ = sprintf('xi U[%g %g], xi_ref_sig %g (hierarchical %d, range %s), vsv_ref_sig %g, smooth_sig %s', S0.mc.ximin, S0.mc.ximax, ...
+    optget(S0.mc, 'xi_ref_sig', 0), optget(S0.mc, 'xi_ref_hier', false), mat2str(optget(S0.mc, 'xi_ref_sig_range', [0.005 0.2])), ...
+    optget(S0.mc, 'vsv_ref_sig', 0), mat2str(optget(S0.mc, 'smooth_sig', [0 0])));
 sigd = optget(opt, 'disp_sig', 0.0025);
 sfrom_ = optget(opt, 'disp_sig_from', '');
 if ~isempty(sfrom_)                            % per-period precision of a waveform run
@@ -82,6 +83,9 @@ for ic = 1:numel(cases)
         fprintf(o, 'Case %s (data: %s dispersion of the true model, branches %s), sig %s, %d chains x %d it (%.0f s); acceptance %s\n', ...
             cases{ic}, cases{ic}, mat2str(ifelse_br(br_, S0.nm)), sdesc_, nch, nit, toc, mat2str(round(100*cellfun(@(x) x.acc, R'))/100));
         fprintf(o, '   priors: %s\n', pdesc_);
+        xs_ = cell2mat(cellfun(@(x) x.xs(:), R, 'UniformOutput', false));
+        if any(isfinite(xs_)), q_ = sort(xs_(isfinite(xs_))); fprintf(o, '   sampled xi prior strength sigma_xi: median %.3f [5-95%%: %.3f-%.3f]\n', ...
+            median(q_), q_(max(1, round(0.05*numel(q_)))), q_(round(0.95*numel(q_)))); end
         fprintf(o, '   final log L per chain %s (0 = exact fit)\n', mat2str(round(cellfun(@(x) x.L(end), R'))));
         fprintf(o, '   xi band averages: posterior mean [5-95%%] | true | chain means\n');
         for b = 1:size(bands, 1)

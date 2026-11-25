@@ -8,6 +8,7 @@ function varargout = lr_common(action, varargin)
 %   [S, ok] = lr_common('disp', S, m, cfg, Tdisp, fb, nm, which)
 %   v = lr_common('profiles', S, zplot, cfg)        [vsv vsh xi eta] on zplot
 %   lp = lr_common('logprior', m, cfg, mc)          smoothness, Vsv and xi log priors
+%   [m, lp] = lr_common('hyper', m, cfg, mc)        update the sampled xi prior strength (xi_ref_hier)
 %
 % Each of m.V (Vsv), m.X (xi) and, with mc.eta_free, m.E (eta) is one
 % clamped cubic B-spline from the Moho (cfg.zmin) to cfg.zmax:
@@ -59,6 +60,14 @@ function varargout = lr_common(action, varargin)
 % mc.xi_ref_len, with xi_ref_mean default 1 (isotropic; a fixed value, not
 % the reference model's xi, so an oracle test does not pull toward the
 % truth). It multiplies the uniform prior mc.ximin..ximax.
+% Hierarchical version (mc.xi_ref_hier = true): the strength sigma_xi is
+% not set but sampled with the model (m.xs), with a scale-invariant
+% (log-uniform) hyperprior on mc.xi_ref_sig_range, so the data decide how
+% strongly xi is pulled toward xi_ref_mean; the prior then includes its
+% normalization, -N log(sigma_xi), N = (zmax - zmin)/xi_ref_len (the number
+% of independent Gaussian terms), and mc.xi_ref_sig is not used.
+%   [m, lp] = lr_common('hyper', m, cfg, mc)   Metropolis updates of m.xs
+%                                              (no forward calculation)
 switch action
     case 'draw_prior'
         [cfg, mc] = varargin{:};
@@ -66,6 +75,7 @@ switch action
         kx = randi([mc.kxmin min(mc.kxmax, kv)]);
         m.V = draw_one(cfg, kv, mc.vsmin, mc.vsmax, cfg.vbot);
         m.X = draw_one(cfg, kx, mc.ximin, mc.ximax, cfg.xbot);
+        if xi_hier(mc), m.xs = draw_xs(mc); end
         if eta_on(mc)
             ke = randi([mc.kemin min(mc.kemax, kv)]);
             m.E = draw_one(cfg, ke, mc.etamin, mc.etamax, cfg.ebot);
@@ -129,6 +139,10 @@ switch action
         if isfield(mc, 'smooth_sig') && ~isempty(mc.smooth_sig), sg = mc.smooth_sig(:)' .* [1 1]; end
         if isfield(mc, 'vsv_ref_sig') && ~isempty(mc.vsv_ref_sig), sr = mc.vsv_ref_sig; end
         if isfield(mc, 'xi_ref_sig') && ~isempty(mc.xi_ref_sig), sx = mc.xi_ref_sig; end
+        hx = xi_hier(mc);
+        if hx                                       % hierarchical: sampled strength
+            if isfield(m, 'xs') && ~isempty(m.xs), sx = m.xs; else, sx = sqrt(prod(xs_range(mc))); end   % (state without m.xs yet)
+        end
         if ~any(sg > 0) && ~(sr > 0) && ~(sx > 0), varargout = {0}; return; end
         dz = 1; zg = (cfg.zmin:dz:cfg.zmax)';
         vs = bspline_profile([cfg.zmin; m.V.zc(:); cfg.zmax], [m.V.ev(1); m.V.vc(:); m.V.ev(2)], zg);
@@ -137,6 +151,7 @@ switch action
             xm = 1; if isfield(mc, 'xi_ref_mean') && ~isempty(mc.xi_ref_mean), xm = mc.xi_ref_mean; end
             lx = 10; if isfield(mc, 'xi_ref_len') && ~isempty(mc.xi_ref_len), lx = mc.xi_ref_len; end
             lp = lp - 0.5*sum(((xi - xm)/sx).^2)*dz/lx;
+            if hx, lp = lp - numel(zg)*dz/lx * log(sx); end   % normalization (sigma_xi sampled)
         end
         if sr > 0                                   % prior toward the reference Vsv
             vr = interp1(cfg.refp.z, cfg.refp.vsv, zg, 'linear', 'extrap');
@@ -157,6 +172,22 @@ switch action
             end
         end
         varargout = {lp};
+    case 'hyper'
+        % Metropolis updates of the sampled xi prior strength m.xs (log
+        % random walk; log-uniform hyperprior on mc.xi_ref_sig_range, so the
+        % acceptance ratio is the ratio of the xi prior incl. normalization)
+        [m, cfg, mc] = varargin{:};
+        if ~xi_hier(mc), varargout = {m, lr_common('logprior', m, cfg, mc)}; return; end
+        if ~isfield(m, 'xs') || isempty(m.xs), m.xs = draw_xs(mc); end
+        rg = xs_range(mc); st = 0.3; if isfield(mc, 'xi_ref_step') && ~isempty(mc.xi_ref_step), st = mc.xi_ref_step; end
+        lp = lr_common('logprior', m, cfg, mc);
+        for j = 1:5
+            mn = m; mn.xs = m.xs * exp(st*randn);
+            if mn.xs < rg(1) || mn.xs > rg(2), continue; end
+            lpn = lr_common('logprior', mn, cfg, mc);
+            if log(rand) < lpn - lp, m = mn; lp = lpn; end
+        end
+        varargout = {m, lp};
     case 'profiles'
         % [vsv vsh xi eta] on zplot: the B-spline profiles between zmin and
         % zmax, the reference model elsewhere (and eta at the reference
@@ -184,4 +215,20 @@ function P = draw_one(cfg, k, vmin, vmax, vbot)
 P.zc = cfg.zmin + (cfg.zmax - cfg.zmin)*rand(k, 1);
 P.vc = vmin + (vmax - vmin)*rand(k, 1);
 P.ev = [vmin + (vmax - vmin)*rand; vbot];          % bottom tied to reference
+end
+
+function h = xi_hier(mc)
+% hierarchical xi prior (strength sampled) on?
+h = isfield(mc, 'xi_ref_hier') && ~isempty(mc.xi_ref_hier) && mc.xi_ref_hier;
+end
+
+function rg = xs_range(mc)
+% range of the log-uniform hyperprior on the xi prior strength
+rg = [0.005 0.2];
+if isfield(mc, 'xi_ref_sig_range') && numel(mc.xi_ref_sig_range) == 2, rg = mc.xi_ref_sig_range; end
+end
+
+function xs = draw_xs(mc)
+% draw from the log-uniform hyperprior
+rg = xs_range(mc); xs = exp(log(rg(1)) + (log(rg(2)) - log(rg(1)))*rand);
 end

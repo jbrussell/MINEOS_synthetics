@@ -124,13 +124,18 @@ for fo = [1 fid]
     fprintf(fo, 'interior control points: Vsv median %g (5-95%%: %g-%g); xi median %g (5-95%%: %g-%g)\n', ...
         median(kv), round(prctile_(kv', 5)), round(prctile_(kv', 95)), median(kx), round(prctile_(kx', 5)), round(prctile_(kx', 95)));
     pr_ = struct('smooth_sig', [0 0], 'smooth_param', 'vsv_vsh', 'smooth_len', 10, 'vsv_ref_sig', 0, 'vsv_ref_len', 10, ...
-                 'ximin', NaN, 'ximax', NaN, 'xi_ref_sig', 0, 'xi_ref_mean', 1, 'xi_ref_len', 10);
+                 'ximin', NaN, 'ximax', NaN, 'xi_ref_sig', 0, 'xi_ref_mean', 1, 'xi_ref_len', 10, 'xi_ref_hier', false);
     for f_ = fieldnames(pr_)', if isfield(mc, f_{1}) && ~isempty(mc.(f_{1})), pr_.(f_{1}) = mc.(f_{1}); end, end
     pf_ = @(f, varargin) pr_.(f);
     fprintf(fo, 'priors: smoothness smooth_sig %s (%s, per %g km); reference Vsv vsv_ref_sig %g km/s (per %g km; 0 = off)\n', ...
         mat2str(pf_('smooth_sig', [0 0])), pf_('smooth_param', 'vsv_vsh'), pf_('smooth_len', 10), pf_('vsv_ref_sig', 0), pf_('vsv_ref_len', 10));
     fprintf(fo, 'priors: xi uniform %g-%g; xi toward %g with xi_ref_sig %g (per %g km; 0 = off)\n', ...
         pf_('ximin'), pf_('ximax'), pf_('xi_ref_mean'), pf_('xi_ref_sig'), pf_('xi_ref_len'));
+    if pr_.xi_ref_hier && isfield(svc{1}, 'xs')
+        xs_ = cell2mat(cellfun(@(x) x.xs(:), svc, 'uniformoutput', false)); xs_ = sort(xs_(isfinite(xs_)));
+        if ~isempty(xs_), fprintf(fo, 'priors: xi strength sampled (hierarchical): sigma_xi median %.3f [5-95%%: %.3f-%.3f]\n', ...
+            median(xs_), xs_(max(1, round(0.05*numel(xs_)))), xs_(round(0.95*numel(xs_)))); end
+    end
 end
 R4 = cell2mat(cellfun(@(x) x.rho, svc, 'uniformoutput', false));
 S4 = cell2mat(cellfun(@(x) x.sig, svc, 'uniformoutput', false));
