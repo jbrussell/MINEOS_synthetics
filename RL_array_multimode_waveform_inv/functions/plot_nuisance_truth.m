@@ -24,6 +24,14 @@ function txt = plot_nuisance_truth(rec, cfg, mc, pd, svc, stc, Ctrue_f, sig_true
 % (sv.tauc, sv.dthc); B = best fit (posterior mean of the Gaussian
 % marginal) for the final state of each chain (structure and mean tau, dth
 % of its last samples, as fig4), averaged over the chains.
+% Cycle equivalence: tau_n(w) -> tau_n(w) + k 2 pi/w (a whole cycle at every
+% frequency, k integer) leaves exp(-i w tau) and so the waveforms unchanged
+% (up to what the tau basis cannot represent, which B absorbs), so the time
+% shifts are only defined up to k cycles. For each record and branch the k
+% (|k| <= 3) that brings the recovered tau_n(w) closest to the true delay
+% over the band is removed from the recovered coefficients (and,
+% separately, from the fit at the true structure) before the comparison;
+% records with k ~= 0 are drawn as open markers and counted in the summary.
 % dth_true : [1 x nrec] (deg) or [] (zeros).
 % cachef   : file for the true-structure fit (it takes a few minutes);
 %            reused when present.
@@ -66,6 +74,21 @@ for ic = 2:nc, Tc = cat(4, Tc, svc{ic}.tauc); Ac = cat(4, Ac, svc{ic}.dthc); end
 pr = @(X, p) prctile_4(X, p);
 Tm = mean(Tc, 4); T5 = pr(Tc, 5); T95 = pr(Tc, 95); Ts = std(Tc, 0, 4);
 Am = mean(Ac, 4); A5 = pr(Ac, 5); A95 = pr(Ac, 95); As = std(Ac, 0, 4);
+% cycle equivalence: remove k whole cycles (k 2 pi/w, projected on the tau basis)
+w_ = cfg.w(:); Pc = cfg.Psit \ (2*pi./w_);          % Kt x 1: one cycle on the tau basis
+kpost = zeros(nrec, nm); kfit = kpost;
+for r = 1:nrec
+    for n = 1:nm
+        td = pd.true_delay{r}(:, n); ok = isfinite(td);
+        if ~any(ok), continue; end
+        tp = cfg.Psit * squeeze(Tm(r, n, :)); tf = cfg.Psit * squeeze(Tfit(r, n, :));
+        ks = -3:3;
+        [~, i1] = min(arrayfun(@(k) sum((tp(ok) - td(ok) - k*2*pi./w_(ok)).^2), ks)); kpost(r, n) = ks(i1);
+        [~, i2] = min(arrayfun(@(k) sum((tf(ok) - td(ok) - k*2*pi./w_(ok)).^2), ks)); kfit(r, n) = ks(i2);
+    end
+end
+sh = bsxfun(@times, kpost, reshape(Pc, 1, 1, Kt)); shf = bsxfun(@times, kfit, reshape(Pc, 1, 1, Kt));
+Tm = Tm - sh; T5 = T5 - sh; T95 = T95 - sh; Tfit = Tfit - shf;
 Bp = zeros(nrec, nm, K);
 mu_b = repmat([1; 0], nm*K, 1); sb2 = mc.sb^2*ones(2*nm*K, 1);
 for ic = 1:nc
@@ -105,7 +128,9 @@ for q = 1:numel(sets)
         for wv = 1:2
             r = find(wave == wv);
             for j = r(:)', plot(X(j, n)*[1 1], [L(j, n) U(j, n)], '-', 'color', 0.4 + 0.6*mcol(n,:)); end
-            h = plot(X(r, n), Y(r, n), mk(wv), 'color', mcol(n,:), 'markerfacecolor', mcol(n,:), 'markersize', 5);
+            if strcmp(sets{q}{1}, 'tau'), sk = kpost(r, n) ~= 0; else, sk = false(size(r(:))); end
+            h = plot(X(r(~sk), n), Y(r(~sk), n), mk(wv), 'color', mcol(n,:), 'markerfacecolor', mcol(n,:), 'markersize', 5);
+            if any(sk), plot(X(r(sk), n), Y(r(sk), n), mk(wv), 'color', mcol(n,:), 'markersize', 8, 'linewidth', 1.5); end
             if wv == 1, hh(n) = h; end
             plot(X(r, n), F(r, n), 'x', 'color', [0.45 0.45 0.45], 'markersize', 6);
         end
@@ -141,14 +166,19 @@ for q = 1:2
     end
     axis square;
 end
-annotation('textbox', [0 0.965 1 0.035], 'string', ...
-    ['Nuisance parameters, true vs recovered (circles: Love, triangles: Rayleigh; grey x: fitted at the true structure; ', ...
-     'tau truth = projection of the MINEOS path delay on the tau basis)'], ...
+annotation('textbox', [0 0.955 1 0.045], 'string', ...
+    {'Nuisance parameters, true vs recovered (circles: Love, triangles: Rayleigh; grey x: fitted at the true structure)', ...
+     'tau truth: MINEOS path delay projected on the tau basis; open markers: recovered tau shifted by whole cycles k 2\pi/\omega (removed)'}, ...
     'edgecolor', 'none', 'horizontalalignment', 'center', 'fontsize', 11);
 print(fig, '-dpng', '-r130', fullfile(outdir, 'fig9_nuisance_true_vs_recovered.png'));
 
 % ---- text summary ----
-txt = sprintf('nuisance parameters vs truth (posterior mean - true; z = that / posterior std; tau truth = projection of the MINEOS path delay):\n');
+txt = sprintf(['nuisance parameters vs truth (posterior mean - true; z = that / posterior std; tau truth = projection of the MINEOS path delay;\n', ...
+               '  tau after removing whole-cycle shifts k 2 pi/w, which leave the waveforms unchanged)\n']);
+for n = 1:nm
+    txt = [txt sprintf('  branch %d: records with the recovered tau shifted by whole cycles: %d of %d (k = %s); fit at the true structure: %d\n', ...
+        n-1, sum(kpost(:, n) ~= 0), nrec, mat2str(kpost(kpost(:, n) ~= 0, n)'), sum(kfit(:, n) ~= 0))]; %#ok<AGROW>
+end
 for q = 1:numel(sets)
     a = sets{q}{2};
     if strcmp(sets{q}{1}, 'tau'), E = Tm(:,:,a) - Ttrue(:,:,a); S = Ts(:,:,a); lo = T5(:,:,a); hi = T95(:,:,a); X = Ttrue(:,:,a); nm_ = 'tau'; un = 's';
