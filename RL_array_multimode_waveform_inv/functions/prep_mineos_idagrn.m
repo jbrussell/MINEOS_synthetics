@@ -51,12 +51,22 @@ function P = prep_mineos_idagrn(opt)
 if nargin < 1, opt = struct(); end
 og = @(f, d) optget(opt, f, d);
 prepfile = og('prepfile', 'prep_mineos.mat');
+here = fileparts(fileparts(mfilename('fullpath')));   % package folder
 if exist(prepfile, 'file') == 2
     P = load(prepfile); P = P.P;
     fprintf('loaded %s\n', prepfile);
+    % prep files made before the event reader had the centroid time t_cent
+    % (needed by read_event_data.m): re-read the events (cheap, same order)
+    if ~isfield(P.ev, 't_cent')
+        ev_ = rl_read_cmtsolution(og('eventfile', fullfile(here, 'events_nomelt_2012.cmt')));
+        if numel(ev_) ~= numel(P.ev) || ~all(strcmp({ev_.id}, {P.ev.id}))
+            error('prep_mineos_idagrn: %s is from another event list; delete it and rerun D2', prepfile);
+        end
+        P.ev = ev_;
+        fprintf('  (event list re-read: %s predates t_cent)\n', prepfile);
+    end
     return
 end
-here = fileparts(fileparts(mfilename('fullpath')));   % package folder
 P.mdir = og('mdir', fullfile(here, '..', 'run_MINEOS'));
 addpath(fullfile(P.mdir, 'functions'));
 P.trueid = og('trueid', 'pa5_5km');
