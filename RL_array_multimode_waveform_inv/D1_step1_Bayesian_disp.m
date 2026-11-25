@@ -16,7 +16,8 @@
 % Data (opt.s1b_disp_file):
 %   ''   synthetic: MINEOS branch-0 phase velocities of the true model (PA5)
 %        at opt.s1_periods, error opt.s1_cstd (fraction of c), plus
-%        Gaussian noise of that std (opt.s1b_noise, default true; seed
+%        Gaussian noise of opt.s1b_noise_scale (default 0.5) times that
+%        std (opt.s1b_noise, default true; seed
 %        opt.s1b_noise_seed); without noise the posterior is centred on an
 %        exact fit
 %   file .mat with periods (s), c and cstd (km/s), or a text file with
@@ -80,10 +81,10 @@ if isempty(fdat)
     cstd = opt.s1_cstd * cobs;
     if g('s1b_noise', true)
         rs_ = randn('state'); randn('state', g('s1b_noise_seed', 1));
-        cobs = cobs + cstd .* randn(size(cobs)); randn('state', rs_);
+        cobs = cobs + optget(opt, 's1b_noise_scale', 0.5) * cstd .* randn(size(cobs)); randn('state', rs_);
     end
     dlabel = sprintf('synthetic (PA5), %.2f%% error', 100*opt.s1_cstd);
-    if g('s1b_noise', true), dlabel = [dlabel sprintf(' + noise (seed %d)', g('s1b_noise_seed', 1))]; end
+    if g('s1b_noise', true), dlabel = [dlabel sprintf(' + noise %.2fx (seed %d)', g('s1b_noise_scale', 0.5), g('s1b_noise_seed', 1))]; end
 elseif any(regexp(fdat, '\.mat$'))
     D_ = load(fdat); periods = D_.periods(:); cobs = D_.c(:); cstd = D_.cstd(:); dlabel = fdat;
 else

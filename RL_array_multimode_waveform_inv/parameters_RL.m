@@ -36,6 +36,7 @@ opt = opt_defaults(opt, struct( ...
     's1_cstd',      0.005, ...           % data uncertainty (fraction of c)
     's1b_noise',    true, ...            % synthetic step-1 dispersion data: add Gaussian noise of std s1_cstd*c
     's1b_noise_seed', 1, ...             %   (D1 linearized and D1_step1_Bayesian_disp.m; seed of the noise)
+    's1b_noise_scale', 0.5, ...          %   noise std = s1b_noise_scale * s1_cstd * c (the assumed error stays s1_cstd)
     's1_start_model', 'pa5_iso', ...     % starting model of step 1: 'pa5_iso' = isotropic PA5 without lid/LVZ
     ...                                  %   (Vs linear in depth from the Moho to s1_zlin km, PA5 Vp/Vs, rho/Vs,
     ...                                  %   eta and Q; functions/pa5_iso_ref_card.m); 'prem' = isotropic PREM
