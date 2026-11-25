@@ -28,7 +28,7 @@ function P = prep_mineos_idagrn(opt)
 %
 % opt.data_source = 'aswms' (default of parameters_RL.m): the data are the
 % ASWMS-Q event files (A1-A3; for the synthetic test from the SAC files of
-% D0_synth_make_sac_data.m), so the full true-model synthetics of step 4
+% A0_synth_make_sac_data.m), so the full true-model synthetics of step 4
 % are NOT computed here (P.u_true_* absent). The true-model MINEOS phase
 % velocities (diagnostics of the synthetic test) are computed when
 % opt.trueid is not empty (set it to '' for real data). The single-branch

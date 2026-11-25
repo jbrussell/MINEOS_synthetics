@@ -16,7 +16,7 @@
 %     max_dist_tol (20-115 deg) skipped
 % Input : <opt.aswms_dir>sacdata/<event id>/*<component>.sac, event list
 %         sacdata/evlist.txt (real data: your SAC files in this layout,
-%         with event and station header fields; synthetic: D0)
+%         with event and station header fields; synthetic: A0)
 % Output: <opt.aswms_dir>eventmat/<event id>_<component>.mat, structure
 %         event (evla, evlo, evdp, otime, id, Mw, stadata(:): stla, stlo,
 %         stel, dist, otime, delta, data, cmp, stnm, filename, snr)

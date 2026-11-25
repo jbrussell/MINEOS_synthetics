@@ -53,7 +53,7 @@ periods = opt.s1_periods(:);
 cd(mdir);
 cobs = run_mineos_phv_kernels(opt.trueid, 'R', periods, 0, 0);
 cstd = opt.s1_cstd * cobs;
-if optget(opt, 's1b_noise', false)            % optional Gaussian data noise (as D1_step1_Bayesian_disp.m)
+if optget(opt, 's1b_noise', true)             % Gaussian data noise (opt.s1b_noise; as D1_step1_Bayesian_disp.m)
     rs_ = randn('state'); randn('state', optget(opt, 's1b_noise_seed', 1));
     cobs = cobs + cstd .* randn(size(cobs)); randn('state', rs_);
 end

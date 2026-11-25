@@ -25,7 +25,7 @@
 % <opt.aswms_dir>eventmat/<event id>_<component>.mat made by A1-A3 from
 % SAC files (read_event_data.m), as for real data; for the synthetic test
 % the SAC files are idagrn6 seismograms of the true model with branches
-% 0..opt.nbranch_data-1 plus band-limited noise (D0_synth_make_sac_data.m),
+% 0..opt.nbranch_data-1 plus band-limited noise (A0_synth_make_sac_data.m),
 % for 15 real 2012 Pacific-rim earthquakes (events_nomelt_2012.cmt, Global
 % CMT) at 16 NoMelt OBSs, transverse (Love) and vertical (Rayleigh)
 % displacement. Events removed by A1-A3 and stations without data are
@@ -49,7 +49,7 @@
 % points that are updated every opt.relin iterations; nuis_relin.m).
 %
 % Noise: in the data ('aswms'; the synthetic level and correlation are
-% measured against the noise-free records of D0) or band-limited white
+% measured against the noise-free records of A0) or band-limited white
 % noise added here ('internal'),
 % modelled with an exponential (AR(1)) covariance with a level sigma and
 % correlation r for each of the 4 window types (Love/Rayleigh x
@@ -197,7 +197,7 @@ rec = struct([]); r = 0;
 wmode_ = og('windows', 'single');
 % data source (opt.data_source): 'aswms' = the ASWMS-Q event files of A1-A3
 % (<opt.aswms_dir>eventmat/; read_event_data.m), with the noise already in
-% the data; for the synthetic test, the noise-free records of D0
+% the data; for the synthetic test, the noise-free records of A0
 % (opt.truthfile) give the noise level; 'internal' = true-model synthetics
 % of the prep file with noise added here
 aswms_ = strcmp(og('data_source', 'internal'), 'aswms');
@@ -210,7 +210,7 @@ if aswms_
     synth_ = exist(tf_, 'file') == 2;
     if synth_
         truth = load(tf_); truth = truth.truth;
-        it_tr = round((P.t(1) - truth.t(1))/cfg.dt);      % D0 time axis -> idagrn time axis
+        it_tr = round((P.t(1) - truth.t(1))/cfg.dt);      % A0 time axis -> idagrn time axis
     end
 end
 single_ = any(strcmp(wmode_, {'single', 'fund', 'auto'}));
@@ -275,7 +275,7 @@ for wv = waves_(:)'
             pres = Dd.present(:)' & all(isfinite(Ud), 1);   % stations with data over the whole segment
             Ud(:, ~pres) = 0;
             dat = proc(Ud);
-            if synth_                                   % noise-free records of D0 (diagnostics, noise level)
+            if synth_                                   % noise-free records of A0 (diagnostics, noise level)
                 ke = find(strcmp(truth.ev_id, ev(e).id));
                 Uc = truth.clean{wv, ke}(it + it_tr, :); Uc(:, ~pres) = 0;
                 clean = proc(Uc);
@@ -478,7 +478,7 @@ if aswms_
         sig_true = sqrt(ss(:,1) ./ ss(:,2))';
         if any(ssw_(:, 2) > 0), sig_true = sqrt(ssw_(:,1) ./ max(ssw_(:,2), 1))'; end   % (whitened units)
         if single_, sig_true([2 4]) = sig_true([1 3]); end
-        fprintf('noise of the D0 data (std; with per-station levels: relative to them) per window %s\n', mat2str(round(sig_true*1e4)/1e4));
+        fprintf('noise of the A0 data (std; with per-station levels: relative to them) per window %s\n', mat2str(round(sig_true*1e4)/1e4));
     elseif nlev_n_ > 0
         sig_true = ones(1, 4); rho_emp = 0.5*ones(1, 4);      % (scale on the measured levels)
     else

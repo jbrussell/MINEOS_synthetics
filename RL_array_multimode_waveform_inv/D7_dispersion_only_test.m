@@ -39,6 +39,8 @@ if optget(opt, 'disp_prior_from_opt', false)    % prior options of opt instead o
     end
     S0.mc.vsv_ref_sigz = vsv_ref_sigz(opt, S0.cfg);
 end
+S0.mc.disp_noise_hier = optget(opt, 'disp_noise_hier', false);   % sampled data-error multiplier per wave type (run_disp_inv.m)
+S0.mc.disp_noise_range = optget(opt, 'disp_noise_range', [0.1 10]);
 vr_ = optget(S0.mc, 'vsv_ref_sig', 0); if ~isnumeric(vr_), vr_ = -1; end   % (-1: depth-dependent, 'step1')
 pdesc_ = sprintf('xi U[%g %g], xi_ref_sig %g (hierarchical %d, range %s), vsv_ref_sig %g, smooth_sig %s (hierarchical %d)', S0.mc.ximin, S0.mc.ximax, ...
     optget(S0.mc, 'xi_ref_sig', 0), optget(S0.mc, 'xi_ref_hier', false), mat2str(optget(S0.mc, 'xi_ref_sig_range', [0.005 0.2])), ...

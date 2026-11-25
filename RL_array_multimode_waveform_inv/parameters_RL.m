@@ -34,6 +34,8 @@ opt = opt_defaults(opt, struct( ...
     ... % ---- step 1: isotropic Rayleigh inversion (D1) ----
     's1_periods',   logspace(log10(20), log10(100), 12), ...   % (s)
     's1_cstd',      0.005, ...           % data uncertainty (fraction of c)
+    's1b_noise',    true, ...            % synthetic step-1 dispersion data: add Gaussian noise of std s1_cstd*c
+    's1b_noise_seed', 1, ...             %   (D1 linearized and D1_step1_Bayesian_disp.m; seed of the noise)
     's1_start_model', 'pa5_iso', ...     % starting model of step 1: 'pa5_iso' = isotropic PA5 without lid/LVZ
     ...                                  %   (Vs linear in depth from the Moho to s1_zlin km, PA5 Vp/Vs, rho/Vs,
     ...                                  %   eta and Q; functions/pa5_iso_ref_card.m); 'prem' = isotropic PREM
@@ -46,10 +48,10 @@ opt = opt_defaults(opt, struct( ...
                            'rhovs', 10, 'xi', 100, 'eta', 10), ...
     's1_z_dampbot', 300, 's1_zmax', 400, ...   % (km below sea level)
     's1_nit',       4, ...               % iterations (MINEOS recalculated after each)
-    ... % ---- data: ASWMS-Q event files (D0 synthetic only; A1-A3 for synthetic and real data) ----
+    ... % ---- data: ASWMS-Q event files (A0 synthetic only; A1-A3 for synthetic and real data) ----
     'data_source',  'aswms', ...         % 'aswms': the data are read from the ASWMS-Q event files
     ...                                  %   <aswms_dir>eventmat/<event id>_<component>.mat (A1-A3; for the
-    ...                                  %   synthetic test written from the SAC files of D0); 'internal': the
+    ...                                  %   synthetic test written from the SAC files of A0); 'internal': the
     ...                                  %   previous behaviour (true-model synthetics computed in step 2, noise
     ...                                  %   added to the processed records)
     'aswms_dir',    ['ASWMS' filesep], ... % ASWMS-Q working directory (sacdata/, eventmat/, winpara/, branchmat/)
@@ -57,9 +59,9 @@ opt = opt_defaults(opt, struct( ...
     'aswms_net',    'XX', ...            % network code of the synthetic SAC files
     'aswms',        struct(), ...        % overrides of the ASWMS-Q parameters (aswms_parameters.m), e.g.
     ...                                  %   struct('snr_tol', 3, 'maxdepth', 50, 'min_sta_num', 5)
-    'synth_len_hr', 2, ...               % D0: length of the synthetic SAC records (h; ASWMS-Q needs dist/2 km/s)
-    'synth_seed',   3, ...               % D0: random seed of the noise
-    'truthfile',    'synth_truth.mat', ... % D0: noise-free records, noise and true model (in aswms_dir)
+    'synth_len_hr', 2, ...               % A0: length of the synthetic SAC records (h; ASWMS-Q needs dist/2 km/s)
+    'synth_seed',   3, ...               % A0: random seed of the noise
+    'truthfile',    'synth_truth.mat', ... % A0: noise-free records, noise and true model (in aswms_dir)
     'noise_guess',  0.03, ...            % real data without noise levels: starting noise level (fraction of peak)
     'noise_levels', 'pre', ...           % 'pre': noise std of each record and station measured before the first
     ...                                  %   arrival (dist/13.5 km/s - 60 s after the origin, plus any samples
@@ -77,8 +79,8 @@ opt = opt_defaults(opt, struct( ...
     'noise_psd',    'shape', ...         % 'fdom' spectra: 'shape' (pooled shape x station level) or 'station'
     'noise_arp',    8, ...               % 'arp', 'emp': AR order
     'noise_nugget', 0.05, ...            % white-noise fraction added before the AR fits (stability)
-    'synth_pre_s',  0, ...               % D0: noise before the origin (s; 0: records start at the origin)
-    'synth_noise_spread', 0, ...         % D0: noise level per station x 10^(spread*U[-1,1]) (0: all equal)
+    'synth_pre_s',  0, ...               % A0: noise before the origin (s; 0: records start at the origin)
+    'synth_noise_spread', 0, ...         % A0: noise level per station x 10^(spread*U[-1,1]) (0: all equal)
     ... % ---- step 2: MINEOS + idagrn6 (D2) ----
     'prepfile',     'prep_step2.mat', ...
     'refid',        'RLinv_step1', ...   % reference card of step 2 (= s1_final)
@@ -173,7 +175,7 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   plane wave in x-y, as before; event_G_spec.m)
     'N',        800, ...                 % samples per record (N*dt = 3200 s: earliest overtone to slowest fundamental)
     'noise',    0.03, ...                % synthetic noise std, fraction of the peak band-passed amplitude of each
-    ...                                  %   event and wave type (D0; 'internal': of each record's peak)
+    ...                                  %   event and wave type (A0; 'internal': of each record's peak)
     'nchains',  4, 'nit', 3000, 'burn', 1500, ...           % plain sampler
     'nens',     2, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750, ... % parallel tempering
     'plot_fontsize', 15 ...              % font size (pt) of all plot axes (tick labels, axis labels, titles);

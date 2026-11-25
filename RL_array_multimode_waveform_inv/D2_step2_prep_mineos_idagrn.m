@@ -9,7 +9,7 @@
 %   - idagrn6 seismograms at the 16 NoMelt OBSs for the 15 events:
 %       data      : opt.data_source = 'aswms' (default): NOT computed here;
 %                   the data are the ASWMS-Q event files of A1-A3 (for the
-%                   synthetic test from the SAC files of D0). 'internal':
+%                   synthetic test from the SAC files of A0). 'internal':
 %                   PA5, all opt.nbranch_data branches (T and Z)
 %       Uref      : reference model, one branch at a time (idagrn6_mask),
 %                   also written in the ASWMS-Q event-file format to
@@ -24,7 +24,7 @@
 %
 % Needs the MINEOS and idagrn6 binaries (../FORTRAN/bin) and SAC (sacio).
 % Previous: D1_step1_rayleigh_isotropic_inv.m and (data) A1-A3 (synthetic
-% test: D0 first). Next: D3_step2_waveform_inv.m
+% test: A0 first). Next: D3_step2_waveform_inv.m
 
 parameters_RL;
 S1 = load(opt.s1_file, 'card_final');

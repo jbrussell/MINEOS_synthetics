@@ -16,9 +16,9 @@
 % Data (opt.s1b_disp_file):
 %   ''   synthetic: MINEOS branch-0 phase velocities of the true model (PA5)
 %        at opt.s1_periods, error opt.s1_cstd (fraction of c), plus
-%        Gaussian noise of that std if opt.s1b_noise = true (seed
-%        opt.s1b_noise_seed); without noise (the linearized D1's data) the
-%        posterior is centred on an exact fit
+%        Gaussian noise of that std (opt.s1b_noise, default true; seed
+%        opt.s1b_noise_seed); without noise the posterior is centred on an
+%        exact fit
 %   file .mat with periods (s), c and cstd (km/s), or a text file with
 %        three columns: period (s), c, cstd (km/s)
 % Starting model: as in D1 (opt.s1_start_model, 'pa5_iso' or 'prem').
@@ -34,10 +34,19 @@
 % fit). The posterior std (s1_unc.vsv_std) can be used for the step-2 Vsv
 % prior (opt.vsv_ref_sig = 'step1').
 %
-% Options (opt.s1b_*): disp_file (''), noise (false), noise_seed (1),
+% Noise level: the data errors are multiplied by a sampled factor
+% (opt.s1b_noise_hier, default true; log-uniform hyperprior on
+% opt.s1b_noise_range, default [0.1 10]), so the data decide how well they
+% can be fit; its posterior is saved (s1_unc.noise_mult) and the scaled
+% error bars are drawn next to the assumed ones. Smoothing: hierarchical by
+% default (opt.s1b_smooth_hier = true; strength sampled on
+% opt.smooth_sig_range). No prior toward a reference Vsv.
+%
+% Options (opt.s1b_*): disp_file (''), noise (true), noise_seed (1),
+% noise_hier (true), noise_range ([0.1 10]),
 % zmin (7), zmax (350; km below the seafloor), vsmin/vsmax (3.8/5.0 km/s),
-% kvmax (15), smooth_sig (0; curvature prior on Vsv, lr_common.m), smooth_hier
-% (false; true = its strength sampled, opt.smooth_sig_range),
+% kvmax (15), smooth_hier (true; false = smooth_sig, default 0 = off, a
+% fixed curvature strength on Vsv, lr_common.m),
 % chains (4), nit (20000), burn (10000), lin_updates (2).
 %
 % Next: D2_step2_prep_mineos_idagrn.m
@@ -69,12 +78,12 @@ if isempty(fdat)
     periods = opt.s1_periods(:);
     cd(mdir); cobs = run_mineos_phv_kernels(opt.trueid, 'R', periods, 0, 0); cd(here);
     cstd = opt.s1_cstd * cobs;
-    if g('s1b_noise', false)
+    if g('s1b_noise', true)
         rs_ = randn('state'); randn('state', g('s1b_noise_seed', 1));
         cobs = cobs + cstd .* randn(size(cobs)); randn('state', rs_);
     end
     dlabel = sprintf('synthetic (PA5), %.2f%% error', 100*opt.s1_cstd);
-    if g('s1b_noise', false), dlabel = [dlabel sprintf(' + noise (seed %d)', g('s1b_noise_seed', 1))]; end
+    if g('s1b_noise', true), dlabel = [dlabel sprintf(' + noise (seed %d)', g('s1b_noise_seed', 1))]; end
 elseif any(regexp(fdat, '\.mat$'))
     D_ = load(fdat); periods = D_.periods(:); cobs = D_.c(:); cstd = D_.cstd(:); dlabel = fdat;
 else
@@ -91,7 +100,8 @@ mc = struct('kvmin', 0, 'kvmax', g('s1b_kvmax', 15), 'kxmin', 0, 'kxmax', 0, ...
     'vsmin', g('s1b_vsmin', 3.8), 'vsmax', g('s1b_vsmax', 5.0), 'ximin', 0.85, 'ximax', 1.15, 'p_xi', 0, ...
     'step_vs', 0.03, 'step_xi', 0.01, 'step_z', 10, 'eta_free', false, ...
     'smooth_sig', g('s1b_smooth_sig', 0)*[1 1], 'smooth_param', 'vsv_vsh', 'smooth_len', 10, ...
-    'smooth_hier', g('s1b_smooth_hier', false), 'smooth_sig_range', g('smooth_sig_range', [5e-5 5e-3]));
+    'smooth_hier', g('s1b_smooth_hier', true), 'smooth_sig_range', g('smooth_sig_range', [5e-5 5e-3]), ...
+    'disp_noise_hier', g('s1b_noise_hier', true), 'disp_noise_range', g('s1b_noise_range', [0.1 10]));
 nch = g('s1b_chains', 4); nit = g('s1b_nit', 20000); burn = g('s1b_burn', 10000); thin = 20;
 nup = g('s1b_lin_updates', 2);
 sig = {NaN(numel(periods), 1), cstd ./ cobs};      % relative errors; Love not used (w = [0 1])
@@ -130,10 +140,13 @@ for i = find(in)'
     X = cell2mat(cellfun(@(x) x.vsv(i, :)', R', 'UniformOutput', false)); rh(i) = gr_rhat(X);
 end
 qc = sort(CRs, 2); nsc = size(qc, 2); pcc = @(p) qc(:, max(1, round(p*nsc)));   % predicted dispersion (last stage, linearized)
+lam = sort(cell2mat(cellfun(@(x) x.lam(:, 2), R, 'UniformOutput', false)));   % Rayleigh noise multiplier (1 if not sampled)
+nml = struct('median', median(lam), 'p05', lam(max(1, round(0.05*numel(lam)))), 'p95', lam(round(0.95*numel(lam))), ...
+    'sampled', mc.disp_noise_hier);
 s1_unc = struct('z', zplot, 'vsv_mean', vmean, 'vsv_std', std(V, 0, 2), 'vsv_p05', pc(0.05), 'vsv_p16', pc(0.16), ...
     'vsv_p50', pc(0.5), 'vsv_p84', pc(0.84), 'vsv_p95', pc(0.95), 'vsv_samples', V(:, 1:max(1, floor(ns/400)):end), ...
     'c_p05', pcc(0.05), 'c_p16', pcc(0.16), 'c_p84', pcc(0.84), 'c_p95', pcc(0.95), ...
-    'rhat', rh, 'stages', hist_, 'zmin', zmin, 'zmax', zmax, 'data', dlabel);
+    'rhat', rh, 'stages', hist_, 'zmin', zmin, 'zmax', zmax, 'data', dlabel, 'noise_mult', nml);
 card_final = s1_card_from_vsv(card_start, idx, interp1(zplot, vmean, zn, 'linear', 'extrap'));
 write_MINEOS_mod(card_final, fullfile(mdir, 'CARDS', [opt.s1_final '.card']));
 copyfile(fullfile(mdir, 'CARDS', [opt.ref_qmod '.qmod']), fullfile(mdir, 'CARDS', [opt.s1_final '.qmod']));
@@ -141,6 +154,10 @@ cd(mdir); cpre = run_mineos_phv_kernels(opt.s1_final, 'R', periods, 0, 0); cd(he
 discs = []; method = 'bayes_disp';
 fprintf('Rayleigh fundamental mode, reduced chi^2 (MINEOS): start %.1f, posterior-mean model %.2f\n', ...
     mean(((cobs - cstart)./cstd).^2), mean(((cobs - cpre)./cstd).^2));
+if mc.disp_noise_hier
+    fprintf('data error multiplier (sampled): median %.2f [5-95%%: %.2f-%.2f]; reduced chi^2 with the scaled errors %.2f\n', ...
+        nml.median, nml.p05, nml.p95, mean(((cobs - cpre)./(nml.median*cstd)).^2));
+end
 fprintf('Vsv posterior: R-hat median %.2f (max %.2f); std median %.3f km/s\n', median(rh(in & isfinite(rh))), max(rh(in & isfinite(rh))), median(s1_unc.vsv_std(in)));
 save(opt.s1_file, 'card_prem', 'card_start', 'card_final', 'card_true', 'cobs', 'cstd', ...
      'cstart', 'cpre', 'periods', 'discs', 'opt', 'method', 's1_unc');
@@ -162,9 +179,12 @@ subplot(1, 2, 2); hold on; box on;
 fill([periods; flipud(periods)], [s1_unc.c_p05; flipud(s1_unc.c_p95)], [0.80 0.88 1], 'edgecolor', 'none');
 fill([periods; flipud(periods)], [s1_unc.c_p16; flipud(s1_unc.c_p84)], [0.55 0.70 0.95], 'edgecolor', 'none');
 hd = errorbar(periods, cobs, 2*cstd, 'ko');
+hn = errorbar(periods*1.015, cobs, 2*nml.median*cstd, 'r.');            % posterior scaled errors (slightly offset)
+set(hn, 'linewidth', 1.5);
 hs = plot(periods, cstart, 'g-', 'linewidth', 1.5); hp = plot(periods, cpre, 'b-', 'linewidth', 1.5);
 xlabel('Period (s)'); ylabel('Rayleigh phase velocity (km/s)');
-legend([hd hs hp], {'data (2\sigma)', 'start', 'posterior mean model (MINEOS)'}, 'location', 'southeast');
+legend([hd hn hs hp], {'data, assumed 2\sigma', ['posterior scaled 2\sigma (x' sprintf('%.2f', nml.median) ')'], 'start', ...
+    'posterior mean model (MINEOS)'}, 'location', 'southeast');
 title({sprintf('Data: %s', dlabel), 'shaded: posterior predicted 5-95%, 16-84% (linearized)'}, 'interpreter', 'none');
 print(fig, '-dpng', '-r110', fullfile(od, 'step1_bayes_disp.png')); close(fig);
 fprintf('step-1 model CARDS/%s.card, %s, figures in %s/\n', opt.s1_final, opt.s1_file, od);

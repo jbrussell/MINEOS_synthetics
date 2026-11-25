@@ -1,4 +1,4 @@
-% D0_SYNTH_MAKE_SAC_DATA  Synthetic test only (pre-step): make the "data" as
+% A0_SYNTH_MAKE_SAC_DATA  Synthetic test only (pre-step): make the "data" as
 % SAC files, so that they go through the same data preparation as real data
 % (A1-A3, ASWMS-Q).
 %
