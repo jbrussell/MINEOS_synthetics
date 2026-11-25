@@ -38,7 +38,7 @@ L = loglik(S); lp = lr_common('logprior', S.m, cfg, mc);   % smoothness / Vsv / 
 nsave = floor((nit - burn)/thin); k = 0;
 out.vsv = zeros(numel(zplot), nsave); out.vsh = out.vsv; out.xi = out.vsv;
 out.kv = zeros(nsave, 1); out.kx = out.kv; out.L = zeros(nit, 1);
-out.CL = zeros(numel(Tdisp), nm, nsave); out.CR = out.CL; nacc = 0; out.xs = NaN(nsave, 1);
+out.CL = zeros(numel(Tdisp), nm, nsave); out.CR = out.CL; nacc = 0; out.xs = NaN(nsave, 1); out.ss = NaN(nsave, 2);
 for it = 1:nit
     [mn, okp] = lr_common('propose', S.m, cfg, mc, 1);
     if okp
@@ -48,7 +48,7 @@ for it = 1:nit
             if log(rand) < Ln - L + lpn - lp, S = Sn; L = Ln; lp = lpn; nacc = nacc + 1; end
         end
     end
-    if isfield(mc, 'xi_ref_hier') && mc.xi_ref_hier, [S.m, lp] = lr_common('hyper', S.m, cfg, mc); end
+    if ((isfield(mc, 'xi_ref_hier') && mc.xi_ref_hier) || (isfield(mc, 'smooth_hier') && mc.smooth_hier)), [S.m, lp] = lr_common('hyper', S.m, cfg, mc); end
     out.L(it) = L;
     if it > burn && mod(it - burn, thin) == 0
         k = k + 1;
@@ -56,6 +56,7 @@ for it = 1:nit
         out.vsv(:, k) = v(:, 1); out.vsh(:, k) = v(:, 2); out.xi(:, k) = v(:, 3);
         out.kv(k) = numel(S.m.V.zc); out.kx(k) = numel(S.m.X.zc);
         if isfield(S.m, 'xs'), out.xs(k) = S.m.xs; end
+        if isfield(S.m, 'ss'), out.ss(k, :) = S.m.ss; end
         out.CL(:, :, k) = S.CL; out.CR(:, :, k) = S.CR;
     end
 end

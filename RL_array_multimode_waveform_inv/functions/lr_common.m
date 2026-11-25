@@ -70,6 +70,14 @@ function varargout = lr_common(action, varargin)
 % of independent Gaussian terms), and mc.xi_ref_sig is not used.
 %   [m, lp] = lr_common('hyper', m, cfg, mc)   Metropolis updates of m.xs
 %                                              (no forward calculation)
+% Hierarchical smoothing (mc.smooth_hier = true): the same for the two
+% curvature strengths (m.ss = [sig_1 sig_2], log-uniform hyperprior on
+% mc.smooth_sig_range, normalization -N_c log(sig_c) with N_c the number of
+% curvature terms per smooth_len km); mc.smooth_sig is then not used. With
+% cfg.xi_fixed only the Vsv curvature is used.
+% Depth-dependent Vsv prior: mc.vsv_ref_sigz (km/s on the 1 km grid
+% zmin:zmax, e.g. from the step-1 posterior std, opt.vsv_ref_sig = 'step1';
+% vsv_ref_sigz.m) replaces the scalar mc.vsv_ref_sig.
 switch action
     case 'draw_prior'
         [cfg, mc] = varargin{:};
@@ -78,6 +86,7 @@ switch action
         m.V = draw_one(cfg, kv, mc.vsmin, mc.vsmax, cfg.vbot);
         m.X = draw_one(cfg, kx, mc.ximin, mc.ximax, cfg.xbot);
         if xi_hier(mc), m.xs = draw_xs(mc); end
+        if sm_hier(mc), m.ss = draw_ss(mc); end
         if eta_on(mc)
             ke = randi([mc.kemin min(mc.kemax, kv)]);
             m.E = draw_one(cfg, ke, mc.etamin, mc.etamax, cfg.ebot);
@@ -139,13 +148,21 @@ switch action
         [m, cfg, mc] = varargin{:};
         lp = 0; sg = [0 0]; sr = 0; sx = 0;
         if isfield(mc, 'smooth_sig') && ~isempty(mc.smooth_sig), sg = mc.smooth_sig(:)' .* [1 1]; end
-        if isfield(mc, 'vsv_ref_sig') && ~isempty(mc.vsv_ref_sig), sr = mc.vsv_ref_sig; end
+        hs = sm_hier(mc);
+        if hs                                       % hierarchical smoothing: sampled strengths
+            if isfield(m, 'ss') && numel(m.ss) == 2, sg = m.ss(:)'; else, sg = sqrt(prod(ss_range(mc)))*[1 1]; end
+        end
+        if isfield(mc, 'vsv_ref_sigz') && ~isempty(mc.vsv_ref_sigz)      % depth-dependent (e.g. step-1 posterior std)
+            sr = mc.vsv_ref_sigz(:);
+        elseif isfield(mc, 'vsv_ref_sig') && isnumeric(mc.vsv_ref_sig) && ~isempty(mc.vsv_ref_sig)
+            sr = mc.vsv_ref_sig;
+        end
         if isfield(mc, 'xi_ref_sig') && ~isempty(mc.xi_ref_sig), sx = mc.xi_ref_sig; end
         hx = xi_hier(mc);
         if hx                                       % hierarchical: sampled strength
             if isfield(m, 'xs') && ~isempty(m.xs), sx = m.xs; else, sx = sqrt(prod(xs_range(mc))); end   % (state without m.xs yet)
         end
-        if ~any(sg > 0) && ~(sr > 0) && ~(sx > 0), varargout = {0}; return; end
+        if ~any(sg > 0) && ~any(sr > 0) && ~(sx > 0), varargout = {0}; return; end
         dz = 1; zg = (cfg.zmin:dz:cfg.zmax)';
         vs = bspline_profile([cfg.zmin; m.V.zc(:); cfg.zmax], [m.V.ev(1); m.V.vc(:); m.V.ev(2)], zg);
         xi = xi_of(m, cfg, zg);
@@ -155,10 +172,11 @@ switch action
             lp = lp - 0.5*sum(((xi - xm)/sx).^2)*dz/lx;
             if hx, lp = lp - numel(zg)*dz/lx * log(sx); end   % normalization (sigma_xi sampled)
         end
-        if sr > 0                                   % prior toward the reference Vsv
+        if any(sr > 0)                              % prior toward the reference Vsv
             vr = interp1(cfg.refp.z, cfg.refp.vsv, zg, 'linear', 'extrap');
             lr = 10; if isfield(mc, 'vsv_ref_len') && ~isempty(mc.vsv_ref_len), lr = mc.vsv_ref_len; end
-            lp = lp - 0.5*sum(((vs - vr)/sr).^2)*dz/lr;
+            if numel(sr) > 1 && numel(sr) ~= numel(zg), error('lr_common: vsv_ref_sigz has %d values, the 1 km grid %d', numel(sr), numel(zg)); end
+            lp = lp - 0.5*sum(((vs - vr)./sr).^2)*dz/lr;
         end
         if any(sg > 0)
             sp = 'vsv_vsh'; if isfield(mc, 'smooth_param') && ~isempty(mc.smooth_param), sp = mc.smooth_param; end
@@ -169,25 +187,44 @@ switch action
             end
             ell = 10; if isfield(mc, 'smooth_len') && ~isempty(mc.smooth_len), ell = mc.smooth_len; end
             for c = find(sg > 0)
+                if c == 2 && isfield(cfg, 'xi_fixed') && cfg.xi_fixed && hs, continue; end   % (Vsv only: one profile)
                 d2 = diff(P(:, c), 2) / dz^2;
                 lp = lp - 0.5*sum((d2/sg(c)).^2)*dz/ell;
+                if hs, lp = lp - numel(d2)*dz/ell * log(sg(c)); end   % normalization (sigma sampled)
             end
         end
         varargout = {lp};
     case 'hyper'
-        % Metropolis updates of the sampled xi prior strength m.xs (log
-        % random walk; log-uniform hyperprior on mc.xi_ref_sig_range, so the
-        % acceptance ratio is the ratio of the xi prior incl. normalization)
+        % Metropolis updates of the sampled prior strengths (log random
+        % walks; log-uniform hyperpriors, so the acceptance ratio is the ratio
+        % of the priors incl. their normalization; no forward calculation):
+        % m.xs (xi toward xi_ref_mean, mc.xi_ref_hier) and m.ss (curvature of
+        % the two smoothed profiles, mc.smooth_hier)
         [m, cfg, mc] = varargin{:};
-        if ~xi_hier(mc), varargout = {m, lr_common('logprior', m, cfg, mc)}; return; end
-        if ~isfield(m, 'xs') || isempty(m.xs), m.xs = draw_xs(mc); end
-        rg = xs_range(mc); st = 0.3; if isfield(mc, 'xi_ref_step') && ~isempty(mc.xi_ref_step), st = mc.xi_ref_step; end
+        hx = xi_hier(mc); hs = sm_hier(mc);
+        if hx && (~isfield(m, 'xs') || isempty(m.xs)), m.xs = draw_xs(mc); end
+        if hs && (~isfield(m, 'ss') || numel(m.ss) ~= 2), m.ss = draw_ss(mc); end
         lp = lr_common('logprior', m, cfg, mc);
+        if ~hx && ~hs, varargout = {m, lp}; return; end
+        st = 0.3; if isfield(mc, 'xi_ref_step') && ~isempty(mc.xi_ref_step), st = mc.xi_ref_step; end
+        nss = 2; if isfield(cfg, 'xi_fixed') && cfg.xi_fixed, nss = 1; end
         for j = 1:5
-            mn = m; mn.xs = m.xs * exp(st*randn);
-            if mn.xs < rg(1) || mn.xs > rg(2), continue; end
-            lpn = lr_common('logprior', mn, cfg, mc);
-            if log(rand) < lpn - lp, m = mn; lp = lpn; end
+            if hx
+                mn = m; mn.xs = m.xs * exp(st*randn); rg = xs_range(mc);
+                if mn.xs >= rg(1) && mn.xs <= rg(2)
+                    lpn = lr_common('logprior', mn, cfg, mc);
+                    if log(rand) < lpn - lp, m = mn; lp = lpn; end
+                end
+            end
+            if hs
+                rg = ss_range(mc);
+                for c = 1:nss
+                    mn = m; mn.ss(c) = m.ss(c) * exp(st*randn);
+                    if mn.ss(c) < rg(1) || mn.ss(c) > rg(2), continue; end
+                    lpn = lr_common('logprior', mn, cfg, mc);
+                    if log(rand) < lpn - lp, m = mn; lp = lpn; end
+                end
+            end
         end
         varargout = {m, lp};
     case 'profiles'
@@ -243,4 +280,20 @@ if isfield(cfg, 'xi_fixed') && cfg.xi_fixed
 else
     xi = bspline_profile([cfg.zmin; m.X.zc(:); cfg.zmax], [m.X.ev(1); m.X.vc(:); m.X.ev(2)], z);
 end
+end
+
+function h = sm_hier(mc)
+% hierarchical smoothing (curvature prior strengths sampled) on?
+h = isfield(mc, 'smooth_hier') && ~isempty(mc.smooth_hier) && mc.smooth_hier;
+end
+
+function rg = ss_range(mc)
+% range of the log-uniform hyperprior on the curvature prior strengths
+rg = [5e-5 5e-3];
+if isfield(mc, 'smooth_sig_range') && numel(mc.smooth_sig_range) == 2, rg = mc.smooth_sig_range; end
+end
+
+function ss = draw_ss(mc)
+% draw both strengths from the log-uniform hyperprior
+rg = ss_range(mc); ss = exp(log(rg(1)) + (log(rg(2)) - log(rg(1)))*rand(1, 2));
 end

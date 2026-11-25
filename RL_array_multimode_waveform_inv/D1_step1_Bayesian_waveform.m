@@ -27,6 +27,7 @@
 %
 % Options (opt.s1w_*): nm (1), sampler ('pt'), nens (4; or nchains for
 % 'plain'), nit (1600), burn (800), lin_updates (2), smooth_sig (0),
+% smooth_hier (false),
 % tag ('_s1wf'), prepfile ('prep_s1wf.mat'), launch ('serial': all
 % ensembles in this session - MATLAB parfor runs them in parallel with a
 % pool; 'parallel': one background Octave process per ensemble, Octave
@@ -60,7 +61,7 @@ o1.prepfile = g('s1w_prepfile', 'prep_s1wf.mat');
 o1.refid = opt.s1_start; o1.ref_card = card_start; o1.start_synth = 0;
 o1.nm = g('s1w_nm', 1); o1.waves = 2; o1.xi_fixed = true;
 o1.sampler = g('s1w_sampler', 'pt'); o1.update_ref = 'lin'; o1.lin_updates = g('s1w_lin_updates', 2);
-o1.smooth_sig = g('s1w_smooth_sig', 0)*[1 1];
+o1.smooth_sig = g('s1w_smooth_sig', 0)*[1 1]; o1.smooth_hier = g('s1w_smooth_hier', false);
 o1.vsv_ref_sig = 0; o1.xi_ref_sig = 0; o1.xi_ref_hier = false;
 if strcmp(o1.sampler, 'pt')
     o1.nens = g('s1w_nens', 4); o1.pt_nit = g('s1w_nit', 1600); o1.pt_burn = g('s1w_burn', 800); nrun = o1.nens;

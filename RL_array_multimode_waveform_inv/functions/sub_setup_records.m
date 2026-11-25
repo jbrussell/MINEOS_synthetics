@@ -71,13 +71,15 @@ mc.p_xi  = 0.4;                              % fraction of moves on xi
 mc.smooth_sig = og('smooth_sig', [0 0]);     % curvature prior on the smooth_param profiles (0 = off; lr_common)
 mc.smooth_len = og('smooth_len', 10);        % ... one N(0, sig^2) curvature term per smooth_len km
 mc.smooth_param = og('smooth_param', 'vsv_vsh'); % ... profiles smoothed: 'vsv_vsh' or 'vsv_xi'
-mc.vsv_ref_sig = og('vsv_ref_sig', 0);       % prior toward the reference Vsv (km/s; 0 = off; lr_common)
+mc.vsv_ref_sig = og('vsv_ref_sig', 0);       % prior toward the reference Vsv (km/s, or 'step1'; 0 = off; lr_common)
 mc.vsv_ref_len = og('vsv_ref_len', 10);      % ... one N(Vsv_ref, sig^2) term per vsv_ref_len km
 mc.xi_ref_sig = og('xi_ref_sig', 0);         % Gaussian prior on xi toward xi_ref_mean (0 = off; lr_common)
 mc.xi_ref_mean = og('xi_ref_mean', 1);       % ... its mean (1 = isotropic)
 mc.xi_ref_len = og('xi_ref_len', 10);        % ... one N(xi_ref_mean, sig^2) term per xi_ref_len km
 mc.xi_ref_hier = og('xi_ref_hier', false);   % ... strength sampled (hierarchical) instead of xi_ref_sig
 mc.xi_ref_sig_range = og('xi_ref_sig_range', [0.005 0.2]);   % ... log-uniform hyperprior on it
+mc.smooth_hier = og('smooth_hier', false);   % curvature prior strengths sampled (hierarchical) instead of smooth_sig
+mc.smooth_sig_range = og('smooth_sig_range', [5e-5 5e-3]);   % ... log-uniform hyperprior on them
 % Vsv-only inversion (opt.xi_fixed, step 1 waveform version): xi held at
 % the reference model's (cfg.xi_fixed below; no xi moves, no xi control points)
 if og('xi_fixed', false), mc.p_xi = 0; mc.kxmax = 0; end
@@ -125,6 +127,7 @@ cfg.Tdisp = Tdisp;
 [~, ib_] = max(cfg.lin.z);
 cfg.vbot = cfg.lin.vsv0(ib_); cfg.xbot = (cfg.lin.vsh0(ib_)/cfg.lin.vsv0(ib_))^2;
 cfg.xi_fixed = og('xi_fixed', false);       % xi = the reference model's (Vsv-only; lr_common.m, mineos_dispersion.m)
+mc.vsv_ref_sigz = vsv_ref_sigz(opt, cfg);   % depth-dependent Vsv prior width (opt.vsv_ref_sig = 'step1'), else []
 cfg.ebot = cfg.lin.eta0(ib_);
 CrefL = P.phv_ref_T; CrefR = P.phv_ref_S;     % reference (step-1 model) dispersion
 CtrueL = P.phv_true_T; CtrueR = P.phv_true_S; % true (PA5) dispersion, MINEOS

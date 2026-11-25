@@ -34,13 +34,15 @@ S0 = load(['setup' tg_ '.mat'], 'cfg', 'mc', 'Tdisp', 'fb', 'nm', 'zplot', 'tru'
            'CtrueL', 'CtrueR', 'ClinL', 'ClinR');
 if optget(opt, 'disp_prior_from_opt', false)    % prior options of opt instead of the setup file's
     for f_ = {'ximin', 'ximax', 'xi_ref_sig', 'xi_ref_mean', 'xi_ref_len', 'xi_ref_hier', 'xi_ref_sig_range', 'vsv_ref_sig', 'vsv_ref_len', ...
-              'smooth_sig', 'smooth_param', 'smooth_len'}
+              'smooth_sig', 'smooth_param', 'smooth_len', 'smooth_hier', 'smooth_sig_range'}
         if isfield(opt, f_{1}), S0.mc.(f_{1}) = opt.(f_{1}); end
     end
+    S0.mc.vsv_ref_sigz = vsv_ref_sigz(opt, S0.cfg);
 end
-pdesc_ = sprintf('xi U[%g %g], xi_ref_sig %g (hierarchical %d, range %s), vsv_ref_sig %g, smooth_sig %s', S0.mc.ximin, S0.mc.ximax, ...
+vr_ = optget(S0.mc, 'vsv_ref_sig', 0); if ~isnumeric(vr_), vr_ = -1; end   % (-1: depth-dependent, 'step1')
+pdesc_ = sprintf('xi U[%g %g], xi_ref_sig %g (hierarchical %d, range %s), vsv_ref_sig %g, smooth_sig %s (hierarchical %d)', S0.mc.ximin, S0.mc.ximax, ...
     optget(S0.mc, 'xi_ref_sig', 0), optget(S0.mc, 'xi_ref_hier', false), mat2str(optget(S0.mc, 'xi_ref_sig_range', [0.005 0.2])), ...
-    optget(S0.mc, 'vsv_ref_sig', 0), mat2str(optget(S0.mc, 'smooth_sig', [0 0])));
+    vr_, mat2str(optget(S0.mc, 'smooth_sig', [0 0])), optget(S0.mc, 'smooth_hier', false));
 sigd = optget(opt, 'disp_sig', 0.0025);
 sfrom_ = optget(opt, 'disp_sig_from', '');
 if ~isempty(sfrom_)                            % per-period precision of a waveform run
@@ -86,6 +88,8 @@ for ic = 1:numel(cases)
         xs_ = cell2mat(cellfun(@(x) x.xs(:), R, 'UniformOutput', false));
         if any(isfinite(xs_)), q_ = sort(xs_(isfinite(xs_))); fprintf(o, '   sampled xi prior strength sigma_xi: median %.3f [5-95%%: %.3f-%.3f]\n', ...
             median(q_), q_(max(1, round(0.05*numel(q_)))), q_(round(0.95*numel(q_)))); end
+        ss_ = cell2mat(cellfun(@(x) x.ss, R, 'UniformOutput', false));
+        if any(isfinite(ss_(:))), fprintf(o, '   sampled smoothing strengths: median %s\n', mat2str(median(ss_(all(isfinite(ss_), 2), :), 1), 3)); end
         fprintf(o, '   final log L per chain %s (0 = exact fit)\n', mat2str(round(cellfun(@(x) x.L(end), R'))));
         fprintf(o, '   xi band averages: posterior mean [5-95%%] | true | chain means\n');
         for b = 1:size(bands, 1)

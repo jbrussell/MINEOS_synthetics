@@ -36,7 +36,8 @@
 %
 % Options (opt.s1b_*): disp_file (''), noise (false), noise_seed (1),
 % zmin (7), zmax (350; km below the seafloor), vsmin/vsmax (3.8/5.0 km/s),
-% kvmax (15), smooth_sig (0; curvature prior on Vsv, lr_common.m),
+% kvmax (15), smooth_sig (0; curvature prior on Vsv, lr_common.m), smooth_hier
+% (false; true = its strength sampled, opt.smooth_sig_range),
 % chains (4), nit (20000), burn (10000), lin_updates (2).
 %
 % Next: D2_step2_prep_mineos_idagrn.m
@@ -89,7 +90,8 @@ cfg.refp = struct('z', zplot, 'vsv', cp_('vsv'), 'vsh', cp_('vsh'), 'eta', card_
 mc = struct('kvmin', 0, 'kvmax', g('s1b_kvmax', 15), 'kxmin', 0, 'kxmax', 0, ...
     'vsmin', g('s1b_vsmin', 3.8), 'vsmax', g('s1b_vsmax', 5.0), 'ximin', 0.85, 'ximax', 1.15, 'p_xi', 0, ...
     'step_vs', 0.03, 'step_xi', 0.01, 'step_z', 10, 'eta_free', false, ...
-    'smooth_sig', g('s1b_smooth_sig', 0)*[1 1], 'smooth_param', 'vsv_vsh', 'smooth_len', 10);
+    'smooth_sig', g('s1b_smooth_sig', 0)*[1 1], 'smooth_param', 'vsv_vsh', 'smooth_len', 10, ...
+    'smooth_hier', g('s1b_smooth_hier', false), 'smooth_sig_range', g('smooth_sig_range', [5e-5 5e-3]));
 nch = g('s1b_chains', 4); nit = g('s1b_nit', 20000); burn = g('s1b_burn', 10000); thin = 20;
 nup = g('s1b_lin_updates', 2);
 sig = {NaN(numel(periods), 1), cstd ./ cobs};      % relative errors; Love not used (w = [0 1])

@@ -55,7 +55,7 @@ nsave = floor((mc.nit - mc.burn)/mc.thin);
 sv.st0 = st0;
 sv.vsv = zeros(numel(zplot), nsave); sv.vsh = sv.vsv; sv.xi = sv.vsv; sv.eta = sv.vsv;
 sv.CL = zeros(numel(Tdisp), nm, nsave); sv.CR = sv.CL;
-sv.kv = zeros(nsave, 1); sv.kx = sv.kv; sv.sig = zeros(nsave, 4); sv.rho = sv.sig; sv.xs = NaN(nsave, 1);
+sv.kv = zeros(nsave, 1); sv.kx = sv.kv; sv.sig = zeros(nsave, 4); sv.rho = sv.sig; sv.xs = NaN(nsave, 1); sv.ss = NaN(nsave, 2);
 sv.tau = zeros(nrec, nm, nsave); sv.dth = sv.tau;
 sv.tauc = zeros(nrec, nm, Kt, nsave);   % all time-shift coefficients
 sv.dthc = zeros(nrec, nm, Ka, nsave);   % all arrival-angle coefficients
@@ -86,8 +86,8 @@ for it = 1:mc.nit
             end
         end
     end
-    % ---------- sampled xi prior strength (opt.xi_ref_hier; prior only) ----------
-    if isfield(mc, 'xi_ref_hier') && mc.xi_ref_hier, st.m = lr_common('hyper', st.m, cfg, mc); end
+    % ---------- sampled prior strengths (opt.xi_ref_hier, opt.smooth_hier; prior only) ----------
+    if ((isfield(mc, 'xi_ref_hier') && mc.xi_ref_hier) || (isfield(mc, 'smooth_hier') && mc.smooth_hier)), st.m = lr_common('hyper', st.m, cfg, mc); end
     % ---------- per-record nuisance sweep: one tau_n(w) or dth_n(w) coefficient ----------
     for r = 1:nrec
         tau = tauo(r, st); dc = reshape(st.dthc(r,:,:), nm, Ka); n = randi(nm);
@@ -122,6 +122,7 @@ for it = 1:mc.nit
         sv.CL(:,:,isv) = st.CL; sv.CR(:,:,isv) = st.CR;
         sv.kv(isv) = numel(st.m.V.zc); sv.kx(isv) = numel(st.m.X.zc);
         if isfield(st.m, 'xs'), sv.xs(isv) = st.m.xs; end
+        if isfield(st.m, 'ss'), sv.ss(isv, :) = st.m.ss; end
         sv.sig(isv,:) = st.sig; sv.rho(isv,:) = st.rho; sv.tau(:,:,isv) = st.tauc(:,:,1);
         sv.tauc(:,:,:,isv) = st.tauc;
         sv.dthc(:,:,:,isv) = st.dthc; sv.dth(:,:,isv) = st.dthc(:,:,1);

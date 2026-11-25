@@ -76,7 +76,7 @@ nsave = floor((pt.nit - pt.burn)/pt.thin);
 sv.st0 = st0;
 sv.vsv = zeros(numel(zplot), nsave); sv.vsh = sv.vsv; sv.xi = sv.vsv; sv.eta = sv.vsv;
 sv.CL = zeros(numel(Tdisp), nm, nsave); sv.CR = sv.CL;
-sv.kv = zeros(nsave, 1); sv.kx = sv.kv; sv.sig = zeros(nsave, 4); sv.rho = sv.sig; sv.xs = NaN(nsave, 1);
+sv.kv = zeros(nsave, 1); sv.kx = sv.kv; sv.sig = zeros(nsave, 4); sv.rho = sv.sig; sv.xs = NaN(nsave, 1); sv.ss = NaN(nsave, 2);
 sv.tau = zeros(nrec, nm, nsave); sv.dth = sv.tau;          % band-mean (constant) terms
 sv.tauc = zeros(nrec, nm, Kt, nsave);                      % all time-shift coefficients
 sv.dthc = zeros(nrec, nm, Ka, nsave);                      % all arrival-angle coefficients
@@ -158,8 +158,8 @@ for it = it0:pt.nit
                 end
             end
         end
-        % ---------- sampled xi prior strength (opt.xi_ref_hier; prior only, untempered) ----------
-        if isfield(mc, 'xi_ref_hier') && mc.xi_ref_hier, s.m = lr_common('hyper', s.m, cfg, mc); end
+        % ---------- sampled prior strengths (opt.xi_ref_hier, opt.smooth_hier; prior only, untempered) ----------
+        if ((isfield(mc, 'xi_ref_hier') && mc.xi_ref_hier) || (isfield(mc, 'smooth_hier') && mc.smooth_hier)), s.m = lr_common('hyper', s.m, cfg, mc); end
         % ---------- noise move: level sigma or AR(1) correlation r ----------
         sg = s.sig; rh = s.rho; iw = randi(4); okn = true;
         if rand < 0.5 || (isfield(mc, 'fixed_corr') && mc.fixed_corr), sg(iw) = sg(iw)*exp(mc.step_lsig*randn);   % (fixed correlation: sigma only)
@@ -193,6 +193,7 @@ for it = it0:pt.nit
         sv.CL(:,:,isv) = s.CL; sv.CR(:,:,isv) = s.CR;
         sv.kv(isv) = numel(s.m.V.zc); sv.kx(isv) = numel(s.m.X.zc); sv.sig(isv,:) = s.sig; sv.rho(isv,:) = s.rho;
         if isfield(s.m, 'xs'), sv.xs(isv) = s.m.xs; end
+        if isfield(s.m, 'ss'), sv.ss(isv, :) = s.m.ss; end
         for r = 1:nrec
             [~, ~, itau, ith] = lay(s.lin{r});
             xh = s.xh{r};                                                   % cached posterior mean
