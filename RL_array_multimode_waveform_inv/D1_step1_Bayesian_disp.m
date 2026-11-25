@@ -143,10 +143,13 @@ qc = sort(CRs, 2); nsc = size(qc, 2); pcc = @(p) qc(:, max(1, round(p*nsc)));   
 lam = sort(cell2mat(cellfun(@(x) x.lam(:, 2), R, 'UniformOutput', false)));   % Rayleigh noise multiplier (1 if not sampled)
 nml = struct('median', median(lam), 'p05', lam(max(1, round(0.05*numel(lam)))), 'p95', lam(round(0.95*numel(lam))), ...
     'sampled', mc.disp_noise_hier);
+ssv = sort(cell2mat(cellfun(@(x) x.ss(:, 1), R, 'UniformOutput', false)));   % sampled Vsv curvature strength (NaN if fixed)
+ssv = ssv(isfinite(ssv)); sms = struct('sampled', mc.smooth_hier, 'median', NaN, 'p05', NaN, 'p95', NaN);
+if ~isempty(ssv), sms.median = median(ssv); sms.p05 = ssv(max(1, round(0.05*numel(ssv)))); sms.p95 = ssv(round(0.95*numel(ssv))); end
 s1_unc = struct('z', zplot, 'vsv_mean', vmean, 'vsv_std', std(V, 0, 2), 'vsv_p05', pc(0.05), 'vsv_p16', pc(0.16), ...
     'vsv_p50', pc(0.5), 'vsv_p84', pc(0.84), 'vsv_p95', pc(0.95), 'vsv_samples', V(:, 1:max(1, floor(ns/400)):end), ...
     'c_p05', pcc(0.05), 'c_p16', pcc(0.16), 'c_p84', pcc(0.84), 'c_p95', pcc(0.95), ...
-    'rhat', rh, 'stages', hist_, 'zmin', zmin, 'zmax', zmax, 'data', dlabel, 'noise_mult', nml);
+    'rhat', rh, 'stages', hist_, 'zmin', zmin, 'zmax', zmax, 'data', dlabel, 'noise_mult', nml, 'smooth_sig', sms);
 card_final = s1_card_from_vsv(card_start, idx, interp1(zplot, vmean, zn, 'linear', 'extrap'));
 write_MINEOS_mod(card_final, fullfile(mdir, 'CARDS', [opt.s1_final '.card']));
 copyfile(fullfile(mdir, 'CARDS', [opt.ref_qmod '.qmod']), fullfile(mdir, 'CARDS', [opt.s1_final '.qmod']));
@@ -157,6 +160,10 @@ fprintf('Rayleigh fundamental mode, reduced chi^2 (MINEOS): start %.1f, posterio
 if mc.disp_noise_hier
     fprintf('data error multiplier (sampled): median %.2f [5-95%%: %.2f-%.2f]; reduced chi^2 with the scaled errors %.2f\n', ...
         nml.median, nml.p05, nml.p95, mean(((cobs - cpre)./(nml.median*cstd)).^2));
+end
+if mc.smooth_hier
+    fprintf('smoothing strength (sampled): median %.2e [5-95%%: %.2e-%.2e] km/s/km^2 (hyperprior range %s)\n', ...
+        sms.median, sms.p05, sms.p95, mat2str(mc.smooth_sig_range));
 end
 fprintf('Vsv posterior: R-hat median %.2f (max %.2f); std median %.3f km/s\n', median(rh(in & isfinite(rh))), max(rh(in & isfinite(rh))), median(s1_unc.vsv_std(in)));
 save(opt.s1_file, 'card_prem', 'card_start', 'card_final', 'card_true', 'cobs', 'cstd', ...
