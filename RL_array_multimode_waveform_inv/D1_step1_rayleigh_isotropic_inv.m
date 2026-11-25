@@ -53,6 +53,10 @@ periods = opt.s1_periods(:);
 cd(mdir);
 cobs = run_mineos_phv_kernels(opt.trueid, 'R', periods, 0, 0);
 cstd = opt.s1_cstd * cobs;
+if optget(opt, 's1b_noise', false)            % optional Gaussian data noise (as D1_step1_Bayesian_disp.m)
+    rs_ = randn('state'); randn('state', optget(opt, 's1b_noise_seed', 1));
+    cobs = cobs + cstd .* randn(size(cobs)); randn('state', rs_);
+end
 card_start = read_model_card(['./CARDS/' opt.s1_start '.card']);   % fname relative to run_MINEOS
 % break the smoothing only at the crustal discontinuities (water bottom,
 % sediments, Moho); the PREM discontinuities (80, 220 km) are smoothed over
@@ -87,8 +91,20 @@ write_MINEOS_mod(card_final, fullfile(mdir, 'CARDS', [opt.s1_final '.card']));
 copyfile(fullfile(mdir, 'CARDS', [opt.ref_qmod '.qmod']), fullfile(mdir, 'CARDS', [opt.s1_final '.qmod']));
 fprintf('Rayleigh fundamental mode, reduced chi^2: start %.1f, final %.2f\n', ...
     mean(((cobs - cstart)./cstd).^2), mean(((cobs - cpre)./cstd).^2));
+% linearized uncertainty in the format of the Bayesian versions (s1_unc):
+% the data errors propagated through the damped generalized inverse
+% (unc.Cm of the last iteration; the damping/smoothing are NOT included as
+% a prior covariance, so this is not a posterior), mean +/- 1 and 1.645 std
+zw_ = max(card_true.z(card_true.vsv == 0 & card_true.z < 20));
+[zs_, io_] = sort(unc.z - zw_); km_ = zs_ >= 0;
+vs_ = card_final.vsv(unc.I(io_))/1000; sd_ = unc.vsv_std(io_);
+zplot1 = (0:2:400)'; ip_ = @(x) interp1(zs_(km_), x(km_), zplot1, 'linear', NaN);
+s1_unc = struct('z', zplot1, 'vsv_mean', ip_(vs_), 'vsv_std', ip_(sd_), 'vsv_p05', ip_(vs_ - 1.645*sd_), ...
+    'vsv_p16', ip_(vs_ - sd_), 'vsv_p50', ip_(vs_), 'vsv_p84', ip_(vs_ + sd_), 'vsv_p95', ip_(vs_ + 1.645*sd_), ...
+    'data', 'linearized (Ginv Cd Ginv'')');
+method = 'linearized';
 save(opt.s1_file, 'card_prem', 'card_start', 'card_final', 'card_true', 'cobs', 'cstd', ...
-     'cstart', 'cpre', 'periods', 'discs', 'opt');
+     'cstart', 'cpre', 'periods', 'discs', 'opt', 'method', 's1_unc');
 
 %% figure
 zw = max(card_true.z(card_true.vsv == 0 & card_true.z < 20));
