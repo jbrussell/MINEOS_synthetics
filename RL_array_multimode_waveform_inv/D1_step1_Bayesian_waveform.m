@@ -101,11 +101,12 @@ load(stf_); opt = opt0; g = @(f, d) optget(opt, f, d); delete(stf_);
 %% posterior Vsv -> step-1 card and uncertainty
 S = load(['setup' o1.tag '.mat'], 'cfg', 'zplot', 'Tdisp');
 zplot = S.zplot; cfg = S.cfg; zw = cfg.zw; Td = S.Tdisp(:);
-V = []; Vc = cell(nrun, 1); CRs = []; SS = [];
+V = []; Vc = cell(nrun, 1); CRs = []; SS = []; KV = [];
 for i = 1:nrun
     C = load(sprintf('chain%s_%02d.mat', o1.tag, i), 'sv'); Vc{i} = C.sv.vsv; V = [V, C.sv.vsv]; %#ok<AGROW>
     CRs = [CRs, squeeze(C.sv.CR(:, 1, :))]; %#ok<AGROW>   % branch-0 Rayleigh, posterior samples (linearized)
     if isfield(C.sv, 'ss'), SS = [SS; C.sv.ss(:, 1)]; end %#ok<AGROW>   % sampled Vsv curvature strength
+    KV = [KV; C.sv.kv(:)]; %#ok<AGROW>                                    % interior Vsv control points
 end
 in = zplot >= cfg.zmin & zplot <= cfg.zmax;
 vmean = mean(V, 2); q = sort(V, 2); ns = size(q, 2); pc = @(p) q(:, max(1, round(p*ns)));
@@ -119,7 +120,7 @@ if ~isempty(SS), sms.median = median(SS); sms.p05 = SS(max(1, round(0.05*numel(S
 s1_unc = struct('z', zplot, 'vsv_mean', vmean, 'vsv_std', std(V, 0, 2), 'vsv_p05', pc(0.05), 'vsv_p16', pc(0.16), ...
     'vsv_p50', pc(0.5), 'vsv_p84', pc(0.84), 'vsv_p95', pc(0.95), 'vsv_samples', V(:, 1:max(1, floor(ns/400)):end), ...
     'c_periods', Td, 'c_p05', pcc(0.05), 'c_p16', pcc(0.16), 'c_p84', pcc(0.84), 'c_p95', pcc(0.95), 'rhat', rh, ...
-    'smooth_sig', sms, ...
+    'smooth_sig', sms, 'kv', struct('median', median(KV), 'p05', prctile_(KV, 5), 'p95', prctile_(KV, 95)), ...
     'zmin', cfg.zmin, 'zmax', cfg.zmax, 'data', sprintf('Rayleigh waveforms, %s', opt.aswms_dir));
 % the card: the starting card's nodes between zmin and zmax (the inversion
 % nodes of the setup, whose reference card is the starting card) get the
