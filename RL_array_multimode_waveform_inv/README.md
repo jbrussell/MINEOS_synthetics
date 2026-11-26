@@ -61,8 +61,14 @@ default) each process waits after its burn-in until all chains/ensembles
 have finished theirs; the first process to see all burn-in files runs
 MINEOS + idagrn6 for the new reference (~10 min) and the others then
 continue with it. MINEOS/idagrn6 runs are serialized through the lock
-directory `../run_MINEOS/.prep_lock` (remove it by hand if a process died
-while holding it).
+directory `../run_MINEOS/.prep_lock` (`mineos_lock.m`). Stale locks are
+removed automatically: when the holder (process ID and host in
+`.prep_lock/owner.txt`) no longer exists, when it is the waiting process
+itself (left by an interrupted run, e.g. Ctrl-C in MATLAB), or when an
+old lock without an owner record is more than 2 min old and no MINEOS or
+idagrn6 program is running. A lock of a live process, or of another host on
+a shared file system, is waited for (remove it by hand if that process is
+stuck).
 
 **Projects and the results archive:** name each run by setting
 `opt.project_tag` (in `parameters_RL.m` or in `opt` before the drivers),
