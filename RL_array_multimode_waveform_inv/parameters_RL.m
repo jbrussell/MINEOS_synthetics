@@ -100,8 +100,8 @@ opt = opt_defaults(opt, struct( ...
     'refid',        'RLinv_step1', ...   % reference card of step 2 (= s1_final)
     'ref_qmod',     '', ...              % Q (.qmod) of the step-1 and step-2 cards ('' = trueid for
     ...                                  %   s1_start_model = 'pa5_iso', premid for 'prem')
-    'nbranch_data', 16, ...              % branches 0..15 in the PA5 data
-    'nm',           8, ...               % branches 0..7 modeled
+    'nbranch_data', 4, ...               % branches 0..3 in the PA5 data (synthetic test)
+    'nm',           4, ...               % branches 0..3 modeled
     'maxF',         70, ...              % mode tables up to (mHz)
     'dt',           4, 'len_hr', 1.25, ...
     'start_synth',  1, ...               % idagrn6 seismograms of the step-1 starting model (all branches)

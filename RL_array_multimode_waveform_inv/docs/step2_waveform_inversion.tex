@@ -137,7 +137,7 @@ version, Section~\ref{sec:step1}).
 For the synthetic test, \texttt{A0\_synth\_make\_sac\_data.m} computes
 \texttt{idagrn6} normal-mode seismograms for the true model (PA5) with the
 mode branches $n=0,\dots,N_b^{\rm data}-1$ (\texttt{opt.nbranch\_data},
-default 16; tests use 1, 2 and 4) at sampling interval $\Delta t=4$~s,
+default 4; tests also use 1 and 2) at sampling interval $\Delta t=4$~s,
 transverse and vertical displacement, starting at the origin time. Noise
 is added: white noise through the processing band-pass $H$
 (Section~\ref{sec:proc}), with standard deviation \texttt{opt.noise} $=0.03$
@@ -147,7 +147,8 @@ $=s$, default 0). The records are written as SAC files in the ASWMS-Q
 layout, so they go through the same processing as real data. A truth file
 keeps the noise-free records for diagnostics; it is never read for real
 data. The inversion models only the branches $n=0,\dots,n_m-1$
-(\texttt{opt.nm}); branches $n\ge n_m$ in the data are not modeled.
+(\texttt{opt.nm}, default 4: all branches of the default data);
+branches $n\ge n_m$ in the data are not modeled.
 
 \subsection{ASWMS-Q processing (A1--A4)}\label{sec:aswms}
 The scripts A1--A3 are ports of the ASWMS-Q pipeline
