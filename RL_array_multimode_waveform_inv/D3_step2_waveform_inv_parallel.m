@@ -8,6 +8,11 @@
 % as the serial runs (each chain/ensemble has its own random seed);
 % checkpoints and resuming as in D3.
 %
+% Before the run, any open pool is closed and the 'local' cluster profile
+% is set to opt.par_workers workers (one per chain/ensemble when []) and
+% saved, so that a pool of that size can be started (MATLAB limits a pool
+% to the profile's NumWorkers).
+%
 % Each worker runs one ensemble with all its opt.K temperatures, so the
 % useful number of workers is opt.nens (default 4). Memory: every worker
 % holds a copy of the records and the linearization (of order 100 MB for
@@ -21,4 +26,19 @@
 % Next: D4_step2_plot_results.m (called automatically when all are done).
 if ~exist('opt', 'var'), opt = struct(); end
 opt.parallel = true;
+parameters_RL;              % resolve opt (keeps every field already set) for the pool size below
+if ~exist('OCTAVE_VERSION', 'builtin') && exist('parpool', 'file') == 2 && license('test', 'Distrib_Computing_Toolbox')
+    % pool workers: opt.par_workers, or one per chain/ensemble ([])
+    if ~isempty(opt.par_workers), nw_ = opt.par_workers;
+    elseif strcmp(opt.sampler, 'pt'), nw_ = opt.nens;
+    else, nw_ = opt.nchains; end
+    delete(gcp('nocreate'))
+    % Load the cluster profile ('Processes' for R2022b+, 'local' for R2022a and earlier)
+    c = parcluster('local');
+    % Set the maximum number of workers
+    c.NumWorkers = nw_;
+    % Save the change permanently
+    saveProfile(c);
+    clear c nw_
+end
 D3_step2_waveform_inv
