@@ -18,7 +18,10 @@ function P = prep_mineos_idagrn(opt)
 %     events_nomelt_2012.cmt: the full PA5 synthetics (all branches in the
 %     table: the "data") and single-branch synthetics of the reference model
 %     for branches 0..nm-1 (idagrn6_mask: the reference spectra Uref),
-%     transverse (T) and vertical (Z) components, displacement.
+%     transverse (T) and vertical (Z) components, displacement;
+%  5. (opt.start_synth = 1) full synthetics of the step-1 starting card
+%     (opt.s1_start, written by D1, same branches as the data), for the
+%     record sections (D2) and the waveform figures (fig4).
 %
 % Steps 2-4 for the true model are skipped when opt.P_true (a previous
 % output) is given; only the reference part is then recomputed.
@@ -40,7 +43,8 @@ function P = prep_mineos_idagrn(opt)
 % opt fields: ref_card (required), refid ('RLinv_step1'), ref_qmod
 % (trueid); optional: prepfile, mdir (path to run_MINEOS), trueid
 % ('pa5_5km'), zmoho (12 km below sea level), maxF (70 mHz), nbranch_data
-% (8), nm (3), Tdisp, dt (4 s), len_hr (1 h), eventfile, stationfile, P_true
+% (8), nm (3), Tdisp, dt (4 s), len_hr (1 h), eventfile, stationfile, P_true,
+% start_synth (0), s1_start ('RLinv_pa5iso')
 %
 % jbrussell 11/2026
 
@@ -139,6 +143,21 @@ for TY = 'TS'
     P.(['u_ref_', TY]) = D.u;                        % {nev x nm}
     P.t = D.t;
     fprintf('idagrn %c done (%.0f s)\n', TY, toc);
+end
+
+% 5. synthetics of the step-1 STARTING model (CARDS/<s1_start>.card, with
+% its .qmod, written by D1), all branches (for the waveform figures)
+if og('start_synth', 0) && ~lin_only_
+    sid = og('s1_start', 'RLinv_pa5iso');
+    if exist(fullfile(P.mdir, 'CARDS', [sid, '.card']), 'file') ~= 2
+        error('prep_mineos_idagrn: %s.card (the step-1 starting model) not found; run D1 first', sid);
+    end
+    for TY = 'TS'
+        mineos_modes(P.mdir, sid, TY, P.nbranch_data, P.maxF, P.Tdisp, []);
+        D = idagrn_synth(P.mdir, sid, TY, P.maxF, P.nbranch_data, P.ev, P.sta, P.len_hr, P.dt, []);
+        P.(['u_start_', TY]) = D.u;
+        fprintf('step-1 start idagrn %c done (%.0f s)\n', TY, toc);
+    end
 end
 
 if (aswms_ || ~isempty(og('aswms_dir', ''))) && ~lin_only_   % reference branch synthetics, ASWMS-Q event-file format

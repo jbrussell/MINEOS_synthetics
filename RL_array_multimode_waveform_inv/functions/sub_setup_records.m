@@ -329,6 +329,14 @@ for wv = waves_(:)'
             rec(r).clean = clean(idx) / rec(r).scale;
         end
         rec(r).Dj = Dj;
+        % for the waveform figures: the step-1 starting model (all branches,
+        % no nuisance correction)
+        if isfield(P, ['u_start_' uname{wv}])
+            u = proc(P.(['u_start_' uname{wv}]){e}(it, :));
+            rec(r).start = u(idx) / rec(r).scale;
+        else
+            rec(r).start = NaN(size(idx));
+        end
     end
 end
 % reference spectra Uref (single-branch idagrn6 synthetics of the

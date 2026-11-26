@@ -3,9 +3,10 @@ function plot_record_sections(P, outdir, fc, win)
 %
 % Record sections of the step-2 prep structure P (prep_mineos_idagrn.m):
 % the data (P.u_true_*: the event files of A1-A3 in D2, or the full PA5
-% mode sum, branches 0..P.nbranch_data-1) and the step-1 model (the
-% reference: the sum of its single-branch synthetics P.u_ref_*, branches
-% 0..P.nm-1), transverse (Love, T) and vertical (Rayleigh, Z)
+% mode sum, branches 0..P.nbranch_data-1), the step-1 starting model (if
+% present: P.u_start_*, opt.start_synth; same branches as the data) and the
+% final step-1 model (the reference: the sum of its single-branch
+% synthetics P.u_ref_*, branches 0..P.nm-1), transverse (Love, T) and vertical (Rayleigh, Z)
 % displacement, band-passed to the inversion band fc = [f1 f2 f3 f4] Hz
 % (cosine taper; default [1/112 1/100 1/20 1/17]).
 %
@@ -23,7 +24,8 @@ function plot_record_sections(P, outdir, fc, win)
 %                                   window bounds of every event
 %   record_section_events_<T|Z>.png one panel per event (stations vs
 %                                   distance), normalized per event; data
-%                                   black, step-1 model red, window blue
+%                                   black, step-1 start green, final step-1
+%                                   model red, window blue
 if nargin < 3 || isempty(fc), fc = [1/112 1/100 1/20 1/17]; end
 if nargin < 4, win = {}; end
 if ~exist(outdir, 'dir'), mkdir(outdir); end
@@ -38,7 +40,7 @@ km2deg = 180/(6371*pi);
 comp = {'T', 'Z'}; ty = {'T', 'S'}; wname = {'Love (transverse)', 'Rayleigh (vertical)'};
 ecol = lines(nev);
 for wv = 1:2
-    D = zeros(nev, nst); Ut = cell(nev, 1); Us = cell(nev, 1);
+    D = zeros(nev, nst); Ut = cell(nev, 1); Us = cell(nev, 1); U0 = cell(nev, 1);
     W1 = NaN(nev, nst); W2 = NaN(nev, nst);       % window start/end per station (s)
     for e = 1:nev
         D(e, :) = gc_dist_az(P.sta.lat, P.sta.lon, P.ev(e).lat*ones(nst, 1), P.ev(e).lon*ones(nst, 1))';
@@ -48,6 +50,7 @@ for wv = 1:2
             us = 0; for n = 1:size(P.(fr), 2), us = us + P.(fr){e, n}; end
             Us{e} = bp(us);
         end
+        if isfield(P, ['u_start_' ty{wv}]), U0{e} = bp(P.(['u_start_' ty{wv}]){e}); end
         w = [];
         if numel(win) >= wv && numel(win{wv}) >= e, w = win{wv}{e}; end
         if ~isempty(w) && numel(w.winpara) == 4
@@ -57,8 +60,8 @@ for wv = 1:2
         end
     end
     hasw = any(isfinite(W1(:)));
-    tit_ = sprintf('%s, %g-%g s: data (branches 0-%d) and step-1 model (branches 0-%d)', wname{wv}, ...
-        round(1/fc(4)), round(1/fc(1)), P.nbranch_data - 1, P.nm - 1);
+    tit_ = sprintf('%s, %g-%g s: data (branches 0-%d), step-1 start (green) and final step-1 model (red, branches 0-%d)', ...
+        wname{wv}, round(1/fc(4)), round(1/fc(1)), P.nbranch_data - 1, P.nm - 1);
     if hasw, wl_ = 'blue: automatic window (A3)'; else, wl_ = 'no automatic windows (run A3 before D2)'; end
     % ---- all events in one record section ----
     fig = figure('position', [50 50 1100 1300]); hold on; box on;
@@ -90,6 +93,7 @@ for wv = 1:2
         sp = max(rng_, 0.5) / nst * 1.6;            % half-amplitude of a trace (deg)
         sn = max(abs(Ut{e}(:)));                    % one normalization per event
         for j = 1:nst
+            if ~isempty(U0{e}), plot(t, de(j) + sp*U0{e}(:, j)/sn, '-', 'color', [0 0.6 0], 'linewidth', 0.5); end
             if ~isempty(Us{e}), plot(t, de(j) + sp*Us{e}(:, j)/sn, '-', 'color', [0.85 0.2 0.2], 'linewidth', 0.5); end
             plot(t, de(j) + sp*Ut{e}(:, j)/sn, 'k-', 'linewidth', 0.6);
         end
@@ -106,7 +110,7 @@ for wv = 1:2
         if mod(e - 1, nc) == 0, ylabel('\Delta (deg)'); end
         if e > (nr - 1)*nc, xlabel('Time since the centroid (s)'); end
     end
-    st_ = sprintf('%s: data black, step-1 model red; %s', tit_, wl_);
+    st_ = sprintf('%s; data black; %s', tit_, wl_);
     if exist('OCTAVE_VERSION', 'builtin')
         axes('position', [0 0.965 1 0.03], 'visible', 'off');
         text(0.5, 0.5, st_, 'horizontalalignment', 'center');

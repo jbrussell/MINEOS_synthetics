@@ -21,11 +21,16 @@ function P = update_reference(vsv, vsh, zp, cfg, opt, refid_new, prepfile_new, e
 if exist(prepfile_new, 'file') == 2
     P = load(prepfile_new); P = P.P; fprintf('loaded %s\n', prepfile_new); return
 end
-Pold = prep_mineos_idagrn(opt);                 % cached: true-model results
+Pold = prep_mineos_idagrn(opt);                 % cached: true-model results, step-1 start synthetics
 if nargin < 8, eta = []; end
 c = ref_card_update(cfg.card_ref, cfg.zw, cfg.zmin, cfg.zmax, zp, vsv, vsh, eta);
 o = opt; o.prepfile = prepfile_new; o.refid = refid_new; o.ref_card = c;
-o.P_true = Pold;
+o.P_true = Pold; o.start_synth = 0;
 P = prep_mineos_idagrn(o);                       % (MINEOS/idagrn6 serialized inside: mineos_lock.m)
+for TY = 'TS'                                    % step-1 start synthetics for the figures
+    f = ['u_start_' TY];
+    if isfield(Pold, f), P.(f) = Pold.(f); end
+end
+save(prepfile_new, 'P');
 end
 

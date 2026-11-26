@@ -111,6 +111,8 @@ opt = opt_defaults(opt, struct( ...
     'nm',           4, ...               % branches 0..3 modeled
     'maxF',         70, ...              % mode tables up to (mHz)
     'dt',           4, 'len_hr', 1.25, ...
+    'start_synth',  1, ...               % idagrn6 seismograms of the step-1 starting model (all branches)
+    ...                                  %   for the D2 record sections and the waveform figures (fig4)
     ... % ---- step 2: inversion (D3) ----
     'sampler',  'pt', ...                % 'pt' (parallel tempering; default) or 'plain' (independent rjMcMC chains)
     'nuisance', 'marginal', ...          % tau_n(w), dth_n(w), B_n(w): 'marginal' (integrated out,
