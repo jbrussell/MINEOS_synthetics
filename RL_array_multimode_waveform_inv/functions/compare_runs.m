@@ -3,8 +3,7 @@ function compare_runs(tags, names, outfile)
 % Posterior mean and 5-95% range of Vsv, Vsh and xi for several runs
 % (setup<tag>.mat, chain<tag>_XX.mat), with the true model (PA5) and the
 % reference model of each run, in one figure.
-%   compare_runs({'_s1','_s2','_ctl','_ctl3'}, {'PREM ref.','stage 2', ...
-%                'PA5 ref.','PA5 ref., n<=2 data'}, 'figs_compare.png')
+%   compare_runs({'_plain','_pt'}, {'plain rjMcMC','parallel tempering'}, 'figs_compare.png')
 if exist('OCTAVE_VERSION', 'builtin'), set(0, 'defaultfigurevisible', 'off'); end
 nr = numel(tags);
 flds = {'vsv', 'vsh', 'xi'};

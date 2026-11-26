@@ -4,10 +4,10 @@ function P = prep_mineos_idagrn(opt)
 % Run MINEOS and idagrn6 for the recovery test and cache the results in
 % opt.prepfile (default 'prep_mineos.mat'):
 %
-%  1. the reference ("input") card: by default PREM below the PA5 Moho with
-%     the PA5 water, sediments and crust above it (mineos_tools/
-%     make_ref_card.m), or the card opt.ref_card (a read_model_card
-%     structure, e.g. an updated reference from a previous inversion stage);
+%  1. the reference ("input") card opt.ref_card (a read_model_card
+%     structure: the step-1 model in D2, or an updated reference from a
+%     previous inversion stage), written to CARDS/<opt.refid>.card with the
+%     Q of CARDS/<opt.ref_qmod>.qmod;
 %  2. MINEOS mode tables of the true model (PA5; opt.nbranch_data branches)
 %     and of the reference model (branches 0..nm-1), Love (T) and Rayleigh
 %     (S), up to opt.maxF mHz;
@@ -18,10 +18,7 @@ function P = prep_mineos_idagrn(opt)
 %     events_nomelt_2012.cmt: the full PA5 synthetics (all branches in the
 %     table: the "data") and single-branch synthetics of the reference model
 %     for branches 0..nm-1 (idagrn6_mask: the reference spectra Uref),
-%     transverse (T) and vertical (Z) components, displacement;
-%  5. (opt.start_synth = 1) full synthetics of the step-1 starting card (opt.s1_start,
-%     written by D1, same branches as the data), for comparison
-%     in the waveform figures.
+%     transverse (T) and vertical (Z) components, displacement.
 %
 % Steps 2-4 for the true model are skipped when opt.P_true (a previous
 % output) is given; only the reference part is then recomputed.
@@ -40,11 +37,10 @@ function P = prep_mineos_idagrn(opt)
 % Needs the MINEOS and idagrn6 binaries in ../FORTRAN/bin and SAC (sacio)
 % for idagrn6; see ../FORTRAN/README. Run from this directory.
 %
-% opt fields (all optional): prepfile, mdir (path to run_MINEOS), trueid
-% ('pa5_5km'), premid ('prem_35'), refid ('prem_nomelt'), ref_card, zmoho
-% (12 km below sea level), maxF (70 mHz), nbranch_data (8), nm (3), Tdisp,
-% dt (4 s), len_hr (1 h), eventfile, stationfile, P_true, start_synth (0),
-% premref ('prem_nomelt')
+% opt fields: ref_card (required), refid ('RLinv_step1'), ref_qmod
+% (trueid); optional: prepfile, mdir (path to run_MINEOS), trueid
+% ('pa5_5km'), zmoho (12 km below sea level), maxF (70 mHz), nbranch_data
+% (8), nm (3), Tdisp, dt (4 s), len_hr (1 h), eventfile, stationfile, P_true
 %
 % jbrussell 11/2026
 
@@ -70,9 +66,8 @@ end
 P.mdir = og('mdir', fullfile(here, '..', 'run_MINEOS'));
 addpath(fullfile(P.mdir, 'functions'));
 P.trueid = og('trueid', 'pa5_5km');
-P.premid = og('premid', 'prem_35');
-P.ref_qmod = og('ref_qmod', P.premid);       % Q of the reference card
-P.refid  = og('refid', 'prem_nomelt');
+P.ref_qmod = og('ref_qmod', P.trueid);       % Q of the reference card
+P.refid  = og('refid', 'RLinv_step1');
 P.zmoho  = og('zmoho', 12);
 P.maxF   = og('maxF', 70);
 P.nbranch_data = og('nbranch_data', 8);
@@ -89,15 +84,12 @@ P.ev = rl_read_cmtsolution(og('eventfile', fullfile(here, 'events_nomelt_2012.cm
 
 % 1. reference card
 rc = og('ref_card', []);
-if isempty(rc)
-    P.card_ref = make_ref_card(P.mdir, P.refid, P.premid, P.trueid, P.zmoho);
-else
-    ws_ = warning;                              % write_MINEOS_mod turns all warnings on
-    write_MINEOS_mod(rc, fullfile(P.mdir, 'CARDS', [P.refid, '.card']));
-    warning(ws_);
-    copyfile(fullfile(P.mdir, 'CARDS', [P.ref_qmod, '.qmod']), fullfile(P.mdir, 'CARDS', [P.refid, '.qmod']));
-    P.card_ref = read_model_card(fullfile(P.mdir, 'CARDS', [P.refid, '.card']));
-end
+if isempty(rc), error('prep_mineos_idagrn: opt.ref_card (the reference model, e.g. the step-1 card) is required'); end
+ws_ = warning;                                  % write_MINEOS_mod turns all warnings on
+write_MINEOS_mod(rc, fullfile(P.mdir, 'CARDS', [P.refid, '.card']));
+warning(ws_);
+copyfile(fullfile(P.mdir, 'CARDS', [P.ref_qmod, '.qmod']), fullfile(P.mdir, 'CARDS', [P.refid, '.qmod']));
+P.card_ref = read_model_card(fullfile(P.mdir, 'CARDS', [P.refid, '.card']));
 if ~isempty(P.trueid)
     P.card_true = read_model_card(fullfile(P.mdir, 'CARDS', [P.trueid, '.card']));
 else
@@ -147,21 +139,6 @@ for TY = 'TS'
     P.(['u_ref_', TY]) = D.u;                        % {nev x nm}
     P.t = D.t;
     fprintf('idagrn %c done (%.0f s)\n', TY, toc);
-end
-
-% 5. synthetics of the step-1 STARTING model (CARDS/<s1_start>.card, with
-% its .qmod, written by D1), all branches (for the waveform figures)
-if og('start_synth', 0) && ~lin_only_
-    sid = og('s1_start', 'RLinv_pa5iso');
-    if exist(fullfile(P.mdir, 'CARDS', [sid, '.card']), 'file') ~= 2
-        error('prep_mineos_idagrn: %s.card (the step-1 starting model) not found; run D1 first', sid);
-    end
-    for TY = 'TS'
-        mineos_modes(P.mdir, sid, TY, P.nbranch_data, P.maxF, P.Tdisp, []);
-        D = idagrn_synth(P.mdir, sid, TY, P.maxF, P.nbranch_data, P.ev, P.sta, P.len_hr, P.dt, []);
-        P.(['u_start_', TY]) = D.u;
-        fprintf('step-1 start idagrn %c done (%.0f s)\n', TY, toc);
-    end
 end
 
 if (aswms_ || ~isempty(og('aswms_dir', ''))) && ~lin_only_   % reference branch synthetics, ASWMS-Q event-file format

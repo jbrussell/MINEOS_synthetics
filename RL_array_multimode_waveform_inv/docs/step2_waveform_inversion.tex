@@ -281,9 +281,8 @@ source to station $j$ in the reference model and the instrument-free
 displacement response. The reference synthetics are computed by D2
 (\texttt{prep\_mineos\_idagrn.m}) one branch at a time with
 \texttt{idagrn6\_mask}, and also written in the ASWMS-Q event-file layout.
-For plotting, the reference prediction is $\Ifft[\sum_n U^{\rm ref}_{rjn}]$,
-and the step-1 starting-model prediction is the processed full synthetic
-of that model divided by $s_r$.
+For plotting, the reference (step-1 model) prediction is
+$\Ifft[\sum_n U^{\rm ref}_{rjn}]$.
 
 %======================================================================
 \section{Model parameterization}\label{sec:model}
@@ -1156,9 +1155,8 @@ station). All axes use 15-pt text (\texttt{opt.plot\_fontsize}).
 The waveform figures show, for each record:
 \begin{itemize}
 \item the data $\mathbf{d}_r$;
-\item the step-1 starting-model synthetic;
-\item the reference prediction $\Ifft[\sum_nU^{\rm ref}_{rjn}]$, with no
-  nuisance correction;
+\item the reference (step-1 model) prediction $\Ifft[\sum_nU^{\rm ref}_{rjn}]$,
+  with no nuisance correction;
 \item the final prediction: the exact waveforms of Eq.~\eqref{eq:forward}
   for the last chain state, with $t$ and $\theta$ set to their means over
   the last 20 samples and $\beta$ to its conditional posterior mean.

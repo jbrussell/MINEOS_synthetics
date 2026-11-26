@@ -59,7 +59,7 @@ card_start = read_model_card(fullfile(mdir, 'CARDS', [opt.s1_start '.card']));
 o1 = opt;
 o1.tag = g('s1w_tag', '_s1wf'); o1.outdir = od;
 o1.prepfile = g('s1w_prepfile', 'prep_s1wf.mat');
-o1.refid = opt.s1_start; o1.ref_card = card_start; o1.start_synth = 0;
+o1.refid = opt.s1_start; o1.ref_card = card_start;
 o1.nm = g('s1w_nm', 1); o1.waves = 2; o1.xi_fixed = true;
 o1.sampler = g('s1w_sampler', 'pt'); o1.update_ref = 'lin'; o1.lin_updates = g('s1w_lin_updates', 2);
 o1.smooth_sig = g('s1w_smooth_sig', 0)*[1 1]; o1.smooth_hier = g('s1w_smooth_hier', false);   % (true: sampled strength; not recommended)

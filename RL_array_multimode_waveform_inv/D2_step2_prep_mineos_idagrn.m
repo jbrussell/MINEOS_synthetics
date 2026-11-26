@@ -15,12 +15,10 @@
 %                   also written in the ASWMS-Q event-file format to
 %                   <opt.aswms_dir>branchmat/<refid>/<event id>_<component>.mat
 %                   (write_branchmat.m; stadata(j).data = [Nt x nm])
-%       start     : the step-1 STARTING model (CARDS/<opt.s1_start>.card), all
-%                   branches (for the waveform figures)
 % (functions/prep_mineos_idagrn.m). Takes a few minutes.
-% Then record sections of the full mode-sum synthetics (PA5 data and step-1 start,
-% T and Z, inversion band, with the window bounds) in figs_step2/
-% (functions/plot_record_sections.m).
+% Then record sections of the data and of the step-1 model (T and Z,
+% inversion band, with the automatic windows of A3 when they have been
+% picked) in figs_step2/ (functions/plot_record_sections.m).
 %
 % Needs the MINEOS and idagrn6 binaries (../FORTRAN/bin) and SAC (sacio).
 % Previous: D1_step1_rayleigh_isotropic_inv.m and (data) A1-A3 (synthetic
@@ -34,15 +32,24 @@ o.refid = opt.s1_final;
 P = prep_mineos_idagrn(o);
 fprintf('cached in %s: data branches 0-%d, modeled branches 0-%d\n', opt.prepfile, opt.nbranch_data-1, opt.nm-1);
 Pp = P;                                     % record sections of the data: from the event files
-if strcmp(opt.data_source, 'aswms')
-    ty_ = 'TS';
-    for wv = 1:2
-        for e = 1:numel(P.ev)
+win_ = {{}, {}};                            % automatic windows of A3 (event.winpara), if picked yet
+ty_ = 'TS';
+for wv = 1:2
+    for e = 1:numel(P.ev)
+        Dd = [];
+        if strcmp(opt.data_source, 'aswms') || exist(fullfile(opt.aswms_dir, 'eventmat'), 'dir') == 7
             Dd = read_event_data(opt, P.ev(e), P.sta.name, opt.aswms_components{wv}, P.t);
+        end
+        if strcmp(opt.data_source, 'aswms')
             if isempty(Dd), u = zeros(numel(P.t), numel(P.sta.name)); else, u = Dd.U; u(~isfinite(u)) = 0; end
             Pp.(['u_true_' ty_(wv)]){e} = u;
         end
+        if ~isempty(Dd) && ~isempty(Dd.winpara)
+            win_{wv}{e} = struct('winpara', Dd.winpara, 'dist', Dd.dist, 'toff', Dd.toff);
+        else
+            win_{wv}{e} = [];
+        end
     end
 end
-plot_record_sections(Pp, 'figs_step2', optget(opt, 'fc', []), optget(opt, 'U_start', []), optget(opt, 'windows', 'single'), optget(opt, 'fund_margin', []));
+plot_record_sections(Pp, 'figs_step2', optget(opt, 'fc', []), win_);
 fprintf('record sections in figs_step2/\n');

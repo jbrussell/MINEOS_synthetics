@@ -9,8 +9,8 @@ function P = update_reference(vsv, vsh, zp, cfg, opt, refid_new, prepfile_new, e
 % given (when eta is a model parameter). MINEOS (mode tables,
 % phase/group velocities and kernels of branches 0..nm-1) and idagrn6_mask
 % (single-branch reference synthetics) are rerun for it with
-% prep_mineos_idagrn.m; the true-model data and the PREM synthetics of
-% opt.prepfile are reused, not recomputed. The result is cached in
+% prep_mineos_idagrn.m; the true-model results of opt.prepfile are reused,
+% not recomputed. The result is cached in
 % prepfile_new (CARDS/<refid_new>.card); install it with apply_reference.m.
 %
 % The MINEOS and idagrn6 runs share scratch files in opt.mdir, so they are
@@ -21,16 +21,11 @@ function P = update_reference(vsv, vsh, zp, cfg, opt, refid_new, prepfile_new, e
 if exist(prepfile_new, 'file') == 2
     P = load(prepfile_new); P = P.P; fprintf('loaded %s\n', prepfile_new); return
 end
-Pold = prep_mineos_idagrn(opt);                 % cached: true data, step-1 start synthetics
+Pold = prep_mineos_idagrn(opt);                 % cached: true-model results
 if nargin < 8, eta = []; end
 c = ref_card_update(cfg.card_ref, cfg.zw, cfg.zmin, cfg.zmax, zp, vsv, vsh, eta);
 o = opt; o.prepfile = prepfile_new; o.refid = refid_new; o.ref_card = c;
-o.P_true = Pold; o.start_synth = 0;
+o.P_true = Pold;
 P = prep_mineos_idagrn(o);                       % (MINEOS/idagrn6 serialized inside: mineos_lock.m)
-for TY = 'TS'                                    % step-1 start synthetics for the figures
-    f = ['u_start_' TY];
-    if isfield(Pold, f), P.(f) = Pold.(f); end
-end
-save(prepfile_new, 'P');
 end
 

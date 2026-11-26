@@ -1,31 +1,31 @@
-function plot_record_sections(P, outdir, fc, U_start, windows, fund_margin)
-% plot_record_sections(P, outdir, fc, U_start, windows, fund_margin)
+function plot_record_sections(P, outdir, fc, win)
+% plot_record_sections(P, outdir, fc, win)
 %
-% Record sections of the full mode-sum idagrn6 synthetics of the step-2
-% prep structure P (prep_mineos_idagrn.m): the PA5 "data" (all branches
-% 0..P.nbranch_data-1) and, if present, the step-1 starting model (same
-% branches; P.u_start_*), transverse
-% (Love, T) and vertical (Rayleigh, Z) displacement, band-passed to the
-% inversion band fc = [f1 f2 f3 f4] Hz (cosine taper; default
-% [1/112 1/100 1/20 1/17]). The lines mark the overtone and fundamental-
-% mode windows of the inversion (group velocities of the reference model,
-% as in sub_setup_records.m): Delta/U_ov (overtone window start), Delta/U_b
-% (overtone/fundamental boundary; with opt.windows = 'single' the two are
-% one window) and Delta/U_f + 60 s (end). U_start (optional, km/s, scalar
-% or [Love Rayleigh]) replaces U_ov as in opt.U_start; windows = 'fund'
-% (opt.windows) starts the window at max fundamental-mode U + fund_margin
-% (opt.fund_margin, default [0.4 0.2] km/s for [Love Rayleigh]).
+% Record sections of the step-2 prep structure P (prep_mineos_idagrn.m):
+% the data (P.u_true_*: the event files of A1-A3 in D2, or the full PA5
+% mode sum, branches 0..P.nbranch_data-1) and the step-1 model (the
+% reference: the sum of its single-branch synthetics P.u_ref_*, branches
+% 0..P.nm-1), transverse (Love, T) and vertical (Rayleigh, Z)
+% displacement, band-passed to the inversion band fc = [f1 f2 f3 f4] Hz
+% (cosine taper; default [1/112 1/100 1/20 1/17]).
+%
+% win (optional): the automatic waveform windows of A3 (ASWMS-Q,
+%   A3_run_autowinpick.m), win{wv}{e} for wave type wv (1 Love, 2 Rayleigh)
+%   and event e: a struct with winpara [v1 t1 v2 t2], dist (km, per
+%   station of P.sta) and toff (event.otime - centroid time, s), as
+%   read_event_data.m returns them; the window of a station is
+%   dist/v1 + t1 + toff .. dist/v2 + t2 + toff on the time axis of P.t.
+%   Empty (or missing for an event): no window is drawn.
 %
 % Figures in outdir:
 %   record_section_all_<T|Z>.png    all events and stations vs epicentral
-%                                   distance, each trace normalized
-%   record_section_events_<T|Z>.png one panel per event (16 stations vs
-%                                   distance), normalized per event; PA5
-%                                   black, step-1 start red
+%                                   distance, each trace normalized; the
+%                                   window bounds of every event
+%   record_section_events_<T|Z>.png one panel per event (stations vs
+%                                   distance), normalized per event; data
+%                                   black, step-1 model red, window blue
 if nargin < 3 || isempty(fc), fc = [1/112 1/100 1/20 1/17]; end
-if nargin < 4, U_start = []; end
-if nargin < 5 || isempty(windows), windows = 'single'; end
-if nargin < 6 || isempty(fund_margin), fund_margin = [0.4 0.2]; end
+if nargin < 4, win = {}; end
 if ~exist(outdir, 'dir'), mkdir(outdir); end
 if exist('OCTAVE_VERSION', 'builtin'), set(0, 'defaultfigurevisible', 'off'); end
 t = P.t(:); Nt = numel(t); dt = t(2) - t(1);
@@ -38,17 +38,28 @@ km2deg = 180/(6371*pi);
 comp = {'T', 'Z'}; ty = {'T', 'S'}; wname = {'Love (transverse)', 'Rayleigh (vertical)'};
 ecol = lines(nev);
 for wv = 1:2
-    U = P.(['grv_ref_' ty{wv}]);
-    if size(U, 2) > 1, Uo_ = U(:, 2:end); else, Uo_ = U(:, 1); end   % (fundamental mode only: no overtones)
-    Ub = max(U(:,1)) + 0.2; Uov = max(Uo_(:)) + 0.6; Uf = min(U(:,1)) - 0.35;
-    if ~isempty(U_start), Uov = U_start(min(wv, numel(U_start))); end
-    if strcmp(windows, 'fund'), Ub = max(U(:,1)) + fund_margin(min(wv, numel(fund_margin))); Uov = Ub; end
-    D = zeros(nev, nst); Ut = cell(nev, 1); Up = cell(nev, 1);
+    D = zeros(nev, nst); Ut = cell(nev, 1); Us = cell(nev, 1);
+    W1 = NaN(nev, nst); W2 = NaN(nev, nst);       % window start/end per station (s)
     for e = 1:nev
         D(e, :) = gc_dist_az(P.sta.lat, P.sta.lon, P.ev(e).lat*ones(nst, 1), P.ev(e).lon*ones(nst, 1))';
         Ut{e} = bp(P.(['u_true_' ty{wv}]){e});
-        if isfield(P, ['u_start_' ty{wv}]), Up{e} = bp(P.(['u_start_' ty{wv}]){e}); end
+        fr = ['u_ref_' ty{wv}];
+        if isfield(P, fr)
+            us = 0; for n = 1:size(P.(fr), 2), us = us + P.(fr){e, n}; end
+            Us{e} = bp(us);
+        end
+        w = [];
+        if numel(win) >= wv && numel(win{wv}) >= e, w = win{wv}{e}; end
+        if ~isempty(w) && numel(w.winpara) == 4
+            wp = w.winpara;
+            W1(e, :) = w.dist(:)'/wp(1) + wp(2) + w.toff;
+            W2(e, :) = w.dist(:)'/wp(3) + wp(4) + w.toff;
+        end
     end
+    hasw = any(isfinite(W1(:)));
+    tit_ = sprintf('%s, %g-%g s: data (branches 0-%d) and step-1 model (branches 0-%d)', wname{wv}, ...
+        round(1/fc(4)), round(1/fc(1)), P.nbranch_data - 1, P.nm - 1);
+    if hasw, wl_ = 'blue: automatic window (A3)'; else, wl_ = 'no automatic windows (run A3 before D2)'; end
     % ---- all events in one record section ----
     fig = figure('position', [50 50 1100 1300]); hold on; box on;
     sc = 0.45;                                      % half-amplitude of a trace (deg)
@@ -57,16 +68,16 @@ for wv = 1:2
             u = Ut{e}(:, j); u = u / max(abs(u));
             plot(t, D(e, j) + sc*u, '-', 'color', ecol(e, :), 'linewidth', 0.5);
         end
+        if any(isfinite(W1(e, :)))                  % window bounds of the event (stations by distance)
+            [ds, is] = sort(D(e, :));
+            plot(W1(e, is), ds, 'k-', W2(e, is), ds, 'k-', 'linewidth', 1);
+        end
     end
-    dd = linspace(floor(min(D(:))) - 1, ceil(max(D(:))) + 1, 50);
-    hl = plot(dd/km2deg/Uov, dd, 'k--', dd/km2deg/Ub, dd, 'k-', dd/km2deg/Uf + 60, dd, 'k:', 'linewidth', 1.2);
-    legend(hl, {sprintf('window start, U_{ov} = %.2f km/s', Uov), ...
-                sprintf('overtone/fundamental boundary, U_b = %.2f km/s', Ub), ...
-                sprintf('fundamental window end, U_f = %.2f km/s (+60 s)', Uf)}, 'location', 'southeast');
-    set(gca, 'ydir', 'normal'); xlim([0 t(end)]); ylim(dd([1 end]));
-    xlabel('Time since origin (s)'); ylabel('Epicentral distance (deg)');
-    title(sprintf('%s, PA5 full mode sum (branches 0-%d), %g-%g s, traces normalized', ...
-        wname{wv}, P.nbranch_data - 1, round(1/fc(4)), round(1/fc(1))));
+    dd = [floor(min(D(:))) - 1, ceil(max(D(:))) + 1];
+    set(gca, 'ydir', 'normal'); xlim([0 t(end)]); ylim(dd);
+    xlabel('Time since the centroid (s)'); ylabel('Epicentral distance (deg)');
+    if hasw, wl2_ = 'black: automatic window of each event (A3)'; else, wl2_ = wl_; end
+    title(sprintf('%s, data, %g-%g s, traces normalized; %s', wname{wv}, round(1/fc(4)), round(1/fc(1)), wl2_));
     print(fig, '-dpng', '-r130', fullfile(outdir, ['record_section_all_' comp{wv} '.png']));
     if fig_close_mode, close(fig); end
     % ---- one panel per event ----
@@ -79,24 +90,28 @@ for wv = 1:2
         sp = max(rng_, 0.5) / nst * 1.6;            % half-amplitude of a trace (deg)
         sn = max(abs(Ut{e}(:)));                    % one normalization per event
         for j = 1:nst
-            if ~isempty(Up{e}), plot(t, de(j) + sp*Up{e}(:, j)/sn, '-', 'color', [0.85 0.2 0.2], 'linewidth', 0.5); end
+            if ~isempty(Us{e}), plot(t, de(j) + sp*Us{e}(:, j)/sn, '-', 'color', [0.85 0.2 0.2], 'linewidth', 0.5); end
             plot(t, de(j) + sp*Ut{e}(:, j)/sn, 'k-', 'linewidth', 0.6);
         end
         dl = [min(de) - 2*sp, max(de) + 2*sp];
-        plot(dl/km2deg/Uov, dl, 'b--', dl/km2deg/Ub, dl, 'b-', dl/km2deg/Uf + 60, dl, 'b:');
-        t1 = max(0, min(de)/km2deg/Uov - 300); t2 = min(t(end), max(de)/km2deg/Uf + 400);
+        if any(isfinite(W1(e, :)))
+            [ds, is] = sort(de);
+            plot(W1(e, is), ds, 'b-', W2(e, is), ds, 'b-', 'linewidth', 1.2);
+            t1 = max(0, min(W1(e, :)) - 300); t2 = min(t(end), max(W2(e, :)) + 300);
+        else
+            t1 = max(0, min(de)/km2deg/5 - 300); t2 = min(t(end), max(de)/km2deg/3.5 + 400);
+        end
         xlim([t1 t2]); ylim(dl);
         title(sprintf('%s  %.0f-%.0f deg', P.ev(e).id, min(de), max(de)), 'interpreter', 'none');
         if mod(e - 1, nc) == 0, ylabel('\Delta (deg)'); end
-        if e > (nr - 1)*nc, xlabel('Time (s)'); end
+        if e > (nr - 1)*nc, xlabel('Time since the centroid (s)'); end
     end
+    st_ = sprintf('%s: data black, step-1 model red; %s', tit_, wl_);
     if exist('OCTAVE_VERSION', 'builtin')
         axes('position', [0 0.965 1 0.03], 'visible', 'off');
-        text(0.5, 0.5, sprintf('%s full mode sums, %g-%g s: PA5 (black, branches 0-%d), step-1 start (red); blue: window bounds', ...
-            wname{wv}, round(1/fc(4)), round(1/fc(1)), P.nbranch_data - 1), 'horizontalalignment', 'center');
+        text(0.5, 0.5, st_, 'horizontalalignment', 'center');
     else
-        sgtitle(sprintf('%s full mode sums, %g-%g s: PA5 (black, branches 0-%d), step-1 start (red); blue: window bounds', ...
-            wname{wv}, round(1/fc(4)), round(1/fc(1)), P.nbranch_data - 1));
+        sgtitle(st_);
     end
     print(fig, '-dpng', '-r130', fullfile(outdir, ['record_section_events_' comp{wv} '.png']));
     if fig_close_mode, close(fig); end

@@ -294,11 +294,9 @@ for wv = 1:2
 end
 print(fig, '-dpng', '-r130', fullfile(outdir, 'fig3_dispersion_fits.png'));
 
-%% 4) waveform fits: data, step-1 start, reference and final model, with windows
-% step-1 start: idagrn6 seismograms of the starting model of step 1 (all
-% branches, no nuisance correction);
-% reference: sum of the reference branches 0..nm-1 (idagrn6_mask, no
-% nuisance correction); final: the waveform operator for the final state
+%% 4) waveform fits: data, step-1 model (reference) and final model, with windows
+% step 1: sum of the reference branches 0..nm-1 of the step-1 model
+% (idagrn6_mask, no nuisance correction); final: the waveform operator for the final state
 % of chain/ensemble 1 (structure, posterior-mean tau_n(w) and dth_n(w) of
 % the last samples, and the best-fitting B_n(w)). All processed like the data (band-pass, record normalization).
 pick = [1 6 11 16];
@@ -324,15 +322,13 @@ for e0 = unique([1 min(8, max([rec.event]))])
             if any(iF), patch([min(tt(iF)) max(tt(iF)) max(tt(iF)) min(tt(iF))], ymax*[-1 -1 1 1], ...
                     [0.85 0.92 1], 'edgecolor', 'none'); end
             hd = plot(tt(s), rec(r).d(s), 'k-', 'linewidth', 1.5);
-            if isfield(rec, 'start'), hp = plot(tt(s), rec(r).start(s), '-', 'color', [0 0.6 0]);
-            else, hp = plot(NaN, NaN, '-', 'color', [0 0.6 0]); end    % setup made without step-1 start synthetics
             hr = plot(tt(s), rec(r).refsyn(s), '-', 'color', [0.3 0.3 1]);
             hf = plot(tt(s), p1(s), '-', 'color', [0.85 0.1 0.1], 'linewidth', 1);
             ylim(ymax*[-1 1]); ylabel(sta{pick(q)});
             if q == 1
                 title(sprintf('%s, %s (\\Delta_0 = %.0f km)', wn{wv}, rec(r).id, rec(r).Del0));
                 if wv == 1
-                    legend([hd hp hr hf], {'data (PA5)', 'step-1 start', 'reference (step 1)', 'final model'}, ...
+                    legend([hd hr hf], {'data', 'step 1 (reference)', 'final model'}, ...
                         'location', 'northwest', 'fontsize', 7);
                 end
             end
