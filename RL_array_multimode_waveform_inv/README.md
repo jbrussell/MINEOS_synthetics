@@ -36,7 +36,7 @@ calling a driver).
 
 | Driver | What it does | Time (4 cores) |
 |---|---|---|
-| `A00_make_station_circle.m` | optional, synthetic tests: a station file with `opt.circle_N` (16) stations evenly spaced on a circle of diameter `opt.circle_aperture_km` (1000 km) centred on NoMelt (`stations_circle_<aperture>km_N<N>.txt`; map in `figs_stations/`); use it with `opt.stationfile` (and a new `opt.aswms_dir`, `opt.prepfile`) before A0 | seconds |
+| `A00_make_station_circle.m` | optional, synthetic tests: a station file with `opt.circle_N` (16) stations evenly spaced on a circle of diameter `opt.circle_aperture_km` (1000 km) centred on NoMelt, and (`opt.circle_fill`, default true) stations inside it at about the same spacing: one at the centre and concentric rings (16 + 17 = 33 stations for the defaults; `stations_circle_<aperture>km_N<N>_fill.txt`; map in `figs_stations/`); use it with `opt.stationfile` (and a new `opt.aswms_dir`, `opt.prepfile`) before A0 | seconds |
 | `D1_step1_rayleigh_isotropic_inv.m` | step 1: Rayleigh n = 0 phase velocities → isotropic Vs; writes the step-2 reference card `../run_MINEOS/CARDS/RLinv_step1.card` | ~5 min |
 | `D2_step2_prep_mineos_idagrn.m` | MINEOS tables, dispersion and kernels; reference spectra (step-1 model, branches 0..`opt.nm`−1; the data are the event files of A1–A3) and, with `opt.start_synth` (default 1), seismograms of the step-1 starting model (all data branches); cached in `opt.prepfile`; record sections of the data, the step-1 start and the final step-1 model (T and Z, with the automatic A3 windows when they have been picked) in `figs_step2/` | ~10 min |
 | `D3_step2_waveform_inv.m` | the waveform inversion with the parallel-tempering (`opt.sampler = 'pt'`, default) or plain (`'plain'`) sampler | hours |
