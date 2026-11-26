@@ -40,7 +40,7 @@ if ~exist('OCTAVE_VERSION', 'builtin') && exist('parpool', 'file') == 2 && licen
     % Save the change permanently
     saveProfile(c);
     % start the pool now with that many workers (D3 reuses an open pool: par_workers.m)
-    parpool("local", nw_)
+    parpool('local', nw_)
     clear c nw_
 end
 D3_step2_waveform_inv
