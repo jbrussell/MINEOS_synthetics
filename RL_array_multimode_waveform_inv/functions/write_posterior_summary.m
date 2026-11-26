@@ -1,5 +1,5 @@
-function P = write_posterior_summary(svc, zplot, cfg, mc, tru, refp, Tdisp, tag, outfile)
-% P = write_posterior_summary(svc, zplot, cfg, mc, tru, refp, Tdisp, tag, outfile)
+function P = write_posterior_summary(svc, zplot, cfg, mc, tru, refp, Tdisp, tag, outfile, Cd)
+% P = write_posterior_summary(svc, zplot, cfg, mc, tru, refp, Tdisp, tag, outfile, Cd)
 %
 % Final posterior of a step-2 run: the T = 1 samples of ALL chains/PT
 % ensembles pooled (equal weight per saved sample) and their statistics,
@@ -7,6 +7,8 @@ function P = write_posterior_summary(svc, zplot, cfg, mc, tru, refp, Tdisp, tag,
 % sub_plot_results.m). Read it with  P = load(outfile); P = P.P;
 %
 % svc : {nens x 1} saved T = 1 samples per ensemble (chain<tag>_XX.mat, sv)
+% Cd  : optional struct of the true and reference dispersion (nT x nmodes,
+%       km/s): trueL, trueR, refL, refR (NaN or absent: unknown)
 %
 % P.z                 depth below the seafloor (km, zplot), nz x 1
 % P.zinv              [zmin zmax] (km) of the inverted part of the model
@@ -27,7 +29,8 @@ function P = write_posterior_summary(svc, zplot, cfg, mc, tru, refp, Tdisp, tag,
 %   .ci95 .ci68 .rhat, .values/.prob (posterior probability of each count)
 % P.disp.T (s), P.disp.L / .R  Love / Rayleigh phase velocities of the
 %   sampled models (km/s), nT x nmodes: .mean .median .ci95 (nT x nmodes x 2)
-%   .ci68 .rhat
+%   .ci68 .rhat, .need (mode, period) pairs constrained by the data,
+%   .true, .ref (from Cd); the samples in P.samples.CL / .CR (nT x nmodes x ns)
 % P.noise.sig, .rho  noise standard deviations and correlations (ns x 4;
 %   L ovt, L fund, R ovt, R fund); P.smooth_sig (ns x 2) and P.xi_sig
 %   (ns x 1) when sampled (hierarchical priors)
@@ -112,8 +115,14 @@ for wv = 1:2
             S.rhat(j) = gr_rhat(reshape(Cr(j, :), nsi(1), nc));
         end
     end
-    if isfield(cfg, 'need'), S.need = cfg.need; end   % (mode, period) pairs constrained by the data
+    if isfield(cfg, 'need'), S.need = logical(cfg.need); else, S.need = true(nT, nmo); end
+    S.true = NaN(nT, nmo); S.ref = NaN(nT, nmo);
+    if nargin >= 10 && isstruct(Cd)
+        if isfield(Cd, ['true' wl(wv)]), S.true = Cd.(['true' wl(wv)]); end
+        if isfield(Cd, ['ref' wl(wv)]), S.ref = Cd.(['ref' wl(wv)]); end
+    end
     P.disp.(wl(wv)) = S;
+    P.samples.(['C' wl(wv)]) = C;
 end
 
 % noise and hierarchical prior parameters

@@ -202,10 +202,14 @@ print(fig, '-dpng', '-r130', fullfile(outdir, 'fig1_posteriors.png'));
 %% final posterior: pooled T = 1 samples of all ensembles and their statistics
 % (posterior_summary<tag>.mat: mean, median, 68/95 % intervals, R-hat,
 % control points, dispersion; write_posterior_summary.m) and the
-% probability fields of Vsv, Vsh, xi (fig10_posterior_pdf.png)
+% probability fields of Vsv, Vsh, xi (fig10_posterior_pdf.png) and of the
+% Love and Rayleigh dispersion of all branches (fig11_posterior_dispersion.png)
 Psum = write_posterior_summary(svc, zplot, cfg, mc, tru, refp, Tdisp, tag, ...
-                               fullfile(outdir, ['posterior_summary' tag '.mat']));
+                               fullfile(outdir, ['posterior_summary' tag '.mat']), ...
+                               struct('trueL', CtrueL, 'trueR', CtrueR, 'refL', CrefL, 'refR', CrefR));
 fig = plot_posterior_pdf(Psum, fullfile(outdir, 'fig10_posterior_pdf.png'));
+if fig_close_mode, close(fig); end
+fig = plot_posterior_disp(Psum, fullfile(outdir, 'fig11_posterior_dispersion.png'));
 if fig_close_mode, close(fig); end
 fid = fopen(fullfile(outdir, 'summary.txt'), 'a');
 for fo = [1 fid]
