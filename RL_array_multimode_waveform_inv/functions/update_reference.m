@@ -14,7 +14,7 @@ function P = update_reference(vsv, vsh, zp, cfg, opt, refid_new, prepfile_new, e
 % prepfile_new (CARDS/<refid_new>.card); install it with apply_reference.m.
 %
 % The MINEOS and idagrn6 runs share scratch files in opt.mdir, so they are
-% serialized between processes (mineos_lock.m).
+% serialized between processes (mineos_lock.m, in prep_mineos_idagrn.m).
 %
 % Used at the end of burn-in by D3_step2_waveform_inv.m
 % (opt.update_ref = 'burnin') and by D6_step2_update_reference_and_rerun.m.
@@ -26,13 +26,7 @@ if nargin < 8, eta = []; end
 c = ref_card_update(cfg.card_ref, cfg.zw, cfg.zmin, cfg.zmax, zp, vsv, vsh, eta);
 o = opt; o.prepfile = prepfile_new; o.refid = refid_new; o.ref_card = c;
 o.P_true = Pold; o.start_synth = 0;
-mineos_lock(opt.mdir, 'acquire');
-try
-    P = prep_mineos_idagrn(o);
-catch err
-    mineos_lock(opt.mdir, 'release'); rethrow(err);
-end
-mineos_lock(opt.mdir, 'release');
+P = prep_mineos_idagrn(o);                       % (MINEOS/idagrn6 serialized inside: mineos_lock.m)
 for TY = 'TS'                                    % step-1 start synthetics for the figures
     f = ['u_start_' TY];
     if isfield(Pold, f), P.(f) = Pold.(f); end

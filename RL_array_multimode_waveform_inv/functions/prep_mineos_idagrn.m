@@ -104,6 +104,10 @@ else
     P.card_true = P.card_ref;                     % (real data: no true model; placeholder for the plots)
 end
 
+% MINEOS/idagrn6 runs share scratch files in P.mdir: serialized between
+% processes (mineos_lock.m) from here until the synthetics are done
+mineos_lock(P.mdir, 'acquire');
+try
 % 2-3. mode tables, dispersion and kernels
 Pt = og('P_true', []);
 aswms_ = strcmp(og('data_source', 'internal'), 'aswms');
@@ -163,6 +167,10 @@ end
 if (aswms_ || ~isempty(og('aswms_dir', ''))) && ~lin_only_   % reference branch synthetics, ASWMS-Q event-file format
     write_branchmat(P, opt);
 end
+catch err
+    mineos_lock(P.mdir, 'release'); rethrow(err);
+end
+mineos_lock(P.mdir, 'release');
 tmpf = tmp_name('prep');
 save(tmpf, 'P'); movefile(tmpf, prepfile);
 end

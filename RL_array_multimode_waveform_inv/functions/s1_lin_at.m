@@ -19,7 +19,13 @@ write_MINEOS_mod(card, fullfile(mdir, 'CARDS', [cardid '.card']));
 qsrc = fullfile(mdir, 'CARDS', [qmodid '.qmod']); qdst = fullfile(mdir, 'CARDS', [cardid '.qmod']);
 if ~strcmp(qsrc, qdst), copyfile(qsrc, qdst); end
 card = read_model_card(fullfile(mdir, 'CARDS', [cardid '.card']));
-o = mineos_modes(mdir, cardid, 'S', 1, maxF, periods(:), 0);
+mineos_lock(mdir, 'acquire');                    % (shared MINEOS scratch files: mineos_lock.m)
+try
+    o = mineos_modes(mdir, cardid, 'S', 1, maxF, periods(:), 0);
+catch err
+    mineos_lock(mdir, 'release'); rethrow(err);
+end
+mineos_lock(mdir, 'release');
 cR = o.phv(:, 1);
 lin = mineos_lin_setup(card, o.K, o.K, cR, cR, zw, zmin, zmax);
 end
