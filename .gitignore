@@ -13,3 +13,5 @@ run_MINEOS/CARDS/c2_inv.*
 # cards written by RL_array_multimode_waveform_inv
 run_MINEOS/CARDS/prem_nomelt.*
 run_MINEOS/CARDS/RLinv_*
+# project archives (RL_array_multimode_waveform_inv/results/<project_tag>/): waveform data
+RL_array_multimode_waveform_inv/results/*/data/

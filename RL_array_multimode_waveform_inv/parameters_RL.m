@@ -23,6 +23,18 @@ addpath(fullfile(here_, 'functions', 'octave_shims'), '-end');  % only where a t
 mdir_ = fullfile(here_, '..', 'run_MINEOS');
 addpath(fullfile(mdir_, 'functions'));
 opt = opt_defaults(opt, struct( ...
+    ... % ---- project: name and archive of a run ----
+    'project_tag', '', ...               % NAME OF THE PROJECT (run): when set, the run tag is '_<project_tag>'
+    ...                                  %   (setup_<project_tag>.mat, chain_<project_tag>_XX.mat,
+    ...                                  %   figs_<project_tag>/) and D4 archives the run in
+    ...                                  %   <results_root>/<project_tag>/ (save_project_results.m: figures,
+    ...                                  %   summaries, mat files, waveform data, this file and the exact
+    ...                                  %   options; rerun with opt = load_project('<project_tag>')).
+    ...                                  %   '' = from the run tag (opt.tag, default '_<sampler>') without the '_'
+    'results_root', 'results', ...       % folder of the project archives
+    'save_results', true, ...            % archive the run at the end of D4
+    'results_data', true, ...            % also archive the waveform data (opt.aswms_dir), the reference prep
+    ...                                  %   file and the model cards (~50-150 MB per project)
     ... % ---- models and files ----
     'mdir',      mdir_, ...              % run_MINEOS (MINEOS cards, drivers, ../FORTRAN/bin)
     'trueid',    'pa5_5km', ...          % true model (CARDS/<trueid>.card)
@@ -196,14 +208,22 @@ if ~pa5iso_ && ~strcmp(opt.s1_start_model, 'prem'), error('opt.s1_start_model mu
 if isempty(opt.s1_start), if pa5iso_, opt.s1_start = 'RLinv_pa5iso'; else, opt.s1_start = 'RLinv_prem_iso'; end, end
 if isempty(opt.ref_qmod), if pa5iso_, opt.ref_qmod = opt.trueid; else, opt.ref_qmod = opt.premid; end, end
 clear pa5iso_
-% run tag and figure folder: set automatically from the sampler unless given.
+% run tag, project tag and figure folder: set automatically unless given.
 % An automatic value is remembered (opt.tag_auto_, opt.outdir_auto_) and
 % recomputed on the next call, so an opt left in the (MATLAB) workspace by an
 % earlier run does not keep a stale tag after opt.sampler changes; a tag or
 % outdir set by hand is kept.
+% With opt.project_tag set (by hand), the automatic tag is '_<project_tag>';
+% otherwise '_<sampler>', and the project tag is the run tag without '_'.
+pt_user_ = ~isempty(opt.project_tag) && ~(isfield(opt, 'project_tag_auto_') && strcmp(opt.project_tag, opt.project_tag_auto_));
 if ~isfield(opt, 'tag') || (isfield(opt, 'tag_auto_') && strcmp(opt.tag, opt.tag_auto_))
-    opt.tag = ['_' opt.sampler]; opt.tag_auto_ = opt.tag;
+    if pt_user_, opt.tag = ['_' opt.project_tag]; else, opt.tag = ['_' opt.sampler]; end
+    opt.tag_auto_ = opt.tag;
 end
+if ~pt_user_
+    opt.project_tag = regexprep(opt.tag, '^_', ''); opt.project_tag_auto_ = opt.project_tag;
+end
+clear pt_user_
 if ~isfield(opt, 'outdir') || (isfield(opt, 'outdir_auto_') && strcmp(opt.outdir, opt.outdir_auto_))
     opt.outdir = ['figs' opt.tag]; opt.outdir_auto_ = opt.outdir;
 end

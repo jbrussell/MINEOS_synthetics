@@ -64,6 +64,30 @@ continue with it. MINEOS/idagrn6 runs are serialized through the lock
 directory `../run_MINEOS/.prep_lock` (remove it by hand if a process died
 while holding it).
 
+**Projects and the results archive:** name each run by setting
+`opt.project_tag` (in `parameters_RL.m` or in `opt` before the drivers),
+e.g. `opt.project_tag = 'aa1k12'`. The run tag then becomes `_aa1k12`
+(`setup_aa1k12.mat`, `chain_aa1k12_XX.mat`, `figs_aa1k12/`), and at the end
+of D4 the run is archived in `results/<project_tag>/`
+(`save_project_results.m`; `opt.save_results`, default true):
+
+| | |
+|---|---|
+| `README.txt` | key settings, how the synthetic data were made (A0: noise, seed, arrival-angle anomalies), code version, how to rerun |
+| `settings.txt` | every option of the run (`opt.*`) and the sampler settings it used (`mc.*`) |
+| `parameters/` | `parameters_RL.m` as it was, and `opt_used.mat` (the exact resolved options, including overrides given in `opt`) |
+| `figures/` | the figure folder: all figures, `summary.txt`, `posterior_summary<tag>.mat`, `B_posterior<tag>.mat`, `dth_posterior<tag>.mat` |
+| `step2/` | `setup<tag>.mat`, `chain<tag>_XX*.mat`, `refupd<tag>*.mat`, `prep<tag>_*.mat`, `nuis_true<tag>.mat`, logs, the reference prep file |
+| `step1/` | `step1_result.mat` and the step-1 figure folders as they were when archived |
+| `data/` | the waveform data (a copy of `opt.aswms_dir`: SAC files, event files, windows, truth file) and the model cards; `opt.results_data = false` leaves it out (it is 50-150 MB) |
+
+Rerun or vary an archived project with `opt = load_project('aa1k12')` (its
+exact options; `load_project('aa1k12', true)` also reads the archived
+waveform data), then the drivers as usual; for a variant change `opt` and
+give it a new `opt.project_tag`. Without a project tag the run tag is
+`_<sampler>` as before and the project tag is the run tag without `_`.
+Archiving can be repeated by hand: `parameters_RL; save_project_results(opt)`.
+
 **Naming:** `D#_*.m` are the drivers, run in that order;
 `parameters_RL.m` holds the settings for all of them. Everything else is in
 `./functions`: functions, and two *drivee* scripts, `sub_setup_records.m`
