@@ -97,7 +97,8 @@ for wv = 1:2
         plot(x, As.c_med(rr, n), mk(1 + mod(n - 1, numel(mk))), 'color', cc, 'markerfacecolor', cc);
     end
     if tr
-        lim = [min([As.true(rr); As.c_lo(rr(:), :)](:)) max([As.true(rr); As.c_hi(rr(:), :)](:))] + [-0.5 0.5];
+        lo_ = As.c_lo(rr, :); hi_ = As.c_hi(rr, :);
+        lim = [min([As.true(rr); lo_(:)]) max([As.true(rr); hi_(:)])] + [-0.5 0.5];
         plot(lim, lim, 'k--'); xlim(lim); ylim(lim); axis square;
         xlabel('true d\theta (deg)'); err = As.c_med(rr, :) - As.true(rr);
         title(sprintf('%s: band-mean d\\theta_n, rms error %.2f deg', wn{wv}, sqrt(mean(err(:).^2))));
@@ -107,7 +108,7 @@ for wv = 1:2
     ylabel('posterior d\theta (deg)');
 end
 annotation('textbox', [0 0.965 1 0.03], 'string', sprintf(['Run %s: arrival-angle anomalies d\\theta_n(w) ' ...
-    '(thin: posterior median of every record; %d pooled samples; bands leave out the conditional uncertainty)'], strrep(tag, '_', '\_'), ns), ...
+    '(thin: posterior median of every record; %d pooled samples; bands leave out the conditional uncertainty)'], strrep(tag, '_', '-'), ns), ...
     'edgecolor', 'none', 'horizontalalignment', 'center', 'fontsize', 11);
 if nargin >= 6 && ~isempty(outdir)
     print(fig, '-dpng', '-r130', fullfile(outdir, 'fig14_arrival_angles.png'));
