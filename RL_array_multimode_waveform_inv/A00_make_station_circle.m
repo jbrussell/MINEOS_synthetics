@@ -25,7 +25,7 @@
 %                          round(p*r/s), s = the station spacing on the
 %                          circle, so the outermost gap is about s;
 %                          false: the circle only
-%   opt.circle_dense_power p (default 1.5): how much denser towards the
+%   opt.circle_dense_power p (default 1.75): how much denser towards the
 %                          centre; 1 = evenly spaced (about s everywhere),
 %                          2 = the spacing falls linearly with radius to
 %                          about s/m at the centre

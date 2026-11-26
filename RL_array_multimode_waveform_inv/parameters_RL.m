@@ -45,7 +45,7 @@ opt = opt_defaults(opt, struct( ...
     'circle_N',           16, ...        % number of stations, evenly spaced in azimuth
     'circle_aperture_km', 1000, ...      % diameter of the circle (km)
     'circle_fill',        true, ...      % also stations inside the circle (centre + concentric rings)
-    'circle_dense_power', 1.5, ...       % rings at r*(j/m)^p: p > 1 denser towards the centre, 1 = evenly spaced
+    'circle_dense_power', 1.75, ...      % rings at r*(j/m)^p: p > 1 denser towards the centre, 1 = evenly spaced
     'circle_file',        '', ...        % station file to write ('' = stations_circle_<aperture>km_N<N>[_fill].txt)
     'circle_ref',  fullfile(here_, 'stations_nomelt.txt'), ...   % centre (mean position) and elevation of this array
     ... % ---- step 1: isotropic Rayleigh inversion (D1) ----
