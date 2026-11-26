@@ -199,6 +199,24 @@ for q = 1:3
 end
 print(fig, '-dpng', '-r130', fullfile(outdir, 'fig1_posteriors.png'));
 
+%% final posterior: pooled T = 1 samples of all ensembles and their statistics
+% (posterior_summary<tag>.mat: mean, median, 68/95 % intervals, R-hat,
+% control points, dispersion; write_posterior_summary.m) and the
+% probability fields of Vsv, Vsh, xi (fig10_posterior_pdf.png)
+Psum = write_posterior_summary(svc, zplot, cfg, mc, tru, refp, Tdisp, tag, ...
+                               fullfile(outdir, ['posterior_summary' tag '.mat']));
+fig = plot_posterior_pdf(Psum, fullfile(outdir, 'fig10_posterior_pdf.png'));
+if fig_close_mode, close(fig); end
+fid = fopen(fullfile(outdir, 'summary.txt'), 'a');
+for fo = [1 fid]
+    fprintf(fo, 'final posterior (all ensembles pooled, %d samples): %s\n', Psum.ns, ...
+        fullfile(outdir, ['posterior_summary' tag '.mat']));
+    fprintf(fo, 'interior control points (pooled): Vsv mean %.1f median %g, 95%% %g-%g, R-hat %.2f; xi mean %.1f median %g, 95%% %g-%g, R-hat %.2f\n', ...
+        Psum.ncp.vsv.mean, Psum.ncp.vsv.median, Psum.ncp.vsv.ci95, Psum.ncp.vsv.rhat, ...
+        Psum.ncp.xi.mean, Psum.ncp.xi.median, Psum.ncp.xi.ci95, Psum.ncp.xi.rhat);
+end
+fclose(fid);
+
 %% 2) per-chain means and starts, model dimensions
 fig = figure('position', [50 50 1900 700]);
 xr = {[3.9 5.1], [3.9 5.4], [0.88 1.22]};
