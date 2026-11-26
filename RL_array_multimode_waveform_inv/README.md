@@ -106,6 +106,13 @@ model cards in `run_MINEOS/CARDS` are never removed).
 and `sub_plot_results.m`, which the drivers call and which are not meant to
 be run on their own.
 
+**Period band:** `opt.fc = [f1 f2 f3 f4]` (Hz; default `[1/112 1/100 1/20 1/17]`,
+17–112 s with full weight 20–100 s) is the band of the waveforms. It is
+used by A0 (noise), A3 (window picking), A4, D2 (the dispersion nodes
+`Tdisp` span it) and D3 (the frequencies fitted), so a new band needs A3
+(windows) and D2 (a new `opt.prepfile`) again, then D3; for a synthetic
+test also A0–A2. `opt.maxF` (mode tables, 70 mHz) must be above f4.
+
 **Figure windows:** every figure has its own fixed number
 (`functions/numbered_figure.m` lists them), so rerunning a script redraws
 its figures in the same windows instead of opening new ones. Saved figure
