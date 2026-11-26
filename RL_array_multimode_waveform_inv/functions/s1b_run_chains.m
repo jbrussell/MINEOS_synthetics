@@ -19,7 +19,7 @@ M = 0;                                               % parfor (k = .., 0): seria
 if nworkers > 0 && ~exist('OCTAVE_VERSION', 'builtin')
     if exist('parpool', 'file') == 2 && license('test', 'Distrib_Computing_Toolbox')
         p = gcp('nocreate');
-        if isempty(p), p = parpool(min(nworkers, nch)); end
+        if isempty(p), p = parpool(pool_size(min(nworkers, nch))); end
         M = min(nworkers, p.NumWorkers);
     else
         warning('s1b_run_chains: Parallel Computing Toolbox not available; running the %d chains serially', nch);
