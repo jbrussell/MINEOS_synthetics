@@ -79,18 +79,28 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   arrival (dist/13.5 km/s - 60 s after the origin, plus any samples
     ...                                  %   before the origin); the sampled sigma is a scale factor on it;
     ...                                  %   'none': one sigma per wave type
-    'noise_model',  'ar1', ...           % noise correlation: 'ar1' (AR(1), correlation sampled); EXPERIMENTAL, fixed
-    ...                                  %   from the pre-P noise: 'ar2' (AR(2) per wave type, pooled), 'arp' (AR(p),
-    ...                                  %   pooled), 'emp' (AR(p) per station and record). Test (band-passed noise,
-    ...                                  %   4 s sampling): none whitens it well (residual lag-1 correlation 0.6-0.65
-    ...                                  %   vs 0.56 for AR(1)); the noise covariance is nearly singular (the band is
-    ...                                  %   ~1/3 of the Nyquist range), high orders are unstable.
-    ...                                  %   'fdom': frequency-domain likelihood (tapered in-band DFT coefficients of
-    ...                                  %   each station's window, scaled by its noise spectrum from the pre-P
-    ...                                  %   noise; fdom_operator.m); for real data
-    'noise_psd',    'shape', ...         % 'fdom' spectra: 'shape' (pooled shape x station level) or 'station'
-    'noise_arp',    8, ...               % 'arp', 'emp': AR order
-    'noise_nugget', 0.05, ...            % white-noise fraction added before the AR fits (stability)
+    ... % -- noise model: how the correlation between neighbouring noise samples enters the likelihood --
+    ...   %   noise_model picks ONE model; the three settings below it apply only to some models
+    ...   %   (marked [used by: ...]) and are IGNORED otherwise (with the default 'ar1': all three).
+    'noise_model',  'ar1', ...           % 'ar1'  (DEFAULT) AR(1): sample i correlates with sample i-1 through r;
+    ...                                  %        r and sigma are SAMPLED in the inversion (the "r = [...]" in the logs)
+    ...                                  % 'fdom' frequency-domain likelihood: the in-band spectrum of each station's
+    ...                                  %        window weighted by its noise spectrum from the pre-P noise
+    ...                                  %        (fdom_operator.m); meant for real data. FIXED (r not sampled)
+    ...                                  % EXPERIMENTAL, AR models FITTED ONCE to the pre-P noise and then FIXED:
+    ...                                  % 'ar2'  AR(2), one per wave type, pooled over stations
+    ...                                  % 'arp'  AR(p), p = noise_arp, one per wave type, pooled over stations
+    ...                                  % 'emp'  AR(p), p = noise_arp, one per station of each record
+    ...                                  %   (test with band-passed noise, 4 s sampling: none of the fixed AR models
+    ...                                  %   whitens it better than AR(1) - residual lag-1 correlation 0.6-0.65 vs
+    ...                                  %   0.56 - because the band is ~1/3 of the Nyquist range, so the noise
+    ...                                  %   covariance is nearly singular; high orders are unstable)
+    'noise_psd',    'shape', ...         % [used by: 'fdom'] noise spectra: 'shape' = one spectral shape pooled over
+    ...                                  %   stations x each station's level; 'station' = each station's own spectrum
+    'noise_arp',    8, ...               % [used by: 'arp', 'emp'] AR order p: each noise sample predicted from the
+    ...                                  %   p samples before it ('ar2' always uses p = 2)
+    'noise_nugget', 0.05, ...            % [used by: 'ar2', 'arp', 'emp'] white-noise fraction added to the pre-P
+    ...                                  %   noise autocorrelation before the AR fit (keeps the fit stable)
     'synth_pre_s',  0, ...               % A0: noise before the origin (s; 0: records start at the origin)
     'synth_noise_spread', 0, ...         % A0: noise level per station x 10^(spread*U[-1,1]) (0: all equal)
     'synth_arrival_shift', [], ...       % A0: arrival-angle anomalies: sources moved along the small circle about the
