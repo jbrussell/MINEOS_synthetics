@@ -58,43 +58,23 @@ if ~isempty(mc)
 end
 fclose(fid);
 
-% figures and summaries
-if isfield(opt, 'outdir') && exist(opt.outdir, 'dir') == 7
-    log_{end+1} = cp_(fullfile(opt.outdir, '*'), fullfile(rd, 'figures'));
-end
-if exist('figs_compare.png', 'file') == 2, cp_('figs_compare.png', fullfile(rd, 'figures')); end
-
-% step 2 results
-% (patterns end at the tag or continue with '_' or '.', so that a project
-% whose tag extends this one, e.g. _aa1k12 for _aa1, is not picked up)
-pats = {['setup' tag '.mat'], ['chain' tag '_*.mat'], ['refupd' tag '.mat'], ['refupd' tag '_*.mat'], ...
-        ['prep' tag '_*.mat'], ['nuis_true' tag '.mat'], ['*' tag '.*.log'], ['*' tag '.txt']};
-for k = 1:numel(pats), log_{end+1} = cp_(pats{k}, fullfile(rd, 'step2')); end %#ok<AGROW>
+% figures, step-2 results, step 1, waveform data and model cards: the list of
+% project_file_list.m (also used by D99_clear_archived_run.m)
 data_ = optget(opt, 'results_data', true);
-if data_ && isfield(opt, 'prepfile') && exist(opt.prepfile, 'file') == 2
-    log_{end+1} = cp_(opt.prepfile, fullfile(rd, 'step2'));
-end
-
-% step 1
-if isfield(opt, 's1_file') && exist(opt.s1_file, 'file') == 2, log_{end+1} = cp_(opt.s1_file, fullfile(rd, 'step1')); end
-d1 = dir('figs_step1*');
-for k = 1:numel(d1)
-    if d1(k).isdir, mk_(fullfile(rd, 'step1', d1(k).name)); log_{end+1} = cp_(fullfile(d1(k).name, '*'), fullfile(rd, 'step1', d1(k).name)); end %#ok<AGROW>
-end
-
-% waveform data and model cards
-if data_
-    ad = optget(opt, 'aswms_dir', '');
-    if ~isempty(ad) && exist(ad, 'dir') == 7
-        ad = regexprep(ad, '[/\\]+$', '');
-        [~, an] = fileparts(ad);
-        mk_(fullfile(rd, 'data', an));
-        log_{end+1} = cp_(fullfile(ad, '*'), fullfile(rd, 'data', an));
+L = project_file_list(opt);
+for i = 1:numel(L)
+    dst = fullfile(rd, L(i).dst); mk_(dst);
+    if L(i).sub
+        d1 = dir(L(i).pat);
+        for k = 1:numel(d1)
+            if d1(k).isdir
+                mk_(fullfile(dst, d1(k).name));
+                log_{end+1} = cp_(fullfile(fileparts(L(i).pat), d1(k).name, '*'), fullfile(dst, d1(k).name)); %#ok<AGROW>
+            end
+        end
+    else
+        log_{end+1} = cp_(L(i).pat, dst); %#ok<AGROW>
     end
-    cd_ = fullfile(opt.mdir, 'CARDS');
-    mk_(fullfile(rd, 'data', 'CARDS'));
-    cards = {[opt.trueid '.card'], [opt.s1_final '.card'], ['RLinv_step1_lin' tag '_*.card']};
-    for k = 1:numel(cards), log_{end+1} = cp_(fullfile(cd_, cards{k}), fullfile(rd, 'data', 'CARDS')); end %#ok<AGROW>
 end
 
 % README
