@@ -7,11 +7,11 @@
 %
 % By default only what belongs to this run is removed: setup<tag>.mat,
 % chain<tag>_*.mat, refupd<tag>*.mat, prep<tag>_*.mat, nuis_true<tag>.mat,
-% the logs and summary files of the tag, the figure folder (opt.outdir) and
-% the linearization cards RLinv_step1_lin<tag>_*.card. What other runs may
-% use stays: the step-1 result and figures, the waveform data
-% (opt.aswms_dir), the reference prep file (opt.prepfile) and the true and
-% step-1 model cards; opt.clear_shared = true removes those too.
+% the logs and summary files of the tag and the figure folder (opt.outdir).
+% What other runs may use stays: the step-1 result and figures, the waveform
+% data (opt.aswms_dir) and the reference prep file (opt.prepfile);
+% opt.clear_shared = true removes those too. Model cards in
+% run_MINEOS/CARDS are never removed.
 % Checkpoints (ckpt<tag>_*) are not archived and are not removed.
 %
 %   >> opt.project_tag = 'aa1k12'; D99_clear_archived_run

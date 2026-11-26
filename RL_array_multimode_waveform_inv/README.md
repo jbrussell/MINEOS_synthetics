@@ -43,7 +43,7 @@ calling a driver).
 | `D4_step2_plot_results.m` | figures and `summary.txt` in `figs_<sampler>/`; the final posterior (T = 1 samples of all ensembles pooled) with its statistics (mean, median, 68/95 % intervals, R-hat per depth, number of control points, dispersion) in `posterior_summary<tag>.mat` and its probability fields of Vsv, Vsh, xi in `fig10_posterior_pdf.png` and of the Love and Rayleigh dispersion of all branches in `fig11_posterior_dispersion.png` (relative to the reference) and `fig11b_posterior_dispersion_abs.png` (absolute); the posterior predicted waveforms in `fig12_posterior_waveforms_event<e>.png` and their spread about the median prediction, with the data residual, in `fig12b_posterior_waveform_spread_event<e>.png`; the spectral corrections B_n(w) in `fig13_B_<Love|Rayleigh>.png` (`B_posterior<tag>.mat`) and the arrival-angle anomalies dth_n(w) in `fig14_arrival_angles.png` (`dth_posterior<tag>.mat`; with the true values for synthetic tests); compares the two samplers if both were run (`figs_compare.png`) | 1 min |
 | `D5_step2_check_linearization.m` | full MINEOS vs the linearized dispersion at the posterior mean and at the (projected) truth: linearization error vs what the parameterization cannot represent (`d5_linearization.txt`, `fig10_linearization.png`) | ~5 min |
 | `D6_step2_update_reference_and_rerun.m` | optional outer iteration: new reference from the posterior mean of a run (MINEOS + idagrn6), then D3/D4 again about it (tag `<tag>_it2`) | ~10 min + D3 |
-| `D99_clear_archived_run.m` | clears the working directory of an archived run: removes the files of the run (tag `opt.tag`, project `opt.project_tag`) that have an identical-size copy in `results/<project_tag>/` (setup, chains, reference updates, logs, the figure folder, linearization cards), after listing them and asking; inputs that other runs may use (step-1 result and figures, waveform data, prep file, model cards) only with `opt.clear_shared = true`; checkpoints are not archived and stay | seconds |
+| `D99_clear_archived_run.m` | clears the working directory of an archived run: removes the files of the run (tag `opt.tag`, project `opt.project_tag`) that have an identical-size copy in `results/<project_tag>/` (setup, chains, reference updates, logs, the figure folder), after listing them and asking; inputs that other runs may use (step-1 result and figures, waveform data, prep file) only with `opt.clear_shared = true`; model cards in `run_MINEOS/CARDS` are never removed; checkpoints are not archived and stay | seconds |
 
 ```
 >> D1_step1_rayleigh_isotropic_inv
@@ -96,7 +96,8 @@ give it a new `opt.project_tag`. Without a project tag the run tag is
 Archiving can be repeated by hand: `parameters_RL; save_project_results(opt)`.
 Once a run is archived, `D99_clear_archived_run` removes its files from the
 working directory (only those with an identical-size copy in the archive;
-it lists them and asks first; shared inputs only with `opt.clear_shared = true`).
+it lists them and asks first; shared inputs only with `opt.clear_shared = true`;
+model cards in `run_MINEOS/CARDS` are never removed).
 
 **Naming:** `D#_*.m` are the drivers, run in that order;
 `parameters_RL.m` holds the settings for all of them. Everything else is in

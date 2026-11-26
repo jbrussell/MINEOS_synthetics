@@ -6,15 +6,16 @@ function [removed, kept] = clear_archived_run(opt, include_shared, force)
 % save_project_results.m; the list is project_file_list.m). Driver:
 % D99_clear_archived_run.m. Run from the directory of the run.
 %
-% A file is removed only if its copy in the archive exists and has the same
+% Model cards in run_MINEOS/CARDS are never removed (they are archived in
+% data/CARDS/ but stay in place). A file is removed only if its copy in the archive exists and has the same
 % size; a folder only if every file in it (recursively) is there. Anything
 % else is kept and listed. Files the archive does not hold (checkpoints
 % ckpt<tag>_*, MINEOS scratch in run_MINEOS) are not touched.
 %
 % include_shared (default false): also remove what other runs may use - the
 %   step-1 result (opt.s1_file) and figure folders figs_step1*, the waveform
-%   data (opt.aswms_dir), the reference prep file (opt.prepfile), the true
-%   and step-1 model cards and figs_compare.png. Off by default, because a
+%   data (opt.aswms_dir), the reference prep file (opt.prepfile) and
+%   figs_compare.png. Off by default, because a
 %   later run of another project (or a rerun) reads them from here.
 % force (default false): remove without asking; otherwise the list is
 %   printed and removal needs a 'y' answer.
@@ -26,6 +27,10 @@ if nargin < 3 || isempty(force), force = false; end
 rd = fullfile(optget(opt, 'results_root', 'results'), opt.project_tag);
 if exist(rd, 'dir') ~= 7, error('clear_archived_run: no archive %s (run D4 or save_project_results first)', rd); end
 L = project_file_list(opt);
+% never remove model cards from the MINEOS folder (run_MINEOS/CARDS): other
+% runs, D5/D6 and MINEOS itself read them
+cd_ = fullfile(opt.mdir, 'CARDS');
+L = L(~strncmp({L.pat}, cd_, numel(cd_)));
 cand = {}; kept = {}; skipped = {}; folders = {};
 for i = 1:numel(L)
     d = dir(L(i).pat);
