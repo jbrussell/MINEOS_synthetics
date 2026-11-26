@@ -322,8 +322,8 @@ for e0 = unique([1 min(8, max([rec.event]))])
             % window edges: vertical lines (overtone window orange, fundamental
             % window blue; one surface-wave window: both edges grey)
             if sw_, cw_ = {[0.45 0.45 0.45], [0.45 0.45 0.45]}; else, cw_ = {[0.95 0.5 0.1], [0.2 0.4 0.95]}; end
-            if any(io), plot(min(tt(io))*[1 1], ymax*[-1 1], '--', max(tt(io))*[1 1], ymax*[-1 1], '--', 'color', cw_{1}, 'linewidth', 1); end
-            if any(iF), plot(min(tt(iF))*[1 1], ymax*[-1 1], '--', max(tt(iF))*[1 1], ymax*[-1 1], '--', 'color', cw_{2}, 'linewidth', 1); end
+            for tw_ = [min(tt(io)) max(tt(io))], plot(tw_*[1 1], ymax*[-1 1], '--', 'color', cw_{1}, 'linewidth', 1); end
+            for tw_ = [min(tt(iF)) max(tt(iF))], plot(tw_*[1 1], ymax*[-1 1], '--', 'color', cw_{2}, 'linewidth', 1); end
             hd = plot(tt(s), rec(r).d(s), 'k-', 'linewidth', 1.5);
             if isfield(rec, 'start') && any(isfinite(rec(r).start(s))), hp = plot(tt(s), rec(r).start(s), '-', 'color', [0 0.6 0]);
             else, hp = plot(NaN, NaN, '-', 'color', [0 0.6 0]); end    % setup made without step-1 start synthetics
