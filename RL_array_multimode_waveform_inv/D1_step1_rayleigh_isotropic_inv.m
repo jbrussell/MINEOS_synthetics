@@ -101,7 +101,7 @@ save(opt.s1_file, 'card_start', 'card_final', 'card_true', 'cobs', 'cstd', ...
 zw = max(card_true.z(card_true.vsv == 0 & card_true.z < 20));
 zp = (0:1:400)';
 cp = @(c, f) card_at_depth(c, f, zp + zw)/1000;
-fig = figure('position', [50 50 1300 520]);
+fig = numbered_figure(3001, 'position', [50 50 1300 520]);
 subplot(1, 3, 1); hold on; box on;
 h1 = plot(cp(card_true, 'vsv'), zp, 'r-', 'linewidth', 2);
 h2 = plot(cp(card_true, 'vsh'), zp, 'r--', 'linewidth', 1);

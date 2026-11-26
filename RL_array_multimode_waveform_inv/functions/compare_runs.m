@@ -9,7 +9,7 @@ nr = numel(tags);
 flds = {'vsv', 'vsh', 'xi'};
 labs = {'V_{SV} (km/s)', 'V_{SH} (km/s)', '\xi = (V_{SH}/V_{SV})^2'};
 xr = {[3.9 5.1], [3.9 5.3], [0.88 1.22]};
-fig = figure('position', [50 50 300*nr 900]);
+fig = numbered_figure(1600, 'position', [50 50 300*nr 900]);
 for ir = 1:nr
     S = load(['setup' tags{ir} '.mat'], 'tru', 'refp', 'mc', 'zplot', 'cfg');
     X = struct('vsv', [], 'vsh', [], 'xi', []);

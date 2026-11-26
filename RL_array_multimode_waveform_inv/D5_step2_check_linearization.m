@@ -173,7 +173,7 @@ fclose(fid);
 save(fullfile(outdir, ['d5' tag '.mat']), 'Clin', 'Cmin', 'Ctr', 'Cdec', 'E', 'pm', 'tr', 'Tdisp', 'refname');
 
 %% figure: differences vs period per branch
-fig = figure('position', [50 50 1400 650]);
+fig = numbered_figure(3100, 'position', [50 50 1400 650]);
 col = [0 0.45 0.74; 0.85 0.33 0.10; 0.47 0.67 0.19; 0.5 0.5 0.5];
 for wv = 1:2
     for n = 1:nm

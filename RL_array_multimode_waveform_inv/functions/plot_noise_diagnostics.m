@@ -27,7 +27,7 @@ lag = (0:size(rec(1).nacf_, 2) - 1) * cfg.dt;
 col = lines(Nst);
 
 % ---- 1: levels relative to the record peak ----
-fig = figure('position', [0 0 2300 1000]);
+fig = numbered_figure(1501, 'position', [0 0 2300 1000]);
 for wv = 1:2
     rr = find([rec.wave] == wv);
     Lv = NaN(numel(rr), Nst);
@@ -50,7 +50,7 @@ end
 print(fig, '-dpng', '-r110', fullfile(outdir, 'noise_levels.png')); if fig_close_mode, close(fig); end
 
 % ---- 2: spectra normalized by each station's variance ----
-fig = figure('position', [0 0 1400 600]);
+fig = numbered_figure(1502, 'position', [0 0 1400 600]);
 for wv = 1:2
     subplot(1, 2, wv); hold on; box on;
     A = [];
@@ -72,7 +72,7 @@ end
 print(fig, '-dpng', '-r110', fullfile(outdir, 'noise_spectra.png')); if fig_close_mode, close(fig); end
 
 % ---- 3: autocorrelation ----
-fig = figure('position', [0 0 1400 600]);
+fig = numbered_figure(1503, 'position', [0 0 1400 600]);
 for wv = 1:2
     subplot(1, 2, wv); hold on; box on;
     A = [];
@@ -96,7 +96,7 @@ end
 print(fig, '-dpng', '-r110', fullfile(outdir, 'noise_acf.png')); if fig_close_mode, close(fig); end
 
 % ---- 4: absolute levels per station ----
-fig = figure('position', [0 0 1400 600]);
+fig = numbered_figure(1504, 'position', [0 0 1400 600]);
 for wv = 1:2
     subplot(1, 2, wv); hold on; box on;
     rr = find([rec.wave] == wv); A = NaN(numel(rr), Nst);

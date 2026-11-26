@@ -108,7 +108,7 @@ for ic = 1:numel(cases)
         end
     end
     % figure: posteriors (density, 5-95%, mean, chain means, truth, reference)
-    fig = figure('position', [0 0 1500 650]);
+    fig = numbered_figure(3200 + ic, 'position', [0 0 1500 650]);
     nm_ = {'vsv', 'vsh', 'xi'}; lab = {'V_{SV} (km/s)', 'V_{SH} (km/s)', '\xi = (V_{SH}/V_{SV})^2'};
     xl = {[4 5], [4 5.1], [0.88 1.22]}; col = lines(nch);
     for q_ = 1:3

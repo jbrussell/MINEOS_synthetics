@@ -16,7 +16,7 @@ names = {'vsv', 'vsh', 'xi'};
 labs = {'V_{SV} (km/s)', 'V_{SH} (km/s)', '\xi = (V_{SH}/V_{SV})^2'};
 cm = pdf_cmap(256);
 z = P.z; iz = z <= zmax_plot;
-fig = figure('position', [50 50 1500 700], 'color', 'w');
+fig = numbered_figure(1100, 'position', [50 50 1500 700], 'color', 'w');
 for q = 1:3
     S = P.(names{q});
     ax = subplot(1, 3, q); hold on; box on;

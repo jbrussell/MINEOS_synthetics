@@ -27,7 +27,7 @@ wl = 'LR'; wn = {'Love', 'Rayleigh'};
 T = P.disp.T(:);
 nmo = size(P.samples.CL, 2);
 cm = pdf_cmap(256); cb_ = [0 0.3 0.95];
-fig = figure('position', [50 50 max(900, 380*nmo) 900], 'color', 'w');
+fig = numbered_figure(1110 + abs_, 'position', [50 50 max(900, 380*nmo) 900], 'color', 'w');
 for wv = 1:2
     D = P.disp.(wl(wv)); C = P.samples.(['C' wl(wv)]);         % nT x nmo x ns
     for n = 1:nmo

@@ -64,7 +64,7 @@ for wv = 1:2
         wname{wv}, round(1/fc(4)), round(1/fc(1)), P.nbranch_data - 1, P.nm - 1);
     if hasw, wl_ = 'blue: automatic window (A3)'; else, wl_ = 'no automatic windows (run A3 before D2)'; end
     % ---- all events in one record section ----
-    fig = figure('position', [50 50 1100 1300]); hold on; box on;
+    fig = numbered_figure(2000 + 2*wv - 1, 'position', [50 50 1100 1300]); hold on; box on;
     sc = 0.45;                                      % half-amplitude of a trace (deg)
     for e = 1:nev
         for j = 1:nst
@@ -84,7 +84,7 @@ for wv = 1:2
     print(fig, '-dpng', '-r130', fullfile(outdir, ['record_section_all_' comp{wv} '.png']));
     if fig_close_mode, close(fig); end
     % ---- one panel per event ----
-    fig = figure('position', [50 50 1900 1250]);
+    fig = numbered_figure(2000 + 2*wv, 'position', [50 50 1900 1250]);
     nr = 3; nc = ceil(nev/nr);
     for e = 1:nev
         ir = ceil(e/nc); icol = e - (ir - 1)*nc;     % tight panel layout

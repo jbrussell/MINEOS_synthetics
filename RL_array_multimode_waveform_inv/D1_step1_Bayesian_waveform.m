@@ -140,7 +140,7 @@ save(opt.s1_file, 'card_start', 'card_final', 'card_true', 'cobs', 'cstd', ...
 
 %% figure (as D1_step1_Bayesian_disp.m)
 cpt = @(c, f) card_at_depth(c, f, zplot + zw)/1000;
-fig = figure('position', [50 50 2100 650]);
+fig = numbered_figure(3003, 'position', [50 50 2100 650]);
 subplot(1, 3, 1); hold on; box on;
 fill([s1_unc.vsv_p05(in); flipud(s1_unc.vsv_p95(in))], [zplot(in); flipud(zplot(in))], [0.80 0.88 1], 'edgecolor', 'none');
 fill([s1_unc.vsv_p16(in); flipud(s1_unc.vsv_p84(in))], [zplot(in); flipud(zplot(in))], [0.55 0.70 0.95], 'edgecolor', 'none');

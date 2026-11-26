@@ -58,7 +58,7 @@ for ie = 1:numel(events)
         W{ie, wv} = struct('t', tt(sel), 'd', R.d(sel), 'pred', Pr, 'sta', stn(sel), 'wt', R.wt(sel), 'id', R.id, 'Del0', R.Del0);
     end
     for dev = [false true]
-        fig = figure('position', [50 50 1500 950], 'color', 'w'); figs(end+1) = fig; %#ok<AGROW>
+        fig = numbered_figure(1200 + 50*dev + e0, 'position', [50 50 1500 950], 'color', 'w'); figs(end+1) = fig; %#ok<AGROW>
         for wv = 1:2
             if isempty(W{ie, wv}), continue; end
             draw_record(W{ie, wv}, wv, pick, sta, dev, sw_, cm, cb_, cfg.dt, wn);

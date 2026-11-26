@@ -105,6 +105,10 @@ model cards in `run_MINEOS/CARDS` are never removed).
 and `sub_plot_results.m`, which the drivers call and which are not meant to
 be run on their own.
 
+**Figure windows:** every figure has its own fixed number
+(`functions/numbered_figure.m` lists them), so rerunning a script redraws
+its figures in the same windows instead of opening new ones.
+
 ## Step 1: isotropic Rayleigh inversion
 
 - Data: MINEOS phase velocities of PA5, fundamental-mode Rayleigh,

@@ -82,7 +82,7 @@ figs = [];
 for wv = 1:2
     rr = find([rec.wave] == wv);
     if isempty(rr), continue; end
-    fig = figure('position', [50 50 1300 max(560, 320*nm)], 'color', 'w'); figs(end+1) = fig; %#ok<AGROW>
+    fig = numbered_figure(1300 + wv, 'position', [50 50 1300 max(560, 320*nm)], 'color', 'w'); figs(end+1) = fig; %#ok<AGROW>
     for n = 1:nm
         for c = 1:2
             subplot(nm, 2, 2*(n - 1) + c); hold on; box on;

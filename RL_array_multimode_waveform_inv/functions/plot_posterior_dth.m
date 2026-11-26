@@ -53,7 +53,7 @@ wn = {'Love', 'Rayleigh'};
 ev = [rec.event]; nev = max(ev); ecol = hsv(max(nev, 2))*0.75;
 hcol = [0.85 0.1 0.1; 0 0.35 0.9; 0 0.6 0; 0.6 0 0.7];
 tk = [15 20 25 30 40 50 60 80 100 120]; tk = tk(tk >= min(T) & tk <= max(T));
-fig = figure('position', [50 50 1300 300*(nm + 1)], 'color', 'w');
+fig = numbered_figure(1400, 'position', [50 50 1300 300*(nm + 1)], 'color', 'w');
 for wv = 1:2
     rr = find([rec.wave] == wv);
     for n = 1:nm

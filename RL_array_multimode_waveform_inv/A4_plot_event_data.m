@@ -61,7 +61,7 @@ for icomp = 1:numel(opt.aswms_components)
             if any(iw), snr(k) = max(abs(u(iw))) / sd(k); end
         end
         % ---- per-event figure ----
-        fig = figure('position', [0 0 1600 1100]);
+        fig = numbered_figure(2100 + icomp, 'position', [0 0 1600 1100]);
         subplot(2, 2, 1); hold on; box on;
         dd = max(dist) - min(dist); sc = 0.04*max(dd, 100);
         for k = so
@@ -117,7 +117,7 @@ for icomp = 1:numel(opt.aswms_components)
             if isKey(SNR{ie}, allsta{j}), M(ie, j) = SNR{ie}(allsta{j}); end
         end
     end
-    fig = figure('position', [0 0 2300 800]);
+    fig = numbered_figure(2110 + icomp, 'position', [0 0 2300 800]);
     subplot(1, 2, 1);
     imagesc(1:numel(allsta), 1:numel(evids), log10(M)); c = colorbar; ylabel(c, 'log_{10} SNR');
     set(gca, 'xtick', 1:numel(allsta), 'xticklabel', allsta, 'ytick', 1:numel(evids), 'yticklabel', evids);

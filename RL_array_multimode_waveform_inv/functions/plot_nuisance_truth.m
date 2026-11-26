@@ -106,7 +106,7 @@ end
 
 % ---- figure ----
 np = Kt + Ka + 2; ncol = 4; nrow = ceil(np/ncol);
-fig = figure('position', [50 50 1900 480*nrow]);
+fig = numbered_figure(1090, 'position', [50 50 1900 480*nrow]);
 wave = [rec.wave];
 ip = 0;
 sets = {};
