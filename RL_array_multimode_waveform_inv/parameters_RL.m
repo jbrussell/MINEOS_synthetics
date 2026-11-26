@@ -163,14 +163,26 @@ opt = opt_defaults(opt, struct( ...
     'spec_K',  12, ...                   % B_n(w): hat functions in log w (3 leaves a modelling error in the
     ...                                  %   Rayleigh waveforms that biases the structure; 12 fits clean synthetics)
     'spec_Kt',  4, 'tau_prior', 15, 'dtau_prior', 10, ...   % tau_n(w): Legendre terms, prior std (s)
-    'windows',  'auto', ...              % 'auto': the window picked from the data per event by ASWMS-Q
-    ...                                  %   (A3_run_autowinpick.m: event.winpara of the event files; picker
-    ...                                  %   options through 'aswms', e.g. struct('cycle_before', 2, 'cycle_after', 5));
-    ...                                  %   'fund': fundamental-mode window only, Delta/U_w to Delta/U_f + 60 s
-    ...                                  %   (cuts the fast higher modes, incl. the unmodelled branches >= nm);
-    ...                                  %   U_w = max fundamental-mode U of the reference + fund_margin
-    ...                                  %   'single': one window per wave type from Delta/U_start (overtones +
-    ...                                  %   fundamental mode, one noise level); 'split': overtone and fundamental-mode windows
+    ... % waveform windows: opt.windows chooses how; fund_margin and U_start only apply to some choices
+    'windows',  'auto', ...              % how the time window of each record is set:
+    ...                                  %   'auto' (default): picked from the data per event by ASWMS-Q
+    ...                                  %     (A3_run_autowinpick.m, event.winpara of the event files; picker
+    ...                                  %     options through 'aswms', e.g. struct('cycle_before', 2, 'cycle_after', 5));
+    ...                                  %     fund_margin and U_start are NOT used
+    ...                                  %   'fund': fundamental-mode window only, Delta/(U_max + fund_margin) to
+    ...                                  %     Delta/U_min + 60 s, U_max/U_min = max/min fundamental-mode group
+    ...                                  %     velocity of the reference over the band (cuts the faster overtones,
+    ...                                  %     incl. the unmodelled branches >= nm)
+    ...                                  %   'single': one window per wave type, overtones + fundamental mode,
+    ...                                  %     from Delta/U_start to Delta/U_min + 60 s (one noise level)
+    ...                                  %   'split': as 'single', split into an overtone and a fundamental-mode
+    ...                                  %     window (a noise level each)
+    'fund_margin', [0.4 0.2], ...        % [used by: windows = 'fund'] start margin (km/s, [Love Rayleigh]) added
+    ...                                  %   to U_max: larger = the window opens earlier (more overtone energy),
+    ...                                  %   smaller = tighter, risks cutting the front of the fundamental mode
+    'U_start',  [], ...                  % [used by: windows = 'single', 'split'] window start group velocity
+    ...                                  %   (km/s; scalar or [Love Rayleigh]); [] = max U of branches 1..nm-1
+    ...                                  %   of the reference + 0.6 km/s
     'smooth_sig', [2e-4 2e-4], ...       % smoothness prior [sig_1 sig_2] on the curvature of the two
     ...                                  %   smooth_param profiles: log p = -1/2 sum_c int (X_c''/sig_c)^2 dz/smooth_len.
     ...                                  %   sig is the STD of the allowed curvature, not a weight:
@@ -212,9 +224,6 @@ opt = opt_defaults(opt, struct( ...
     'xi_ref_sig_range', [0.005 0.2], ... % range of the sampled sigma_xi (xi_ref_hier = true)
     'waves', [1 2], ...                  % wave types inverted: 1 = Love, 2 = Rayleigh ([2] = Rayleigh only)
     'xi_fixed', false, ...               % true: xi held at the reference model, Vsv only (step-1 waveform version)
-    'fund_margin', [0.4 0.2], ...        % 'fund' window start margin (km/s) [Love Rayleigh]
-    'U_start',  [], ...                  % window start group velocity (km/s; scalar or [Love Rayleigh]);
-    ...                                  %   [] = max U of branches 1..nm-1 of the reference + 0.6 km/s
     'exact_geom', true, ...              % moveout across the array from great-circle distances (false: local
     ...                                  %   plane wave in x-y, as before; event_G_spec.m)
     'N',        800, ...                 % samples per record (N*dt = 3200 s: earliest overtone to slowest fundamental)
