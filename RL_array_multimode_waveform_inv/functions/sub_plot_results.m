@@ -399,6 +399,34 @@ if any(isfinite(CtrueL(:)))          % (real data: no true model)
     end
 end
 
+%% 5c) posterior B_n(w) and arrival angles
+% posterior spectral corrections B_n(w) (fig13_B_<Love|Rayleigh>.png,
+% B_posterior<tag>.mat) and arrival-angle anomalies dth_n(w)
+% (fig14_arrival_angles.png, dth_posterior<tag>.mat); synthetic tests: with
+% the nuisance fit at the true structure (nuis_true<tag>.mat, section 5b)
+% and the true arrival angles of A0
+try
+    linc_ = []; dtt_ = [];
+    if exist(['nuis_true' tag '.mat'], 'file') == 2, L_ = load(['nuis_true' tag '.mat']); linc_ = L_.linc; end
+    if isfield(opt, 'aswms_dir') && isfield(opt, 'truthfile') && exist(fullfile(opt.aswms_dir, opt.truthfile), 'file') == 2
+        T_ = load(fullfile(opt.aswms_dir, opt.truthfile));
+        if isfield(T_.truth, 'dth_true')
+            dtt_ = NaN(1, nrec);
+            for r = 1:nrec
+                e_ = find(strcmp(T_.truth.ev_id, rec(r).id), 1);
+                if ~isempty(e_), dtt_(r) = T_.truth.dth_true(e_); end
+            end
+        end
+    end
+    ev_ = unique([1 min(8, max([rec.event]))]);
+    figs_ = plot_posterior_B(rec, cfg, mc, svc, Tdisp, fb, nm, ev_, outdir, tag, linc_);
+    figs_(end+1) = plot_posterior_dth(rec, cfg, svc, nm, ev_, outdir, tag, linc_, dtt_);
+    if fig_close_mode, close(figs_); end
+    clear figs_ linc_ dtt_ L_ T_ e_ ev_
+catch err_
+    fprintf('B_n / arrival-angle figures not made: %s\n', err_.message);
+end
+
 %% 6) convergence and noise diagnostics
 fig = figure('position', [50 50 1900 600]);
 subplot(1, 4, 1); hold on; box on;
