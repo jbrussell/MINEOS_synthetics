@@ -13,7 +13,8 @@ function [removed, kept] = clear_archived_run(opt, include_shared, force)
 % ckpt<tag>_*, MINEOS scratch in run_MINEOS) are not touched.
 %
 % include_shared (default false): also remove what other runs may use - the
-%   step-1 result (opt.s1_file) and figure folders figs_step1*, the waveform
+%   step-1 result (opt.s1_file) and figure folders figs_step1*, the D2
+%   record sections (figs_step2), the waveform
 %   data (opt.aswms_dir), the reference prep file (opt.prepfile) and
 %   figs_compare.png. Off by default, because a
 %   later run of another project (or a rerun) reads them from here.

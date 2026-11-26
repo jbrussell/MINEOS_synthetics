@@ -22,8 +22,9 @@ function rd = save_project_results(opt)
 %   step2/              setup<tag>.mat, chain<tag>_XX*.mat (samples; also
 %                       the burn-in files), refupd<tag>*.mat, prep<tag>_*.mat
 %                       (linearization updates), nuis_true<tag>.mat, logs
-%                       *<tag>*.log, and (opt.results_data) the reference
-%                       prep file opt.prepfile
+%                       *<tag>*.log, the D2 record sections (figs_step2/),
+%                       and (opt.results_data) the reference prep file
+%                       opt.prepfile
 %   step1/              opt.s1_file (step1_result.mat) and the step-1 figure
 %                       folders (figs_step1*) as they are at archiving time
 %   data/               (opt.results_data, default true) the waveform data:
@@ -67,7 +68,7 @@ for i = 1:numel(L)
     if L(i).sub
         d1 = dir(L(i).pat);
         for k = 1:numel(d1)
-            if d1(k).isdir
+            if d1(k).isdir && ~any(strcmp(d1(k).name, {'.', '..'}))
                 mk_(fullfile(dst, d1(k).name));
                 log_{end+1} = cp_(fullfile(fileparts(L(i).pat), d1(k).name, '*'), fullfile(dst, d1(k).name)); %#ok<AGROW>
             end

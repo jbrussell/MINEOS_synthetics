@@ -8,7 +8,8 @@
 % By default only what belongs to this run is removed: setup<tag>.mat,
 % chain<tag>_*.mat, refupd<tag>*.mat, prep<tag>_*.mat, nuis_true<tag>.mat,
 % the logs and summary files of the tag and the figure folder (opt.outdir).
-% What other runs may use stays: the step-1 result and figures, the waveform
+% What other runs may use stays: the step-1 result and figures, the D2
+% record sections (figs_step2), the waveform
 % data (opt.aswms_dir) and the reference prep file (opt.prepfile);
 % opt.clear_shared = true removes those too. Model cards in
 % run_MINEOS/CARDS are never removed.

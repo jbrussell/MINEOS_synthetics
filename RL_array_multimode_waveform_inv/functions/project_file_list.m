@@ -10,7 +10,7 @@ function L = project_file_list(opt)
 %   L(i).sub    : true = each match is a folder copied as <dst>/<name>
 %                 (figs_step1*: step1/figs_step1...), false = copied into dst
 %   L(i).shared : true = may also be used by other runs (step-1 result and
-%                 figures, waveform data, reference prep file, model cards,
+%                 figures, D2 record sections (figs_step2), waveform data, reference prep file, model cards,
 %                 figs_compare.png); false = belongs to this run only (its
 %                 tag: setup, chains, figures folder, logs, linearization
 %                 cards)
@@ -27,6 +27,7 @@ pats = {['setup' tag '.mat'], ['chain' tag '_*.mat'], ['refupd' tag '.mat'], ['r
 for k = 1:numel(pats), L = add_(L, pats{k}, 'step2', false, false); end
 data_ = optget(opt, 'results_data', true);
 if data_ && isfield(opt, 'prepfile') && ~isempty(opt.prepfile), L = add_(L, opt.prepfile, 'step2', false, true); end
+L = add_(L, 'figs_step2*', 'step2', true, true);   % D2 record sections (made with the prep file)
 % step 1
 if isfield(opt, 's1_file') && ~isempty(opt.s1_file), L = add_(L, opt.s1_file, 'step1', false, true); end
 L = add_(L, 'figs_step1*', 'step1', true, true);
