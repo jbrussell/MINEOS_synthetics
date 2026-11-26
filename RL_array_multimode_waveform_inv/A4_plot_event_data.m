@@ -25,11 +25,12 @@
 parameters_RL;
 if exist('OCTAVE_VERSION', 'builtin'), set(0, 'defaultfigurevisible', 'off'); end
 wd = opt.aswms_dir; if wd(end) ~= '/' && wd(end) ~= filesep, wd = [wd filesep]; end
-fc = optget(opt, 'fc', [1/112 1/100 1/20 1/17]);
+fcall_ = optget(opt, 'fc', []);
 maxlag = optget(opt, 'noise_maxlag', 12);
-fg = linspace(fc(1), fc(4), 60);
 for icomp = 1:numel(opt.aswms_components)
     comp = opt.aswms_components{icomp};
+    fc = wave_band(fcall_, comp_wave(opt, comp));   % band of this component (opt.fc)
+    fg = linspace(fc(1), fc(4), 60);
     od = [wd 'figs_events' filesep comp filesep];
     if ~exist(od, 'dir'), mkdir(od); end
     files = dir([wd 'eventmat' filesep '*_' comp '.mat']);

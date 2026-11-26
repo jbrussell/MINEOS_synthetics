@@ -40,7 +40,7 @@ parameters.lalim = [min(S{2}) - 1, max(S{2}) + 1];
 parameters.lolim = [min(S{3}) - 1, max(S{3}) + 1];
 parameters.gridsize = 0.5;
 
-fc = og('fc', [1/112 1/100 1/20 1/17]);
+fc = wave_band(og('fc', []), comp_wave(opt, component));   % band of this component (opt.fc)
 parameters.periods = sort(logspace(log10(1/fc(4)), log10(1/fc(1)), 15));
 
 % data selection (a1_a_sac2eventmat)

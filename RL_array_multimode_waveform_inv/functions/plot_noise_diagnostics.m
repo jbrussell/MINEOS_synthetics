@@ -22,7 +22,8 @@ if ~isfield(rec, 'nstd_') || all(arrayfun(@(x) isempty(x.nstd_), rec)), return; 
 if ~exist(outdir, 'dir'), mkdir(outdir); end
 if exist('OCTAVE_VERSION', 'builtin'), set(0, 'defaultfigurevisible', 'off'); end
 wn = {'Love', 'Rayleigh'}; Nst = numel(sta);
-fg = linspace(cfg.fc(1), cfg.fc(4), 60);
+fcw = {wave_band(cfg.fc, 1), wave_band(cfg.fc, 2)};             % band of each wave type (opt.fc)
+fgw = {linspace(fcw{1}(1), fcw{1}(4), 60), linspace(fcw{2}(1), fcw{2}(4), 60)};   % their PSD grids
 lag = (0:size(rec(1).nacf_, 2) - 1) * cfg.dt;
 col = lines(Nst);
 
@@ -52,6 +53,7 @@ save_figure(fig, fullfile(outdir, 'noise_levels.png'), 110); if fig_close_mode, 
 % ---- 2: spectra normalized by each station's variance ----
 fig = numbered_figure(1502, 'position', [0 0 1400 600]);
 for wv = 1:2
+    fg = fgw{wv};
     subplot(1, 2, wv); hold on; box on;
     A = [];
     for r = find([rec.wave] == wv)
@@ -65,7 +67,7 @@ for wv = 1:2
         plot(1./fg, q(max(1, round(0.1*n)), :), 'k--', 1./fg, q(round(0.9*n), :), 'k--', 'linewidth', 1.2);
         plot(1./fg, median(A, 1), 'k-', 'linewidth', 2.5);
     end
-    set(gca, 'xscale', 'log', 'yscale', 'log', 'xtick', [17 20 30 50 80 112]); xlim([1/cfg.fc(4) 1/cfg.fc(1)]);
+    set(gca, 'xscale', 'log', 'yscale', 'log', 'xtick', [17 20 30 50 80 112]); xlim([1/fcw{wv}(4) 1/fcw{wv}(1)]);
     xlabel('Period (s)'); ylabel('PSD / variance (1/Hz)');
     title(sprintf('%s pre-P noise spectra: stations (thin), pooled median and 10-90%% (black)', wn{wv}));
 end

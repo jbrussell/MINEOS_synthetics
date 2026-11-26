@@ -48,7 +48,7 @@ end
 tc = (ev.t_cent - datenum(1970, 1, 1))*86400;    % centroid time (epoch s)
 D.U = NaN(numel(tg), Nst); D.present = false(Nst, 1); D.dist = NaN(Nst, 1); D.nstd = NaN(Nst, 1);
 maxlag = optget(opt, 'noise_maxlag', 12); D.nacf = NaN(Nst, maxlag + 1);
-fc = optget(opt, 'fc', [1/112 1/100 1/20 1/17]);
+fc = wave_band(optget(opt, 'fc', []), comp_wave(opt, comp));   % band of this component
 D.npsd_f = linspace(fc(1), fc(4), 60); D.npsd = NaN(Nst, 60);
 D.winpara = []; if isfield(event, 'winpara') && numel(event.winpara) == 4, D.winpara = event.winpara; end
 D.toff = event.otime - tc;

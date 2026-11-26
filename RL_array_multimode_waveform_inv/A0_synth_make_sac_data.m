@@ -97,16 +97,16 @@ end
 % opt.synth_pre_s s before the origin with noise only (pre-event noise, for
 % the per-record noise levels of the inversion)
 rng(opt.synth_seed);
-fc = optget(opt, 'fc', [1/112 1/100 1/20 1/17]);
 Nt = numel(t); f = (0:Nt-1)'/(Nt*opt.dt);
-bpf = zeros(Nt, 1); ib = find(f > fc(1) & f < fc(4)); bpf(ib) = bp_taper(f(ib), fc);
-bp = @(X) 2*real(ifft(fft(X) .* bpf));             % one-sided band-pass (real output)
 Npre = round(optget(opt, 'synth_pre_s', 0)/opt.dt); Ne = Npre + Nt;
 fe = (0:Ne-1)'/(Ne*opt.dt);
-bpe = zeros(Ne, 1); ibe = find(fe > fc(1) & fe < fc(4)); bpe(ibe) = bp_taper(fe(ibe), fc);
 spread = optget(opt, 'synth_noise_spread', 0);
 noise = cell(2, nev); noise_pre = noise; nfac = noise;
 for wv = 1:2
+    fc = wave_band(optget(opt, 'fc', []), wv);      % band of this wave type (opt.fc)
+    bpf = zeros(Nt, 1); ib = find(f > fc(1) & f < fc(4)); bpf(ib) = bp_taper(f(ib), fc);
+    bp = @(X) 2*real(ifft(fft(X) .* bpf));         % one-sided band-pass (real output)
+    bpe = zeros(Ne, 1); ibe = find(fe > fc(1) & fe < fc(4)); bpe(ibe) = bp_taper(fe(ibe), fc);
     for e = 1:nev
         A = max(max(abs(bp(U{wv, e}))));
         nz = 2*real(ifft(fft(randn(Ne, Nst)) .* bpe)); nz = nz / std(nz(:));

@@ -34,7 +34,7 @@ Cref_f = {disp_to_band(CrefL, Tdisp, fb), disp_to_band(CrefR, Tdisp, fb)};
 
 uname = {'T', 'S'};
 segtap = tukeywin_(cfg.N, 0.1);
-taper = bp_taper(fb, cfg.fc);
+tapers = {bp_taper(fb, wave_band(cfg.fc, 1)), bp_taper(fb, wave_band(cfg.fc, 2))};   % band of each wave type
 Nst = size(cfg.xy, 1);
 for r = 1:numel(rec)
     wv = rec(r).wave; e = rec(r).event;
@@ -44,7 +44,7 @@ for r = 1:numel(rec)
     Y = zeros(cfg.N, Nst);
     for n = 1:nm
         X = fft(P.(['u_ref_' uname{wv}]){e, n}(it, :) .* segtap);
-        Uref{n} = X(cfg.ib, :) .* taper / rec(r).scale;
+        Uref{n} = X(cfg.ib, :) .* tapers{wv} / rec(r).scale;
         Y(cfg.ib, :) = Y(cfg.ib, :) + Uref{n};
     end
     rec(r).Uref = Uref;

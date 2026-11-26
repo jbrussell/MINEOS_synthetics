@@ -112,6 +112,11 @@ used by A0 (noise), A3 (window picking), A4, D2 (the dispersion nodes
 `Tdisp` span it) and D3 (the frequencies fitted), so a new band needs A3
 (windows) and D2 (a new `opt.prepfile`) again, then D3; for a synthetic
 test also A0–A2. `opt.maxF` (mode tables, 70 mHz) must be above f4.
+Separate bands for Love and Rayleigh: give two rows, `[Love; Rayleigh]`,
+e.g. `opt.fc = [1/112 1/100 1/25 1/20; 1/150 1/130 1/20 1/17]` (Love
+20–112 s, Rayleigh 17–150 s; `functions/wave_band.m`). Each wave type's
+data, noise, windows and reference spectra are band-passed to its own
+band; the inversion's frequency grid and the dispersion nodes cover both.
 
 **Figure windows:** every figure has its own fixed number
 (`functions/numbered_figure.m` lists them), so rerunning a script redraws

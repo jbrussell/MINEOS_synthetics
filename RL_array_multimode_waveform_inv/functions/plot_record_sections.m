@@ -26,20 +26,22 @@ function plot_record_sections(P, outdir, fc, win)
 %                                   distance), normalized per event; data
 %                                   black, step-1 start green, final step-1
 %                                   model red, window blue
-if nargin < 3 || isempty(fc), fc = [1/112 1/100 1/20 1/17]; end
+if nargin < 3, fc = []; end
+fcall_ = fc;                                        % opt.fc: one band or [Love; Rayleigh]
 if nargin < 4, win = {}; end
 if ~exist(outdir, 'dir'), mkdir(outdir); end
 if exist('OCTAVE_VERSION', 'builtin'), set(0, 'defaultfigurevisible', 'off'); end
 t = P.t(:); Nt = numel(t); dt = t(2) - t(1);
 f = (0:Nt-1)'/(Nt*dt);
-H = bp_taper(min(f, 1/dt - f), fc);                % two-sided band-pass
 tap = tukeywin_(Nt, 0.05);
-bp = @(u) real(ifft(fft(u .* tap) .* H));
 nev = numel(P.ev); nst = numel(P.sta.lat);
 km2deg = 180/(6371*pi);
 comp = {'T', 'Z'}; ty = {'T', 'S'}; wname = {'Love (transverse)', 'Rayleigh (vertical)'};
 ecol = lines(nev);
 for wv = 1:2
+    fc = wave_band(fcall_, wv);                     % band of this wave type
+    H = bp_taper(min(f, 1/dt - f), fc);             % two-sided band-pass
+    bp = @(u) real(ifft(fft(u .* tap) .* H));
     D = zeros(nev, nst); Ut = cell(nev, 1); Us = cell(nev, 1); U0 = cell(nev, 1);
     W1 = NaN(nev, nst); W2 = NaN(nev, nst);       % window start/end per station (s)
     for e = 1:nev

@@ -67,9 +67,12 @@ opt = opt_defaults(opt, struct( ...
     's1_nit',       4, ...               % iterations (MINEOS recalculated after each)
     ... % ---- waveform period band (A0, A3, A4, D2, D3) ----
     'fc', [1/112 1/100 1/20 1/17], ...   % band-pass corners [f1 f2 f3 f4] (Hz) of the waveforms: cosine taper
-    ...                                  %   f1-f2 and f3-f4, full weight f2-f3 (default 17-112 s, full 20-100 s).
+    ...                                  %   f1-f2 and f3-f4, full weight f2-f3 (default 17-112 s, full 20-100 s);
+    ...                                  %   or two rows [Love; Rayleigh] for separate bands, e.g.
+    ...                                  %   [1/112 1/100 1/25 1/20; 1/112 1/100 1/20 1/17] (wave_band.m).
     ...                                  %   Used by A0 (noise), A3 (window picking), A4, D2 (record sections,
-    ...                                  %   dispersion nodes Tdisp = 0.95/f4 .. 1.02/f1 unless opt.Tdisp is set)
+    ...                                  %   dispersion nodes Tdisp = 0.95/f4 .. 1.02/f1 of both bands unless
+    ...                                  %   opt.Tdisp is set)
     ...                                  %   and D3 (the frequencies fitted). A new band needs a new prep file
     ...                                  %   (D2) and new windows (A3); maxF must exceed f4 (mHz)
     ... % ---- data: ASWMS-Q event files (A0 synthetic only; A1-A3 for synthetic and real data) ----
@@ -230,7 +233,9 @@ opt = opt_defaults(opt, struct( ...
     ));
 plot_font_defaults(opt.plot_fontsize);
 setappdata(0, 'RL_close_figs', opt.close_figs);      % read by fig_close_mode.m
-if 1000*opt.fc(4) > opt.maxF, error('opt.fc(4) = %g mHz is above the mode tables (opt.maxF = %g mHz): raise maxF', 1000*opt.fc(4), opt.maxF); end
+fcb_ = wave_band(opt.fc, 0);
+if 1000*fcb_(4) > opt.maxF, error('opt.fc: f4 = %g mHz is above the mode tables (opt.maxF = %g mHz): raise maxF', 1000*fcb_(4), opt.maxF); end
+clear fcb_
 if ~strcmp(opt.s1_start_model, 'pa5_iso'), error('opt.s1_start_model must be ''pa5_iso'' (the PREM start was removed)'); end
 if isempty(opt.s1_start), opt.s1_start = 'RLinv_pa5iso'; end
 if isempty(opt.ref_qmod), opt.ref_qmod = opt.trueid; end

@@ -113,8 +113,9 @@ mc.nchains = og('nchains', 6);
 P = prep_mineos_idagrn(opt);
 nm = P.nm;
 Tdisp = P.Tdisp(:)';
-fc = og('fc', [1/112 1/100 1/20 1/17]);       % processing band (Hz)
-cfg.fc = fc;
+cfg.fc = og('fc', [1/112 1/100 1/20 1/17]);   % processing band(s) (Hz): one band or [Love; Rayleigh]
+fc = wave_band(cfg.fc, 0);                     % the band covering both: frequency grid cfg.w
+fcw = {wave_band(cfg.fc, 1), wave_band(cfg.fc, 2)};   % the band of each wave type
 
 %% ---- model space ----
 cfg.zw = max(P.card_true.z(P.card_true.vsv == 0 & P.card_true.z < 20));   % water depth (km)
@@ -164,7 +165,7 @@ cfg.dt = P.dt; cfg.N = og('N', 800);
 f = (0:cfg.N-1)'/(cfg.N*cfg.dt);
 cfg.ib = find(f > fc(1) & f < fc(4));
 fb = f(cfg.ib); cfg.w = 2*pi*fb;
-taper = bp_taper(fb, fc);
+tapers = {bp_taper(fb, fcw{1}), bp_taper(fb, fcw{2})};   % band-pass of each wave type on cfg.w
 disp_band = @(C) disp_to_band(C, Tdisp, fb);
 Cref_f = {disp_band(CrefL), disp_band(CrefR)};
 Ctrue_f = {disp_band(CtrueL), disp_band(CtrueR)};
@@ -269,7 +270,7 @@ for wv = waves_(:)'
         if max(tw2) > t(end) || min(tw1) < t(1)
             warning('record %d (%s): windows cut by the %d-sample segment (opt.N, opt.len_hr)', r, ev(e).id, cfg.N);
         end
-        proc = @(U) proc_segment(U, segtap, taper, cfg);   % segment taper + band-pass (as Uref)
+        proc = @(U) proc_segment(U, segtap, tapers{wv}, cfg);   % segment taper + band-pass (as Uref)
         if aswms_
             Ud = Dd.U(it, :);
             pres = Dd.present(:)' & all(isfinite(Ud), 1);   % stations with data over the whole segment
@@ -404,14 +405,15 @@ end
 % factor (~1); the per-station levels are in the spectra (rec.nlev unused).
 if strcmp(nmodel_, 'fdom')
     if ~aswms_, error('opt.noise_model = ''fdom'' needs opt.data_source = ''aswms'' (pre-P noise)'); end
-    fg_ = linspace(fc(1), fc(4), 60); psdm_ = og('noise_psd', 'shape');
-    shape_ = NaN(2, numel(fg_));
+    fgw_ = {linspace(fcw{1}(1), fcw{1}(4), 60), linspace(fcw{2}(1), fcw{2}(4), 60)};   % PSD grids (read_event_data.m)
+    psdm_ = og('noise_psd', 'shape');
+    shape_ = NaN(2, 60);
     for wv = 1:2
         A_ = [];
         for r = find([rec.wave] == wv)
             A_ = [A_; rec(r).npsd_ ./ (rec(r).nstd_(:).^2)];          %#ok<AGROW>
         end
-        for k_ = 1:numel(fg_), a_ = A_(isfinite(A_(:, k_)), k_); if ~isempty(a_), shape_(wv, k_) = median(a_); end, end
+        for k_ = 1:60, a_ = A_(isfinite(A_(:, k_)), k_); if ~isempty(a_), shape_(wv, k_) = median(a_); end, end
     end
     nown_ = 0; ntot_ = 0;
     for r = 1:nrec
@@ -426,8 +428,9 @@ if strcmp(nmodel_, 'fdom')
         end
         Srow_ = Srow_ / rec(r).scale^2;                                   % (records are normalized by their peak)
         Srow_ = max(Srow_, 1e-3*max(Srow_, [], 2));                       % (floor: band edges)
+        fg_ = fgw_{rec(r).wave}; fcr_ = fcw{rec(r).wave};
         Sfun_ = @(j, f) interp1(fg_, Srow_(j, :), f, 'linear', 'extrap');
-        rec(r).W = fdom_operator(rec(r).first, rec(r).wt, jst_, cfg.dt, [fc(1) fc(4)], Sfun_);
+        rec(r).W = fdom_operator(rec(r).first, rec(r).wt, jst_, cfg.dt, [fcr_(1) fcr_(4)], Sfun_);
         rec(r).wld = rec(r).W.ld; rec(r).nlev = [];
     end
     fprintf('frequency-domain noise model (%s spectra): %d coefficients per record on average (%d samples)\n', psdm_, ...
@@ -445,7 +448,6 @@ end
 % to opt.noise_guess and 0.5 for real data, as starting values only: both
 % are sampled)
 sig_true = og('noise', 0.03)*ones(1, 4);
-bpf = zeros(cfg.N, 1); bpf(cfg.ib) = taper;
 cc = zeros(4, 2);                         % lag-1 autocorrelation accumulators
 ss = zeros(4, 2);                         % noise power accumulators ('aswms')
 ssw_ = zeros(4, 2);                       % (whitened, fixed noise models)
@@ -460,6 +462,7 @@ for r = 1:nrec
         end
     else
         X = fft(randn(cfg.N, Nst));
+        bpf = zeros(cfg.N, 1); bpf(cfg.ib) = tapers{rec(r).wave};
         nz = 2*real(ifft(X .* bpf));      % one-sided filter -> real band-limited noise
         nz = nz / std(nz(:));
         nr = sig_true(2*rec(r).wave) * nz(rec(r).idx);
