@@ -161,13 +161,14 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   uniform hyperprior on smooth_sig_range) and smooth_sig is not used; false:
     ...                                  %   smooth_sig as set (a user-chosen fixed strength, or 0 = off)
     'smooth_sig_range', [5e-5 5e-3], ... % range of the sampled curvature strengths (smooth_hier = true)
-    'vsv_ref_sig', 0, ...                % prior toward the reference Vsv (km/s; 0 = off): N(Vsv_ref(z), vsv_ref_sig^2)
+    'vsv_ref_sig', 'step1', ...          % prior toward the reference Vsv (km/s; 0 = off): N(Vsv_ref(z), vsv_ref_sig^2)
     ...                                  %   every vsv_ref_len km between the Moho and zmax, Vsv_ref = the reference
     ...                                  %   model of the prep file (step-1 model; true model in an oracle test).
     ...                                  %   LARGER vsv_ref_sig = WEAKER prior. xi is not affected (lr_common.m)
     'vsv_ref_len', 10, ...               % depth interval (km) of one Gaussian term of that prior (larger = weaker prior)
     ...                                  %   vsv_ref_sig = 'step1': width = the step-1 posterior std (s1_file s1_unc, from a
-    ...                                  %   Bayesian step 1) x vsv_ref_scale, floored at vsv_ref_sig_min (vsv_ref_sigz.m)
+    ...                                  %   Bayesian step 1) x vsv_ref_scale, floored at vsv_ref_sig_min (vsv_ref_sigz.m);
+    ...                                  %   DEFAULT 'step1': the step-1 (D1) posterior carried forward into step 2
     'vsv_ref_scale', 1, 'vsv_ref_sig_min', 0.01, ...
     'ximin', 0.85, 'ximax', 1.15, ...    % uniform prior on the xi control points (default symmetric about 1, prior
     ...                                  %   mean 1 = isotropic; runs before 11/2026 used 0.90-1.20, prior mean 1.05)

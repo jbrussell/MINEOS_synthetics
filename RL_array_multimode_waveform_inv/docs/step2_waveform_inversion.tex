@@ -745,7 +745,8 @@ in the summaries; idagrn data have no ``true'' nuisance parameters.
 \subsection{Optional priors}\label{sec:optprior}
 These multiply the uniform priors. By default the smoothness prior is on
 ($\sigma_s=2\times10^{-4}$), the $\xi$ prior is on with a sampled strength
-(Section~\ref{sec:hier}) and the prior toward the reference $\vsv$ is off. They are
+(Section~\ref{sec:hier}) and the prior toward the reference $\vsv$ is on with
+the step-1 posterior width (\texttt{vsv\_ref\_sig = 'step1'}). They are
 functions of the profiles on a 1~km grid $z_g\in[z_{\min},z_{\max}]$, not
 of the control points, so they apply the same way for any number of
 control points (\texttt{lr\_common.m}, \texttt{'logprior'}). Each Gaussian
@@ -764,7 +765,8 @@ over the grid is weighted by $\Delta z/\ell$.
   $\sigma_s$ is the standard deviation of the allowed curvature:
   a \emph{larger} $\sigma_s$ is a \emph{weaker} prior; $\sigma_{s,c}=0$
   switches the term off.
-\item \textbf{$\vsv$ toward the reference} (\texttt{opt.vsv\_ref\_sig} $=\sigma_v$):
+\item \textbf{$\vsv$ toward the reference} (\texttt{opt.vsv\_ref\_sig} $=\sigma_v$,
+  default \texttt{'step1'}):
   $\ln p_v=-\tfrac12\sum_{z_g}\big[(\vsv-\vsv^{0})/\sigma_v(z_g)\big]^2\Delta z/\ell_v$,
   with $\vsv^0$ the reference model of the prep file (fixed through the
   linearization updates). $\sigma_v$ is a number, or, with
