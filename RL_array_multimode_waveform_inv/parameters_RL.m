@@ -143,7 +143,7 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   U_w = max fundamental-mode U of the reference + fund_margin
     ...                                  %   'single': one window per wave type from Delta/U_start (overtones +
     ...                                  %   fundamental mode, one noise level); 'split': overtone and fundamental-mode windows
-    'smooth_sig', [0 0], ...             % smoothness prior [sig_1 sig_2] on the curvature of the two
+    'smooth_sig', [2e-4 2e-4], ...       % smoothness prior [sig_1 sig_2] on the curvature of the two
     ...                                  %   smooth_param profiles: log p = -1/2 sum_c int (X_c''/sig_c)^2 dz/smooth_len.
     ...                                  %   sig is the STD of the allowed curvature, not a weight:
     ...                                  %     LARGER sig = WEAKER prior = LESS smoothing (rougher profiles allowed);
@@ -151,6 +151,7 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %     so halving sig quadruples it); 0 = prior OFF for that profile (not
     ...                                  %     'infinitely smooth'). E.g. 4e-4 km/s/km^2: a curvature of 4e-4 over
     ...                                  %     smooth_len costs 1/2 in log-prior. See lr_common.m.
+    ...                                  %   Default 2e-4 (4-branch PA5 tests: better than 4e-4 and than off)
     'smooth_param', 'vsv_vsh', ...       % profiles smoothed by smooth_sig:
     ...                                  %   'vsv_vsh' (default): [Vsv Vsh], both km/s/km^2; xi smoothed only through Vsh
     ...                                  %   'vsv_xi': [Vsv (km/s/km^2), xi (1/km^2)], independent; sig_xi ~ 2*sig_sv/Vsv
@@ -175,7 +176,7 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   ximin-ximax. LARGER xi_ref_sig = WEAKER prior (e.g. 0.03-0.05; lr_common.m)
     'xi_ref_mean', 1, ...                % its mean (1 = isotropic; a fixed value, not the reference model's xi)
     'xi_ref_len', 10, ...                % depth interval (km) of one Gaussian term of that prior (larger = weaker prior)
-    'xi_ref_hier', false, ...            % true: HIERARCHICAL xi prior - its strength sigma_xi is sampled (log-uniform
+    'xi_ref_hier', true, ...             % true (default): HIERARCHICAL xi prior - its strength sigma_xi is sampled (log-uniform
     ...                                  %   hyperprior on xi_ref_sig_range), so the data set how strongly xi is pulled
     ...                                  %   toward xi_ref_mean; xi_ref_sig is then not used. false: xi_ref_sig as set
     ...                                  %   (a user-chosen fixed strength, or 0 = off)

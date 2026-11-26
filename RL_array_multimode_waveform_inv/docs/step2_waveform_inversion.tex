@@ -743,7 +743,9 @@ in the summaries; idagrn data have no ``true'' nuisance parameters.
 \end{itemize}
 
 \subsection{Optional priors}\label{sec:optprior}
-These multiply the uniform priors; each is off by default. They are
+These multiply the uniform priors. By default the smoothness prior is on
+($\sigma_s=2\times10^{-4}$), the $\xi$ prior is on with a sampled strength
+(Section~\ref{sec:hier}) and the prior toward the reference $\vsv$ is off. They are
 functions of the profiles on a 1~km grid $z_g\in[z_{\min},z_{\max}]$, not
 of the control points, so they apply the same way for any number of
 control points (\texttt{lr\_common.m}, \texttt{'logprior'}). Each Gaussian
@@ -751,7 +753,7 @@ term counts once per correlation length $\ell$ (default 10~km), i.e.\ a sum
 over the grid is weighted by $\Delta z/\ell$.
 \begin{itemize}
 \item \textbf{Smoothness} (\texttt{opt.smooth\_sig} $=(\sigma_{s,1},\sigma_{s,2})$,
-  km/s/km$^2$):
+  km/s/km$^2$, default $(2\times10^{-4},2\times10^{-4})$):
   \begin{equation}
    \ln p_s=-\frac12\sum_{c=1}^{2}\sum_{z_g}\Big(\frac{X_c''(z_g)}{\sigma_{s,c}}\Big)^2\frac{\Delta z}{\ell_s},
   \end{equation}
@@ -800,8 +802,10 @@ tests it ran down to the lower bound of its range, the posterior collapsed
 to two interior control points and its uncertainty became far too small
 (Section~\ref{sec:step1}). The same can happen to $\sigma_\xi$ in single
 chains (all $\xi\to\bar\xi$), so the lower bounds of the ranges matter.
-With \texttt{xi\_ref\_hier = false} and \texttt{smooth\_hier = false} the
-user-set strengths are used.
+By default $\sigma_\xi$ is sampled (\texttt{xi\_ref\_hier = true}) and the
+smoothing is fixed (\texttt{smooth\_hier = false}, \texttt{smooth\_sig}
+$=(2\times10^{-4},2\times10^{-4})$). With \texttt{xi\_ref\_hier = false} and
+\texttt{smooth\_hier = false} the user-set strengths are used.
 
 \subsection{Target}
 With $p_o=p_s\,p_v\,p_\xi$ the optional priors, the tempered target at
