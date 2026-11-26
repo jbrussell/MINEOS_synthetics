@@ -909,7 +909,7 @@ $c^{w,\rm ref}_n$ and the kernels $G^{w,X}$ of Eq.~\eqref{eq:disp} belong
 to one reference model. A reference far from the solution makes the
 linearized dispersion inaccurate.
 
-\subsection{At the end of burn-in (default)}
+\subsection{At the end of burn-in (\texttt{'burnin'})}
 With \texttt{opt.update\_ref = 'burnin'} the run has three phases:
 \begin{enumerate}
 \item \emph{Burn-in} ($N_{\rm burn}$ iterations) with the step-1 reference.
@@ -943,8 +943,8 @@ moves, so the reference is updated only at the end of burn-in. With
 \texttt{opt.update\_ref = 'none'} the step-1 reference is used
 throughout.
 
-\subsection{Staged re-linearization of the dispersion (\texttt{'lin'})}
-With \texttt{opt.update\_ref = 'lin'} only the MINEOS linearization of the
+\subsection{Staged re-linearization of the dispersion (\texttt{'lin'}, default)}
+With \texttt{opt.update\_ref = 'lin'} (default, with \texttt{opt.lin\_updates} $=3$) only the MINEOS linearization of the
 dispersion (Eq.~\ref{eq:disp}: $c^{\rm ref}$ and kernels at the dispersion
 nodes) is recomputed; the waveform reference ($U^{\rm ref}_{rjn}$ and the
 $c^{w,\rm ref}_n$ in Eq.~\eqref{eq:forward}) is kept, so the nuisance
