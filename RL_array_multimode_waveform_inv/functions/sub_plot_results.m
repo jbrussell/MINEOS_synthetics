@@ -203,13 +203,16 @@ print(fig, '-dpng', '-r130', fullfile(outdir, 'fig1_posteriors.png'));
 % (posterior_summary<tag>.mat: mean, median, 68/95 % intervals, R-hat,
 % control points, dispersion; write_posterior_summary.m) and the
 % probability fields of Vsv, Vsh, xi (fig10_posterior_pdf.png) and of the
-% Love and Rayleigh dispersion of all branches (fig11_posterior_dispersion.png)
+% Love and Rayleigh dispersion of all branches (fig11_posterior_dispersion.png,
+% relative to the reference; fig11b_posterior_dispersion_abs.png, absolute)
 Psum = write_posterior_summary(svc, zplot, cfg, mc, tru, refp, Tdisp, tag, ...
                                fullfile(outdir, ['posterior_summary' tag '.mat']), ...
                                struct('trueL', CtrueL, 'trueR', CtrueR, 'refL', CrefL, 'refR', CrefR));
 fig = plot_posterior_pdf(Psum, fullfile(outdir, 'fig10_posterior_pdf.png'));
 if fig_close_mode, close(fig); end
 fig = plot_posterior_disp(Psum, fullfile(outdir, 'fig11_posterior_dispersion.png'));
+if fig_close_mode, close(fig); end
+fig = plot_posterior_disp(Psum, fullfile(outdir, 'fig11b_posterior_dispersion_abs.png'), [], 'absolute');
 if fig_close_mode, close(fig); end
 fid = fopen(fullfile(outdir, 'summary.txt'), 'a');
 for fo = [1 fid]
