@@ -41,6 +41,11 @@ opt = opt_defaults(opt, struct( ...
     'zmoho',     12, ...                 % Moho of the true model (km below sea level)
     'eventfile', fullfile(here_, 'events_nomelt_2012.cmt'), ...
     'stationfile', fullfile(here_, 'stations_nomelt.txt'), ...
+    ... % ---- synthetic station circle (A00_make_station_circle.m) ----
+    'circle_N',           16, ...        % number of stations, evenly spaced in azimuth
+    'circle_aperture_km', 1000, ...      % diameter of the circle (km)
+    'circle_file',        '', ...        % station file to write ('' = stations_circle_<aperture>km_N<N>.txt)
+    'circle_ref',  fullfile(here_, 'stations_nomelt.txt'), ...   % centre (mean position) and elevation of this array
     ... % ---- step 1: isotropic Rayleigh inversion (D1) ----
     's1_periods',   logspace(log10(20), log10(150), 24), ...   % (s) step-1 dispersion periods (24, log-spaced, 20-150 s)
     's1_cstd',      0.0025, ...          % data uncertainty (fraction of c); also the std of the synthetic noise
