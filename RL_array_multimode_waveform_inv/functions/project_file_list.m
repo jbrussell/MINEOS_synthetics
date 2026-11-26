@@ -20,7 +20,7 @@ tag = opt.tag;
 L = struct('pat', {}, 'dst', {}, 'sub', {}, 'shared', {});
 % figures and summaries
 if isfield(opt, 'outdir') && ~isempty(opt.outdir), L = add_(L, fullfile(opt.outdir, '*'), 'figures', false, false); end
-L = add_(L, 'figs_compare.png', 'figures', false, true);
+L = add_(L, '*figs_compare.png', 'figures', false, true);
 % step 2 results
 pats = {['setup' tag '.mat'], ['chain' tag '_*.mat'], ['refupd' tag '.mat'], ['refupd' tag '_*.mat'], ...
         ['prep' tag '_*.mat'], ['nuis_true' tag '.mat'], ['*' tag '.*.log'], ['*' tag '.txt']};

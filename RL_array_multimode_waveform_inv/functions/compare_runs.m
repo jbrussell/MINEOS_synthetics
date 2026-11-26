@@ -37,5 +37,5 @@ for ir = 1:nr
         end
     end
 end
-print(fig, '-dpng', '-r110', outfile);
+save_figure(fig, outfile, 110);
 end

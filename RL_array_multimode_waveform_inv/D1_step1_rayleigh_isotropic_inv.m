@@ -119,4 +119,4 @@ he = errorbar(periods, cobs, 2*cstd, 'ko'); set(he, 'markerfacecolor', 'k');
 plot(periods, cstart, 'g-o', periods, cpre, 'b-o', 'linewidth', 1.5);
 xlabel('Period (s)'); ylabel('Rayleigh n = 0 phase velocity (km/s)');
 legend({'PA5 (data)', 'start', 'step 1'}, 'location', 'southeast');
-print(fig, '-dpng', '-r130', fullfile('figs_step1', 'fig_step1.png'));
+save_figure(fig, fullfile('figs_step1', 'fig_step1.png'), 130);

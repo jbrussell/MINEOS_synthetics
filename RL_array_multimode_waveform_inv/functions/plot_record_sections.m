@@ -81,7 +81,7 @@ for wv = 1:2
     xlabel('Time since the centroid (s)'); ylabel('Epicentral distance (deg)');
     if hasw, wl2_ = 'black: automatic window of each event (A3)'; else, wl2_ = wl_; end
     title(sprintf('%s, data, %g-%g s, traces normalized; %s', wname{wv}, round(1/fc(4)), round(1/fc(1)), wl2_));
-    print(fig, '-dpng', '-r130', fullfile(outdir, ['record_section_all_' comp{wv} '.png']));
+    save_figure(fig, fullfile(outdir, ['record_section_all_' comp{wv} '.png']), 130);
     if fig_close_mode, close(fig); end
     % ---- one panel per event ----
     fig = numbered_figure(2000 + 2*wv, 'position', [50 50 1900 1250]);
@@ -117,7 +117,7 @@ for wv = 1:2
     else
         sgtitle(st_);
     end
-    print(fig, '-dpng', '-r130', fullfile(outdir, ['record_section_events_' comp{wv} '.png']));
+    save_figure(fig, fullfile(outdir, ['record_section_events_' comp{wv} '.png']), 130);
     if fig_close_mode, close(fig); end
 end
 end

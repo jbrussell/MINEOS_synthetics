@@ -102,7 +102,7 @@ for icomp = 1:numel(opt.aswms_components)
         end
         plot(lag([1 end]), [0 0], 'k:'); ylim([-1 1]);
         xlabel('Lag (s)'); ylabel('autocorrelation'); title('Pre-P noise autocorrelation');
-        print(fig, '-dpng', '-r100', [od event.id '.png']); if fig_close_mode, close(fig); end
+        save_figure(fig, [od event.id '.png'], 100); if fig_close_mode, close(fig); end
         % ---- for the summary ----
         evids{end+1} = event.id; row = containers.Map(stn, num2cell(snr)); %#ok<SAGROW>
         allsta = union(allsta, stn); SNR{end+1} = row; %#ok<SAGROW>
@@ -131,6 +131,6 @@ for icomp = 1:numel(opt.aswms_components)
     end
     set(gca, 'yscale', 'log', 'xtick', 1:numel(allsta), 'xticklabel', allsta); xlim([0 numel(allsta) + 1]);
     ylabel('SNR'); title(sprintf('%s: per-station SNR, median and range over %d events', comp, numel(evids)));
-    print(fig, '-dpng', '-r110', [od 'summary.png']); if fig_close_mode, close(fig); end
+    save_figure(fig, [od 'summary.png'], 110); if fig_close_mode, close(fig); end
     fprintf('%s: event figures and summary in %s\n', comp, od);
 end

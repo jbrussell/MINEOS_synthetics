@@ -47,7 +47,7 @@ for wv = 1:2
     set(gca, 'yscale', 'log', 'xtick', 1:Nst, 'xticklabel', sta); xlim([0 Nst + 1]);
     ylabel('noise std / record peak'); title(sprintf('%s: per station, median and range over %d events (1/SNR)', wn{wv}, numel(rr)));
 end
-print(fig, '-dpng', '-r110', fullfile(outdir, 'noise_levels.png')); if fig_close_mode, close(fig); end
+save_figure(fig, fullfile(outdir, 'noise_levels.png'), 110); if fig_close_mode, close(fig); end
 
 % ---- 2: spectra normalized by each station's variance ----
 fig = numbered_figure(1502, 'position', [0 0 1400 600]);
@@ -69,7 +69,7 @@ for wv = 1:2
     xlabel('Period (s)'); ylabel('PSD / variance (1/Hz)');
     title(sprintf('%s pre-P noise spectra: stations (thin), pooled median and 10-90%% (black)', wn{wv}));
 end
-print(fig, '-dpng', '-r110', fullfile(outdir, 'noise_spectra.png')); if fig_close_mode, close(fig); end
+save_figure(fig, fullfile(outdir, 'noise_spectra.png'), 110); if fig_close_mode, close(fig); end
 
 % ---- 3: autocorrelation ----
 fig = numbered_figure(1503, 'position', [0 0 1400 600]);
@@ -93,7 +93,7 @@ for wv = 1:2
     xlabel('Lag (s)'); ylabel('autocorrelation'); ylim([-1 1]);
     title(sprintf('%s pre-P noise autocorrelation: stations (thin), pooled (black)', wn{wv}));
 end
-print(fig, '-dpng', '-r110', fullfile(outdir, 'noise_acf.png')); if fig_close_mode, close(fig); end
+save_figure(fig, fullfile(outdir, 'noise_acf.png'), 110); if fig_close_mode, close(fig); end
 
 % ---- 4: absolute levels per station ----
 fig = numbered_figure(1504, 'position', [0 0 1400 600]);
@@ -110,6 +110,6 @@ for wv = 1:2
     set(gca, 'yscale', 'log', 'xtick', 1:Nst, 'xticklabel', sta); xlim([0 Nst + 1]);
     ylabel('pre-P noise std (data units)'); title(sprintf('%s: absolute noise per station (dots: events, bar: median)', wn{wv}));
 end
-print(fig, '-dpng', '-r110', fullfile(outdir, 'noise_absolute.png')); if fig_close_mode, close(fig); end
+save_figure(fig, fullfile(outdir, 'noise_absolute.png'), 110); if fig_close_mode, close(fig); end
 fprintf('noise diagnostics (pre-P noise) in %s/noise_*.png\n', outdir);
 end

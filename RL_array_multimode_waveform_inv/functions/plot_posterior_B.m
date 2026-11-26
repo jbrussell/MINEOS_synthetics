@@ -119,7 +119,7 @@ for wv = 1:2
         '(thin: posterior median of every record; %d of %d pooled samples)'], tag, wn{wv}, numel(js), ns), ...
         'edgecolor', 'none', 'horizontalalignment', 'center', 'fontsize', 10, 'interpreter', 'none');
     if nargin >= 9 && ~isempty(outdir)
-        print(fig, '-dpng', '-r130', fullfile(outdir, sprintf('fig13_B_%s.png', wn{wv})));
+        save_figure(fig, fullfile(outdir, sprintf('fig13_B_%s.png', wn{wv})), 130);
     end
 end
 end

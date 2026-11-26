@@ -111,7 +111,7 @@ annotation('textbox', [0 0.965 1 0.03], 'string', sprintf(['Run %s: arrival-angl
     '(thin: posterior median of every record; %d pooled samples; bands leave out the conditional uncertainty)'], strrep(tag, '_', '-'), ns), ...
     'edgecolor', 'none', 'horizontalalignment', 'center', 'fontsize', 11);
 if nargin >= 6 && ~isempty(outdir)
-    print(fig, '-dpng', '-r130', fullfile(outdir, 'fig14_arrival_angles.png'));
+    save_figure(fig, fullfile(outdir, 'fig14_arrival_angles.png'), 130);
 end
 end
 

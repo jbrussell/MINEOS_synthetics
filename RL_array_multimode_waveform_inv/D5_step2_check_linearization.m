@@ -195,4 +195,4 @@ for wv = 1:2
         end
     end
 end
-print(fig, '-dpng', '-r130', fullfile(outdir, 'fig10_linearization.png'));
+save_figure(fig, fullfile(outdir, 'fig10_linearization.png'), 130);

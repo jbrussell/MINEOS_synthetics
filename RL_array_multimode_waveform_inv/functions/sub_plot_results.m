@@ -197,7 +197,7 @@ for q = 1:3
     end
     if q == 1, legend(hh, ll, 'location', 'southwest'); end
 end
-print(fig, '-dpng', '-r130', fullfile(outdir, 'fig1_posteriors.png'));
+save_figure(fig, fullfile(outdir, 'fig1_posteriors.png'), 130);
 
 %% final posterior: pooled T = 1 samples of all ensembles and their statistics
 % (posterior_summary<tag>.mat: mean, median, 68/95 % intervals, R-hat,
@@ -259,7 +259,7 @@ for q = 1:2
     xlim([-0.5 kmax(q)+0.5]); xlabel('interior control points');
     tl = {'V_{SV} control points', '\xi control points (k_\xi \leq k_V)'}; title(tl{q});
 end
-print(fig, '-dpng', '-r130', fullfile(outdir, 'fig2_chains_dimensions.png'));
+save_figure(fig, fullfile(outdir, 'fig2_chains_dimensions.png'), 130);
 
 %% 3) dispersion fits: Love and Rayleigh, absolute and minus truth
 fig = numbered_figure(1030, 'position', [50 50 max(1200, 520*nm) 1500]);   % (room for 15-pt axes)
@@ -292,7 +292,7 @@ for wv = 1:2
         end
     end
 end
-print(fig, '-dpng', '-r130', fullfile(outdir, 'fig3_dispersion_fits.png'));
+save_figure(fig, fullfile(outdir, 'fig3_dispersion_fits.png'), 130);
 
 %% 4) waveform fits: data, step-1 start, step-1 model (reference) and final model, with windows
 % step-1 start: idagrn6 seismograms of the starting model of step 1 (all
@@ -343,7 +343,7 @@ for e0 = unique([1 min(8, max([rec.event]))])
             end
         end
     end
-    print(fig, '-dpng', '-r130', fullfile(outdir, sprintf('fig4_waveform_fits_event%d.png', e0)));
+    save_figure(fig, fullfile(outdir, sprintf('fig4_waveform_fits_event%d.png', e0)), 130);
 end
 
 %% 5) path delays and time shifts
@@ -369,7 +369,7 @@ lim = [-40 40]; plot(lim, lim, 'k--'); xlim(lim); ylim(lim); axis square;
 legend(hh, arrayfun(@(n) sprintf('branch %d', n), 0:nm-1, 'uniformoutput', false), 'location', 'northwest', 'fontsize', 7);
 xlabel('path delay at 40 s (s)'); ylabel('posterior \tau_n (s)');
 title('Time shifts (Love + Rayleigh)');
-print(fig, '-dpng', '-r130', fullfile(outdir, 'fig5_path_nuisance.png'));
+save_figure(fig, fullfile(outdir, 'fig5_path_nuisance.png'), 130);
 
 %% 5b) nuisance parameters: true vs recovered (synthetic test only;
 % plot_nuisance_truth.m): tau_n and dth_n Legendre coefficients and B_n(w);
@@ -454,7 +454,7 @@ for q = 1:3, plot(Rz.(names{q})(in), zplot(in), '-', 'linewidth', 1.3); end
 plot([1.1 1.1], [0 400], 'k--'); set(gca, 'ydir', 'reverse'); ylim([0 400]);
 xlabel('R-hat'); ylabel('Depth (km)'); title('Gelman-Rubin R-hat');
 legend('V_{SV}', 'V_{SH}', '\xi', 'location', 'southeast');
-print(fig, '-dpng', '-r130', fullfile(outdir, 'fig6_diagnostics.png'));
+save_figure(fig, fullfile(outdir, 'fig6_diagnostics.png'), 130);
 
 %% 8) individual posterior samples (each is a smooth B-spline profile)
 fig = numbered_figure(1080, 'position', [50 50 1500 650]);
@@ -469,7 +469,7 @@ for q = 1:3
     if q == 1, ylabel('Depth (km)'); end
     title(sprintf('%d posterior samples (blue: mean, red: PA5)', numel(pickS)));
 end
-print(fig, '-dpng', '-r130', fullfile(outdir, 'fig8_samples.png'));
+save_figure(fig, fullfile(outdir, 'fig8_samples.png'), 130);
 
 %% 9) eta posterior (only when eta is a model parameter)
 if eta_
@@ -487,7 +487,7 @@ if eta_
     h3 = plot(prctile_(X, 5), zplot, 'b--', prctile_(X, 95), zplot, 'b--');
     xlim(vb([1 end])); ylim([0 400]); xlabel('\eta'); ylabel('Depth (km)'); title('Posterior \eta');
     legend([h1 h4 h2 h3(1)], {'true (PA5)', 'reference', 'posterior mean', '5-95%'}, 'location', 'southwest');
-    print(fig, '-dpng', '-r130', fullfile(outdir, 'fig9_eta.png'));
+    save_figure(fig, fullfile(outdir, 'fig9_eta.png'), 130);
 end
 
 %% 7) parallel-tempering diagnostics
@@ -509,7 +509,7 @@ if ~isempty(infc{1}) && numel(infc{1}.T) > 1
     for k = K:-1:1, plot(infc{1}.Ltrace(:, k) - Ltrue, 'color', tc(k+1,:)); end
     plot(infc{1}.Ltrace(:, 1) - Ltrue, 'b'); ylim([-300 30]);
     xlabel('iteration'); ylabel('log L - log L(true)'); title('Ensemble 1 by temperature (blue: T = 1)');
-    print(fig, '-dpng', '-r130', fullfile(outdir, 'fig7_pt_diagnostics.png'));
+    save_figure(fig, fullfile(outdir, 'fig7_pt_diagnostics.png'), 130);
 end
 
 %% noise diagnostics of the pre-P noise ('aswms' data; plot_noise_diagnostics.m)

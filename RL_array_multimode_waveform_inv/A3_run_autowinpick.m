@@ -73,7 +73,7 @@ for ie = 1:length(matfiles)
 	toc
 	if isfigure && length(find([event.stadata.isgood]>0))>1
 		plot_win_select(event,periods,winpara);
-		print(gcf, '-dpng', '-r100', [outwinpath, event.id, '_', comp, '.png']);   % (saved)
+		save_figure(gcf, [outwinpath, event.id, '_', comp, '.png'], 100);   % (saved)
 	end
 	if length(winpara) ~= 4
 		filename = [outwinpath,'/',event.id,'_',comp,'.bad'];

@@ -68,7 +68,7 @@ for ie = 1:numel(events)
         annotation('textbox', [0 0.955 1 0.04], 'string', sprintf('Run %s: posterior %s, %d of %d pooled samples, %d ensembles', ...
             tag, ttl, numel(js), ns, nc), 'edgecolor', 'none', 'horizontalalignment', 'center', 'fontsize', 11, 'interpreter', 'none');
         if nargin >= 11 && ~isempty(outdir)
-            print(fig, '-dpng', '-r130', fullfile(outdir, sprintf(fn, e0)));
+            save_figure(fig, fullfile(outdir, sprintf(fn, e0)), 130);
         end
     end
 end

@@ -60,7 +60,7 @@ end
 annotation('textbox', [0 0.955 1 0.04], 'string', sprintf('Run %s: %d ensembles, %d samples (T = 1, pooled); dash-dot: inverted depth range', ...
     P.tag, P.nens, P.ns), 'edgecolor', 'none', 'horizontalalignment', 'center', 'fontsize', 11, 'interpreter', 'none');
 if nargin >= 2 && ~isempty(outfile)
-    print(fig, '-dpng', '-r150', outfile);
+    save_figure(fig, outfile, 150);
 end
 end
 
