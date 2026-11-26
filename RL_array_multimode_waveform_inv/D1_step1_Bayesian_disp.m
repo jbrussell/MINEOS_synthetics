@@ -21,7 +21,7 @@
 %        exact fit
 %   file .mat with periods (s), c and cstd (km/s), or a text file with
 %        three columns: period (s), c, cstd (km/s)
-% Starting model: as in D1 (opt.s1_start_model, 'pa5_iso' or 'prem').
+% Starting model: as in D1 (isotropic PA5 without lid/LVZ, opt.s1_start_model = 'pa5_iso').
 %
 % Output (same as D1, so D2 can follow either): CARDS/<opt.s1_final>.card
 % from the posterior mean Vsv, opt.s1_file (step1_result.mat) with the D1
@@ -68,13 +68,8 @@ od = 'figs_step1_bayes_disp'; if ~exist(od, 'dir'), mkdir(od); end
 g = @(f, d) optget(opt, f, d);
 
 %% models (as in D1)
-card_prem = make_ref_card(mdir, opt.premref, opt.premid, opt.trueid, opt.zmoho);
 card_true = read_model_card(fullfile(mdir, 'CARDS', [opt.trueid '.card']));
-if strcmp(opt.s1_start_model, 'pa5_iso')
-    card_start = pa5_iso_ref_card(card_true, opt.zmoho, opt.s1_zlin);
-else
-    card_start = isotropic_card(card_prem);
-end
+card_start = pa5_iso_ref_card(card_true, opt.zmoho, opt.s1_zlin);
 write_MINEOS_mod(card_start, fullfile(mdir, 'CARDS', [opt.s1_start '.card']));
 copyfile(fullfile(mdir, 'CARDS', [opt.ref_qmod '.qmod']), fullfile(mdir, 'CARDS', [opt.s1_start '.qmod']));
 card_start = read_model_card(fullfile(mdir, 'CARDS', [opt.s1_start '.card']));
@@ -177,7 +172,7 @@ if mc.smooth_hier
 end
 fprintf('interior Vsv control points: median %g [5-95%%: %g-%g]\n', kvst.median, kvst.p05, kvst.p95);
 fprintf('Vsv posterior: R-hat median %.2f (max %.2f); std median %.3f km/s\n', median(rh(in & isfinite(rh))), max(rh(in & isfinite(rh))), median(s1_unc.vsv_std(in)));
-save(opt.s1_file, 'card_prem', 'card_start', 'card_final', 'card_true', 'cobs', 'cstd', ...
+save(opt.s1_file, 'card_start', 'card_final', 'card_true', 'cobs', 'cstd', ...
      'cstart', 'cpre', 'periods', 'discs', 'opt', 'method', 's1_unc');
 
 %% figures

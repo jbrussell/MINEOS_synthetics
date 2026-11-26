@@ -44,13 +44,8 @@ g = @(f, d) optget(opt, f, d);
 od = 'figs_step1_bayes_wf'; if ~exist(od, 'dir'), mkdir(od); end
 
 %% models (as in D1)
-card_prem = make_ref_card(mdir, opt.premref, opt.premid, opt.trueid, opt.zmoho);
 card_true = read_model_card(fullfile(mdir, 'CARDS', [opt.trueid '.card']));
-if strcmp(opt.s1_start_model, 'pa5_iso')
-    card_start = pa5_iso_ref_card(card_true, opt.zmoho, opt.s1_zlin);
-else
-    card_start = isotropic_card(card_prem);
-end
+card_start = pa5_iso_ref_card(card_true, opt.zmoho, opt.s1_zlin);
 write_MINEOS_mod(card_start, fullfile(mdir, 'CARDS', [opt.s1_start '.card']));
 copyfile(fullfile(mdir, 'CARDS', [opt.ref_qmod '.qmod']), fullfile(mdir, 'CARDS', [opt.s1_start '.qmod']));
 card_start = read_model_card(fullfile(mdir, 'CARDS', [opt.s1_start '.card']));
@@ -79,7 +74,7 @@ end
 if strcmp(o1.sampler, 'pt'), envv = 'ENSEMBLES'; else, envv = 'CHAINS'; end
 opt0 = opt;
 stf_ = ['s1wf_state' o1.tag '.mat'];         % D3/D4 are scripts in this workspace: keep our variables
-save(stf_, 'o1', 'nrun', 'card_start', 'card_true', 'card_prem', 'mdir', 'here', 'od', 'opt0', 'envv', 'stf_');
+save(stf_, 'o1', 'nrun', 'card_start', 'card_true', 'mdir', 'here', 'od', 'opt0', 'envv', 'stf_');
 opt = o1;
 setenv(envv, '[]'); D3_step2_waveform_inv;                        % setup only
 if strcmp(g('s1w_launch', 'serial'), 'parallel') && exist('OCTAVE_VERSION', 'builtin')
@@ -140,7 +135,7 @@ fprintf('branch-0 Rayleigh phase velocity vs the true model (MINEOS): rms start 
     sqrt(mean((cstart - cobs).^2)), sqrt(mean((cpre - cobs).^2)));
 fprintf('Vsv posterior: R-hat median %.2f (max %.2f); std median %.3f km/s\n', ...
     median(rh(in & isfinite(rh))), max(rh(in & isfinite(rh))), median(s1_unc.vsv_std(in)));
-save(opt.s1_file, 'card_prem', 'card_start', 'card_final', 'card_true', 'cobs', 'cstd', ...
+save(opt.s1_file, 'card_start', 'card_final', 'card_true', 'cobs', 'cstd', ...
      'cstart', 'cpre', 'periods', 'discs', 'opt', 'method', 's1_unc');
 
 %% figure (as D1_step1_Bayesian_disp.m)

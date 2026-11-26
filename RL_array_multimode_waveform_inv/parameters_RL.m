@@ -7,7 +7,7 @@
 %   ../run_MINEOS/c2_RLphv_inv_vsvh_vpvh_rho_eta.m. True model PA5, starting
 %   model an isotropic PA5 without its lid/LVZ (Vs linear in depth from the
 %   Moho to 250 km) with the Vp/Vs, rho/Vs, eta and Q of PA5
-%   (opt.s1_start_model = 'pa5_iso'), or isotropic PREM ('prem').
+%   (opt.s1_start_model = 'pa5_iso').
 % Step 2 (D2-D4): multimode Love + Rayleigh array waveform inversion
 %   (rjMcMC) for Vsv, Vsh and xi, with the step-1 model as the reference.
 %   Data: idagrn6 seismograms of PA5 with branches 0..nbranch_data-1;
@@ -38,8 +38,6 @@ opt = opt_defaults(opt, struct( ...
     ... % ---- models and files ----
     'mdir',      mdir_, ...              % run_MINEOS (MINEOS cards, drivers, ../FORTRAN/bin)
     'trueid',    'pa5_5km', ...          % true model (CARDS/<trueid>.card)
-    'premid',    'prem_35', ...          % PREM card
-    'premref',   'prem_nomelt', ...      % PREM below the true Moho, true water/crust above (make_ref_card)
     'zmoho',     12, ...                 % Moho of the true model (km below sea level)
     'eventfile', fullfile(here_, 'events_nomelt_2012.cmt'), ...
     'stationfile', fullfile(here_, 'stations_nomelt.txt'), ...
@@ -50,9 +48,9 @@ opt = opt_defaults(opt, struct( ...
     's1b_noise_seed', 1, ...             %   (D1 linearized and D1_step1_Bayesian_disp.m; seed of the noise)
     's1_start_model', 'pa5_iso', ...     % starting model of step 1: 'pa5_iso' = isotropic PA5 without lid/LVZ
     ...                                  %   (Vs linear in depth from the Moho to s1_zlin km, PA5 Vp/Vs, rho/Vs,
-    ...                                  %   eta and Q; functions/pa5_iso_ref_card.m); 'prem' = isotropic PREM
+    ...                                  %   eta and Q; functions/pa5_iso_ref_card.m; the only starting model)
     's1_zlin',      250, ...             % (km below sea level) 'pa5_iso': PA5 below this depth
-    's1_start',     '', ...              % starting card (written to CARDS; '' = RLinv_pa5iso or RLinv_prem_iso)
+    's1_start',     '', ...              % starting card (written to CARDS; '' = RLinv_pa5iso)
     's1_work',      'RLinv_s1_work', ... % card used for the MINEOS recalculations
     's1_final',     'RLinv_step1', ...   % step-1 model (written to CARDS): the step-2 reference
     's1_file',      'step1_result.mat', ...
@@ -108,8 +106,7 @@ opt = opt_defaults(opt, struct( ...
     ... % ---- step 2: MINEOS + idagrn6 (D2) ----
     'prepfile',     'prep_step2.mat', ...
     'refid',        'RLinv_step1', ...   % reference card of step 2 (= s1_final)
-    'ref_qmod',     '', ...              % Q (.qmod) of the step-1 and step-2 cards ('' = trueid for
-    ...                                  %   s1_start_model = 'pa5_iso', premid for 'prem')
+    'ref_qmod',     '', ...              % Q (.qmod) of the step-1 and step-2 cards ('' = trueid)
     'nbranch_data', 4, ...               % branches 0..3 in the PA5 data (synthetic test)
     'nm',           4, ...               % branches 0..3 modeled
     'maxF',         70, ...              % mode tables up to (mHz)
@@ -217,11 +214,9 @@ opt = opt_defaults(opt, struct( ...
     ));
 plot_font_defaults(opt.plot_fontsize);
 setappdata(0, 'RL_close_figs', opt.close_figs);      % read by fig_close_mode.m
-pa5iso_ = strcmp(opt.s1_start_model, 'pa5_iso');
-if ~pa5iso_ && ~strcmp(opt.s1_start_model, 'prem'), error('opt.s1_start_model must be ''pa5_iso'' or ''prem'''); end
-if isempty(opt.s1_start), if pa5iso_, opt.s1_start = 'RLinv_pa5iso'; else, opt.s1_start = 'RLinv_prem_iso'; end, end
-if isempty(opt.ref_qmod), if pa5iso_, opt.ref_qmod = opt.trueid; else, opt.ref_qmod = opt.premid; end, end
-clear pa5iso_
+if ~strcmp(opt.s1_start_model, 'pa5_iso'), error('opt.s1_start_model must be ''pa5_iso'' (the PREM start was removed)'); end
+if isempty(opt.s1_start), opt.s1_start = 'RLinv_pa5iso'; end
+if isempty(opt.ref_qmod), opt.ref_qmod = opt.trueid; end
 % run tag, project tag and figure folder: set automatically unless given.
 % An automatic value is remembered (opt.tag_auto_, opt.outdir_auto_) and
 % recomputed on the next call, so an opt left in the (MATLAB) workspace by an

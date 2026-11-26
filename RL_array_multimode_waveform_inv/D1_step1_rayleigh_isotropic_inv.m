@@ -6,13 +6,11 @@
 % (run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Eta.m):
 %   - data: MINEOS phase velocities of the true model (PA5), branch 0
 %   - starting model (opt.s1_start_model):
-%       'pa5_iso' (default) isotropic PA5 without its lid/LVZ: between the
+%       'pa5_iso' (the only one) isotropic PA5 without its lid/LVZ: between the
 %                 Moho and opt.s1_zlin (250 km below sea level) Vs is a
 %                 straight line between the Voigt Vs of PA5 at those depths;
 %                 Vpv/Vsv, Vph/Vsh, rho/Vsv, eta and Q of PA5 at every node;
 %                 PA5 elsewhere (functions/pa5_iso_ref_card.m)
-%       'prem'    isotropic PREM (Voigt average) below the PA5 Moho, PA5
-%                 water/sediments/crust above it, eta = 1
 %   - xi held at 1 (eps_xi large, starting xi = 1), eta held at the start
 %   - Vpv/Vsv, Vph/Vsh and rho/Vsv held at the starting-model ratios; with
 %     'pa5_iso' these ratios and eta are imposed exactly on the result, so
@@ -34,16 +32,9 @@ cleanupObj = onCleanup(@() cd(here));
 if ~exist('figs_step1', 'dir'), mkdir('figs_step1'); end
 
 %% models
-card_prem = make_ref_card(mdir, opt.premref, opt.premid, opt.trueid, opt.zmoho);  % anisotropic PREM + PA5 crust
 card_true = read_model_card(fullfile(mdir, 'CARDS', [opt.trueid '.card']));
-pa5iso = strcmp(opt.s1_start_model, 'pa5_iso');
-if pa5iso
-    card_start = pa5_iso_ref_card(card_true, opt.zmoho, opt.s1_zlin);
-    start_lbl = 'start (isotropic PA5, no lid/LVZ)';
-else
-    card_start = isotropic_card(card_prem);
-    start_lbl = 'start (isotropic PREM)';
-end
+card_start = pa5_iso_ref_card(card_true, opt.zmoho, opt.s1_zlin);
+start_lbl = 'start (isotropic PA5, no lid/LVZ)';
 fstart = fullfile(mdir, 'CARDS', [opt.s1_start '.card']);
 write_MINEOS_mod(card_start, fstart);
 copyfile(fullfile(mdir, 'CARDS', [opt.ref_qmod '.qmod']), fullfile(mdir, 'CARDS', [opt.s1_start '.qmod']));
@@ -59,7 +50,7 @@ if optget(opt, 's1b_noise', true)             % Gaussian data noise (opt.s1b_noi
 end
 card_start = read_model_card(['./CARDS/' opt.s1_start '.card']);   % fname relative to run_MINEOS
 % break the smoothing only at the crustal discontinuities (water bottom,
-% sediments, Moho); the PREM discontinuities (80, 220 km) are smoothed over
+% sediments, Moho); any deeper discontinuities of the start are smoothed over
 zc = card_start.z;
 discs = unique(zc(find(diff(zc) == 0 & zc(1:end-1) <= opt.zmoho + 1e-6)));
 
@@ -103,7 +94,7 @@ s1_unc = struct('z', zplot1, 'vsv_mean', ip_(vs_), 'vsv_std', ip_(sd_), 'vsv_p05
     'vsv_p16', ip_(vs_ - sd_), 'vsv_p50', ip_(vs_), 'vsv_p84', ip_(vs_ + sd_), 'vsv_p95', ip_(vs_ + 1.645*sd_), ...
     'data', 'linearized (Ginv Cd Ginv'')');
 method = 'linearized';
-save(opt.s1_file, 'card_prem', 'card_start', 'card_final', 'card_true', 'cobs', 'cstd', ...
+save(opt.s1_file, 'card_start', 'card_final', 'card_true', 'cobs', 'cstd', ...
      'cstart', 'cpre', 'periods', 'discs', 'opt', 'method', 's1_unc');
 
 %% figure
@@ -114,11 +105,10 @@ fig = figure('position', [50 50 1300 520]);
 subplot(1, 3, 1); hold on; box on;
 h1 = plot(cp(card_true, 'vsv'), zp, 'r-', 'linewidth', 2);
 h2 = plot(cp(card_true, 'vsh'), zp, 'r--', 'linewidth', 1);
-h3 = plot(cp(card_prem, 'vsv'), zp, '-', 'color', [0 0.6 0], 'linewidth', 1);
 h4 = plot(cp(card_start, 'vsv'), zp, 'g-', 'linewidth', 1.5);
 h5 = plot(cp(card_final, 'vsv'), zp, 'b-', 'linewidth', 2);
 set(gca, 'ydir', 'reverse'); ylim([0 400]); xlim([3.9 5]); xlabel('V_S (km/s)'); ylabel('Depth below seafloor (km)');
-legend([h1 h2 h3 h4 h5], {'PA5 V_{SV}', 'PA5 V_{SH}', 'PREM V_{SV}', start_lbl, 'step 1 (isotropic)'}, ...
+legend([h1 h2 h4 h5], {'PA5 V_{SV}', 'PA5 V_{SH}', start_lbl, 'step 1 (isotropic)'}, ...
     'location', 'southwest', 'fontsize', 8);
 title('Step 1: isotropic V_S from Rayleigh n = 0');
 subplot(1, 3, 2); hold on; box on;

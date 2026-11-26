@@ -13,8 +13,8 @@ reference model whose mode branches resemble the data's:
    phase velocities (20–100 s, MINEOS) are inverted for an isotropic Vs
    model (ξ = 1) with the linearized MINEOS inversion of
    `../run_MINEOS/c2_RLphv_inv_vsvh_vpvh_rho_eta.m`, starting from an
-   isotropic PA5 without its lid/LVZ that has PA5's Vp/Vs, ρ/Vs and η (or
-   an isotropic PREM). The result has a lid and a low-velocity zone.
+   isotropic PA5 without its lid/LVZ that has PA5's Vp/Vs, ρ/Vs and η.
+   The result has a lid and a low-velocity zone.
 2. **Multimode waveform inversion** (`D2`–`D4`): Love + Rayleigh
    waveforms (17–112 s) are inverted for Vsv, Vsh and ξ with rjMcMC,
    using the step-1 model as the reference for the per-branch spectra,
@@ -110,7 +110,7 @@ be run on their own.
 - Data: MINEOS phase velocities of PA5, fundamental-mode Rayleigh,
   12 periods at 20–100 s, uncertainty 0.5%.
 - Start (`opt.s1_start_model`):
-  - `'pa5_iso'` (default): an isotropic PA5 without its lid/LVZ structure,
+  - `'pa5_iso'` (default and only choice): an isotropic PA5 without its lid/LVZ structure,
     built as the starting model of
     `SURF96_Rayl_1Dinv/test_kernel_inversion_vsvh_vpvh_rho_eta_PA5_twostage.m`
     (`functions/pa5_iso_ref_card.m`). Between the Moho (12 km below sea
@@ -123,9 +123,6 @@ be run on their own.
     PA5's Vp/Vs and ρ/Vs jump up there, the starting Vp and ρ jump up at
     68.5 km (ρ by ~0.2 g/cm³) and are higher than PA5's down to 250 km
     (`figs_step2/pa5_iso_reference.png`).
-  - `'prem'`: PREM below the PA5 Moho with the PA5 water, sediments and
-    crust above it, made isotropic (Voigt average, η = 1;
-    `functions/make_ref_card.m`, `functions/isotropic_card.m`).
 - Inversion: `run_mineos_inv_RaylLove_Vsvh_Vpvh_Rho_Eta.m` (the engine of
   `c2`) with Rayleigh data only, ξ damped to 1 (ε_ξ = 100), η damped to the start,
   smoothing broken only at the crustal discontinuities, MINEOS phase
@@ -333,7 +330,7 @@ windows).
 | `sub_setup_records.m`, `sub_plot_results.m` | drivee scripts: records, data and noise; figures and summary |
 | `prep_mineos_idagrn.m` | MINEOS and idagrn6 runs of step 2 (cached) |
 | `mineos_modes.m`, `idagrn_synth.m` | MINEOS tables/dispersion/kernels of any branch; idagrn6 full or single-branch seismograms |
-| `make_ref_card.m`, `isotropic_card.m`, `card_at_depth.m` | cards: PREM under the PA5 crust, isotropic version, values at depth |
+| `pa5_iso_ref_card.m`, `card_at_depth.m` | cards: the step-1 starting model (isotropic PA5 without lid/LVZ), values at depth |
 | `mineos_lin_setup.m`, `mineos_lin_disp.m`, `mineos_dispersion.m` | linearized MINEOS dispersion: per-parameter kernels; c for given Vsv, Vsh, η node profiles (Vp, ρ scaled to Vs); c of a model |
 | `apply_reference.m`, `ref_card_update.m`, `mineos_lock.m` | install a reference model (spectra, kernels) with the data and windows unchanged; card from Vsv/Vsh(/η) profiles with Vp and ρ scaled; serialize MINEOS runs |
 | `run_pt_LR.m` (plain and PT, marginalized nuisance), `run_chain_LR.m` (sampled nuisance), `lr_common.m` | samplers |
