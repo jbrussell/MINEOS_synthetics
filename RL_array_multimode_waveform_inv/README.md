@@ -159,9 +159,9 @@ For each record j and modeled branch n the predicted spectrum is
 
 U_jn(ω) = B_n(ω) · U_ref,jn(ω) · exp(−iω τ_n(ω)) · exp(−iω [Δ/c_n(ω) − Δ/c_ref,n(ω)]) (+ the δθ_n(ω) term),
 
-with B on 3 hat functions, τ_n(ω) on `opt.spec_Kt` Legendre terms in
-frequency (default 3: constant + linear + quadratic; Kt = 1 is a constant
-shift) and δθ_n(ω) on 2 Legendre terms. A frequency-dependent τ_n absorbs
+with B on `opt.spec_K` hat functions in log ω (default 12), τ_n(ω) on
+`opt.spec_Kt` Legendre terms in frequency (default 4: constant to cubic;
+Kt = 1 is a constant shift) and δθ_n(ω) on 2 Legendre terms. A frequency-dependent τ_n absorbs
 what a constant shift cannot: the overtone path delays relative to the
 reference are frequency dependent, because the 3-D/1-D structure the
 reference misses is sampled differently at each period.
@@ -171,7 +171,8 @@ reference misses is sampled differently at each period.
 | `opt.nuisance` | `'marginal'` (default) | B, τ and δθ integrated out (Laplace approximation about a linearization point); only Vsv, ξ and the noise are sampled. Works with both samplers. |
 | | `'sample'` | τ and δθ sampled by Metropolis with the exact waveforms, B integrated out (plain sampler only) |
 | `opt.relin` | 1 (default) | the linearization points of τ, δθ and B of every state are moved to their conditional posterior mean (one Gauss–Newton step, clamped to ±2 s / ±3°) every `relin` iterations, i.e. before every proposal by default; larger values are cheaper and less accurate. Cost: one rebuild of the waveform derivatives and one likelihood per record, about the cost of a structural proposal, so `relin` = 1 roughly doubles the time per iteration (the posterior mean used for the update is cached from the last likelihood evaluation) |
-| `opt.spec_Kt` | 3 | number of τ_n(ω) terms |
+| `opt.spec_K` | 12 | number of B_n(ω) hat functions. With 3, B cannot follow the spectral shape of the Rayleigh records: in the clean-synthetics test the waveform residual at the true structure was 0.018 (relative rms) with 3 against 0.007 with 12, and the sampler then fits about 20k log-likelihood units better than the true model by moving the structure |
+| `opt.spec_Kt` | 4 | number of τ_n(ω) terms |
 | `opt.windows` | `'single'` (default) / `'split'` | one surface-wave window per wave type (one σ, r each), or separate overtone and fundamental-mode windows (σ, r each); separate noise levels down-weight whichever part the model fits worse (e.g. the overtone window with unmodeled branches 8–15) |
 | `opt.U_start` | `[]` (default) or km/s | start of the (overtone part of the) window; `[]`: max group velocity of branches 1–7 + 0.6 km/s (8.3 km/s Love, 9.2 km/s Rayleigh for the step-1 model) |
 | `opt.update_ref` | `'lin'` (default, `opt.lin_updates` = 3) / `'burnin'` / `'none'` | `'lin'`: recompute only the MINEOS linearization of the dispersion `opt.lin_updates` times during the burn-in (waveform reference of step 1 kept); `'burnin'`: recompute the reference model (idagrn6_mask spectra, MINEOS phase velocities and kernels) once at the end of burn-in, from the mean Vsv, Vsh (and η) of the last `opt.upd_frac` (0.2) of the burn-in of all chains, and hold it fixed afterwards; `'none'`: the step-1 reference throughout. The data, windows and normalizations never change |

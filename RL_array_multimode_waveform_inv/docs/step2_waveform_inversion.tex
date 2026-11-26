@@ -452,12 +452,16 @@ $P_3=\tfrac52\zeta^3-\tfrac32\zeta$. Then
   \tau_{rn}(\omega)&=\sum_{a=1}^{K_\tau}t_{rna}\,P_{a-1}\big(\zeta(\omega)\big)\quad\text{(s)},\\
   \delta\theta_{rn}(\omega)&=\sum_{a=1}^{K_\theta}\theta_{rna}\,P_{a-1}\big(\zeta(\omega)\big)\quad\text{(deg)} .
 \end{align}
-$\Phi_k$ are $K=3$ piecewise-linear ``hat'' functions of $\ln\omega$. Their
+$\Phi_k$ are $K$ piecewise-linear ``hat'' functions of $\ln\omega$. Their
 peaks are at $K$ equally spaced nodes $\ln\omega_{\min}=\nu_1<\dots<\nu_K=\ln\omega_{\max}$:
 $\Phi_k=\max(0,1-|\ln\omega-\nu_k|/(\nu_2-\nu_1))$, and they sum to 1.
 
-The defaults are $K_\tau=3$ (\texttt{opt.spec\_Kt}: constant, linear and
-quadratic in $\zeta$) and $K_\theta=2$. A frequency-dependent $\tau$ is
+The defaults are $K=12$ (\texttt{opt.spec\_K}), $K_\tau=4$
+(\texttt{opt.spec\_Kt}: constant to cubic in $\zeta$) and $K_\theta=2$.
+With $K=3$, $B$ is too coarse to follow the spectral shape of the Rayleigh
+records: for noise-free synthetics the waveform residual at the true
+structure is 0.018 (relative rms) with $K=3$ against 0.007 with $K=12$, and
+the sampler compensates by moving the structure. A frequency-dependent $\tau$ is
 needed for the overtones. Their path delays relative to the reference,
 $\Delta_e\,[1/c^{\rm true}_n(\omega)-1/c^{\rm ref}_n(\omega)]$, vary with
 frequency because each period samples the unmodeled structure differently.
@@ -466,7 +470,7 @@ The nuisance vector of record $r$ is
 \begin{equation}
  \mathbf{x}_r=\big[\underbrace{\Real\beta_{rnk},\Imag\beta_{rnk}}_{2n_mK}\;\big|\;\underbrace{t_{rna}}_{n_mK_\tau}\;\big|\;\underbrace{\theta_{rna}}_{n_mK_\theta}\big],
 \end{equation}
-of length $P=n_m(2K+K_\tau+K_\theta)=88$.
+of length $P=n_m(2K+K_\tau+K_\theta)=120$ for the defaults ($n_m=4$).
 
 \subsection{Linearized operator}\label{sec:G}
 The waveforms are exactly linear in $\beta$ but not in $t$ and $\theta$.
@@ -1239,8 +1243,8 @@ K^{w,n}_X(T,r) & MINEOS Fréchet kernel of phase velocity w.r.t.\ parameter $X$\
 \Delta r_i & node weight (m)\\
 G^{w,X} & kernel of parameter $X$ at the dispersion nodes and model nodes\\
 \chi^w_n(\omega) & mask: 1 where branch $n$ exists in the band\\
-B_{rn}(\omega),\;\beta_{rnk},\;\Phi_k,\;K & spectral correction; its coefficients; hat functions in $\ln\omega$; their number (3)\\
-\tau_{rn}(\omega),\;t_{rna},\;K_\tau & time shift (s); Legendre coefficients; number of terms (3)\\
+B_{rn}(\omega),\;\beta_{rnk},\;\Phi_k,\;K & spectral correction; its coefficients; hat functions in $\ln\omega$; their number (12)\\
+\tau_{rn}(\omega),\;t_{rna},\;K_\tau & time shift (s); Legendre coefficients; number of terms (4)\\
 \delta\theta_{rn}(\omega),\;\theta_{rna},\;K_\theta & arrival-angle anomaly (deg); coefficients; number of terms (2)\\
 \zeta(\omega),\;P_a & normalized log frequency on $[-1,1]$; Legendre polynomials\\
 \mathbf{x}_r,\;\tilde{\mathbf{x}}_r,\;P & nuisance vector; its linearized form; its length (88)\\

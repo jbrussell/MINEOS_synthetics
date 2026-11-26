@@ -146,7 +146,9 @@ opt = opt_defaults(opt, struct( ...
     'upd_frac', 0.2, ...                 % fraction of the burn-in (its end) averaged for the update
     'upd_ngn',  10, ...                  % Gauss-Newton steps per state to move tau, dth, B to the new reference
     'ref_prep', '', ...                  % optional prep file of another starting reference (D6)
-    'spec_Kt',  3, 'tau_prior', 15, 'dtau_prior', 10, ...   % tau_n(w): Legendre terms, prior std (s)
+    'spec_K',  12, ...                   % B_n(w): hat functions in log w (3 leaves a modelling error in the
+    ...                                  %   Rayleigh waveforms that biases the structure; 12 fits clean synthetics)
+    'spec_Kt',  4, 'tau_prior', 15, 'dtau_prior', 10, ...   % tau_n(w): Legendre terms, prior std (s)
     'windows',  'auto', ...              % 'auto': the window picked from the data per event by ASWMS-Q
     ...                                  %   (A3_run_autowinpick.m: event.winpara of the event files; picker
     ...                                  %   options through 'aswms', e.g. struct('cycle_before', 2, 'cycle_after', 5));
