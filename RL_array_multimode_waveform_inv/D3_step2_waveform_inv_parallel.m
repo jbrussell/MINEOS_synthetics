@@ -11,7 +11,7 @@
 % Before the run, any open pool is closed and the 'local' cluster profile
 % is set to opt.par_workers workers (one per chain/ensemble when []) and
 % saved, so that a pool of that size can be started (MATLAB limits a pool
-% to the profile's NumWorkers).
+% to the profile's NumWorkers), and a pool of that size is started.
 %
 % Each worker runs one ensemble with all its opt.K temperatures, so the
 % useful number of workers is opt.nens (default 4). Memory: every worker
@@ -39,6 +39,8 @@ if ~exist('OCTAVE_VERSION', 'builtin') && exist('parpool', 'file') == 2 && licen
     c.NumWorkers = nw_;
     % Save the change permanently
     saveProfile(c);
+    % start the pool now with that many workers (D3 reuses an open pool: par_workers.m)
+    parpool("local", nw_)
     clear c nw_
 end
 D3_step2_waveform_inv
