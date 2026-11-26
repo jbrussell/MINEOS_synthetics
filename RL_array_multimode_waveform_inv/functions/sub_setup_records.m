@@ -62,7 +62,7 @@ outdir = og('outdir', 'figs');
 if ~exist(outdir, 'dir'), mkdir(outdir); end
 
 %% ---- MCMC settings ----
-mc.nit   = og('nit', 8000);  mc.burn = og('burn', 3000);  mc.thin = 5;
+mc.nit   = og('nit', 8000);  mc.burn = og('burn', 3000);  mc.thin = og('thin', 5);   % save every thin-th iteration after burn-in
 mc.kvmin = 0;  mc.kvmax = og('kvmax', 15);   % interior Vsv control points
 mc.kxmin = 0;  mc.kxmax = og('kxmax', 15);   % interior xi control points
 mc.vsmin = 4.0; mc.vsmax = 5.0;              % U prior on Vsv (km/s)

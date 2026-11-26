@@ -231,6 +231,10 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   event and wave type (A0; 'internal': of each record's peak)
     'nchains',  4, 'nit', 3000, 'burn', 1500, ...           % plain sampler
     'nens',     4, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750, ... % parallel tempering (4 ensembles: R-hat between them)
+    'thin',     5, ...                   % save every thin-th iteration after burn-in (both samplers; T = 1 only for
+    ...                                  %   parallel tempering): (pt_nit - pt_burn)/thin samples per ensemble
+    ...                                  %   (150 for the defaults; 600 pooled). Fixed spacing, not set from the
+    ...                                  %   autocorrelation; do not change it when resuming a run from checkpoints
     'parallel', [], ...                  % D3 chains/ensembles over a MATLAB pool: [] = MATLAB's rule (open or
     ...                                  %   auto-created pool), true = start one (par_workers.m), false = serial
     'par_workers', [], ...               % maximum pool workers for D3 ([] = one per chain/ensemble)
