@@ -214,6 +214,18 @@ fig = plot_posterior_disp(Psum, fullfile(outdir, 'fig11_posterior_dispersion.png
 if fig_close_mode, close(fig); end
 fig = plot_posterior_disp(Psum, fullfile(outdir, 'fig11b_posterior_dispersion_abs.png'), [], 'absolute');
 if fig_close_mode, close(fig); end
+% posterior predicted waveforms (fig12_posterior_waveforms_event<e>.png) and
+% their spread relative to the median prediction, with the data residual
+% (fig12b_posterior_waveform_spread_event<e>.png): events and stations of fig4
+try
+    pk_ = [1 6 11 16]; pk_ = pk_(pk_ <= numel(sta));
+    figs_ = plot_posterior_waveforms(rec, cfg, mc, svc, Tdisp, fb, nm, sta, ...
+        unique([1 min(8, max([rec.event]))]), pk_, outdir, tag);
+    if fig_close_mode, close(figs_); end
+    clear figs_ pk_
+catch err_
+    fprintf('posterior waveform figures not made: %s\n', err_.message);
+end
 fid = fopen(fullfile(outdir, 'summary.txt'), 'a');
 for fo = [1 fid]
     fprintf(fo, 'final posterior (all ensembles pooled, %d samples): %s\n', Psum.ns, ...
