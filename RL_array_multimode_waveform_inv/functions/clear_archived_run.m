@@ -31,7 +31,7 @@ L = project_file_list(opt);
 % runs, D5/D6 and MINEOS itself read them
 cd_ = fullfile(opt.mdir, 'CARDS');
 L = L(~strncmp({L.pat}, cd_, numel(cd_)));
-cand = {}; kept = {}; skipped = {}; folders = {};
+cand = {}; kept = {}; why = {}; skipped = {}; folders = {};
 for i = 1:numel(L)
     d = dir(L(i).pat);
     src = fileparts(L(i).pat);
@@ -41,7 +41,7 @@ for i = 1:numel(L)
         if L(i).sub && ~d(k).isdir, continue; end
         if ~L(i).shared || include_shared
             if same_(s, fullfile(rd, L(i).dst, d(k).name)), cand{end+1} = s; %#ok<AGROW>
-            else, kept{end+1} = s; end %#ok<AGROW>
+            else, kept{end+1} = s; why{end+1} = why_(s, fullfile(rd, L(i).dst, d(k).name)); end %#ok<AGROW>
         else
             skipped{end+1} = s; %#ok<AGROW>
         end
@@ -60,7 +60,9 @@ if ~isempty(skipped)
 end
 if ~isempty(kept)
     fprintf('kept, the archive has no identical copy: %d item(s)\n', numel(kept));
-    fprintf('    %s\n', kept{:});
+    for k = 1:numel(kept), fprintf('    %s (%s)\n', kept{k}, why{k}); end
+    fprintf(['  (changed after the run was archived, e.g. D4 rerun with opt.save_results = false: to archive\n' ...
+             '   the current version and then remove it, run  parameters_RL; save_project_results(opt)  and D99 again)\n']);
 end
 if isempty(cand), fprintf('nothing to remove\n'); return; end
 fprintf('to remove (identical copy in the archive): %d item(s)\n', numel(cand));
@@ -97,4 +99,13 @@ else
     ds = dir(s); da = dir(a);
     tf = numel(ds) == 1 && numel(da) == 1 && ~da.isdir && ds.bytes == da.bytes;
 end
+end
+
+function w = why_(s, a)
+% why the copy of s at a does not count as identical
+if exist(a, 'file') == 0, w = 'not in the archive'; return; end
+if exist(s, 'dir') == 7, w = 'archived folder differs'; return; end
+ds = dir(s); da = dir(a);
+if ds.datenum > da.datenum, t = 'newer here'; else, t = 'older here'; end
+w = sprintf('%d bytes here, %d in the archive; %s', ds.bytes, da.bytes, t);
 end
