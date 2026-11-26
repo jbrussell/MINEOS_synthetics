@@ -2,8 +2,8 @@
 % tests): make a station file with opt.circle_N stations evenly spaced in
 % azimuth on a circle of diameter opt.circle_aperture_km (km) centred on
 % the NoMelt array and (opt.circle_fill, default true) stations filling the
-% circle at about the same spacing: a station at the centre and concentric
-% rings between it and the circle. Use it for a synthetic test by setting
+% circle: a station at the centre and concentric rings between it and the
+% circle, gradually denser towards the centre (opt.circle_dense_power). Use it for a synthetic test by setting
 % opt.stationfile to the new file (with a new opt.aswms_dir and
 % opt.prepfile), then A0-A3 and D1-D4 as usual.
 %
@@ -13,13 +13,22 @@
 %                          distance across the array between opposite
 %                          stations, along the great circle through the
 %                          centre
-%   opt.circle_fill        true (default): also stations inside the circle,
-%                          evenly spaced: rings at radii r_j = j*r/m (j =
-%                          1..m, r = aperture/2, m = round(r/s), s = the
-%                          station spacing on the circle), each with
-%                          round(2*pi*r_j/s) stations (every other ring
-%                          rotated by half a step), and one at the centre;
+%   opt.circle_fill        true (default): also stations inside the circle:
+%                          one at the centre and rings at radii
+%                          r_j = r*(j/m)^p (j = 1..m, r = aperture/2), each
+%                          with about as many stations as the radial gap
+%                          to the next ring inward allows,
+%                          round(2*pi*r_j/(r_j - r_(j-1))) (at least 3;
+%                          every other ring rotated by half a step), so the
+%                          spacing along and across the rings is about
+%                          equal and shrinks towards the centre; m =
+%                          round(p*r/s), s = the station spacing on the
+%                          circle, so the outermost gap is about s;
 %                          false: the circle only
+%   opt.circle_dense_power p (default 1.5): how much denser towards the
+%                          centre; 1 = evenly spaced (about s everywhere),
+%                          2 = the spacing falls linearly with radius to
+%                          about s/m at the centre
 %   opt.circle_file        station file to write ('' = default
 %                          stations_circle_<aperture>km_N<N>[_fill].txt here)
 %   opt.circle_ref         station file whose centre is used (default
@@ -60,12 +69,14 @@ lon0 = atan2(v_(2), v_(1))*180/pi;
 elev_ = median(S_{4});
 % station layout: rings (radius km, azimuth deg, name); the circle is ring m_
 r_ = ap_/2; s_ = ap_*sin(pi/N_);                  % station spacing on the circle (chord, km)
-if fill_, m_ = max(1, round(r_/s_)); else, m_ = 1; end
+pw_ = opt.circle_dense_power;
+if fill_, m_ = max(1, round(pw_*r_/s_)); else, m_ = 1; end
+rj_all_ = r_*((0:m_)/m_).^pw_;                    % ring radii (0 = the centre)
 rr_ = zeros(0, 1); azd_ = zeros(0, 1); names_ = {};
 if fill_, rr_(end+1, 1) = 0; azd_(end+1, 1) = 0; names_{end+1, 1} = 'C000'; end
 for j_ = 1:m_
-    rj_ = r_*j_/m_;
-    if j_ == m_, nj_ = N_; else, nj_ = max(3, round(2*pi*rj_/s_)); end
+    rj_ = rj_all_(j_ + 1);
+    if j_ == m_, nj_ = N_; else, nj_ = max(3, round(2*pi*rj_/(rj_ - rj_all_(j_)))); end
     off_ = mod(m_ - j_, 2)*180/nj_;                % every other ring rotated by half a step
     for k_ = 1:nj_
         rr_(end+1, 1) = rj_; azd_(end+1, 1) = off_ + (k_ - 1)*360/nj_; %#ok<SAGROW>
@@ -114,4 +125,4 @@ title(fn_, 'interpreter', 'none');
 od_ = fullfile(here_, 'figs_stations'); if exist(od_, 'dir') ~= 7, mkdir(od_); end
 save_figure(fig, fullfile(od_, [fn_ '.png']), 130);
 if fig_close_mode, close(fig); end
-clear here_ N_ ap_ ref_ cfile_ fill_ r_ s_ m_ rr_ azd_ j_ rj_ nj_ off_ Ns_ nn_ fid_ S_ la_ lo_ v_ elev_ R_ a_ az_ p0_ l0_ lat_ lon_ names_ k_ dc_ I_ J_ dij_ h1_ h2_ fn_ od_
+clear here_ N_ ap_ ref_ cfile_ fill_ pw_ rj_all_ r_ s_ m_ rr_ azd_ j_ rj_ nj_ off_ Ns_ nn_ fid_ S_ la_ lo_ v_ elev_ R_ a_ az_ p0_ l0_ lat_ lon_ names_ k_ dc_ I_ J_ dij_ h1_ h2_ fn_ od_
