@@ -164,7 +164,7 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   Rayleigh waveforms that biases the structure; more B parameters
     ...                                  %   fit better but trade off with the structure: 12 gave multimodal,
     ...                                  %   unmixed posteriors)
-    'spec_Kt',  4, 'tau_prior', 15, 'dtau_prior', 10, ...   % tau_n(w): Legendre terms, prior std (s)
+    'spec_Kt',  3, 'tau_prior', 15, 'dtau_prior', 10, ...   % tau_n(w): Legendre terms, prior std (s)
     ... % waveform windows: opt.windows chooses how; fund_margin and U_start only apply to some choices
     'windows',  'auto', ...              % how the time window of each record is set:
     ...                                  %   'auto' (default): picked from the data per event by ASWMS-Q
