@@ -48,6 +48,12 @@ opt = opt_defaults(opt, struct( ...
     'circle_dense_power', 1.75, ...      % rings at r*(j/m)^p: p > 1 denser towards the centre, 1 = evenly spaced
     'circle_file',        '', ...        % station file to write ('' = stations_circle_<aperture>km_N<N>[_fill].txt)
     'circle_ref',  fullfile(here_, 'stations_nomelt.txt'), ...   % centre (mean position) and elevation of this array
+    ... % ---- synthetic station line along one event's great circle (A00b_make_station_line.m) ----
+    'line_event',      '201210280304A', ... % event (id in opt.eventfile); also writes events_<id>.cmt
+    'line_length_km',  2000, ...         % length of the line (km), centred on the array centre
+    'line_spacing_km', 50, ...           % station spacing (km)
+    'line_file',       '', ...           % station file to write ('' = stations_line_<event>_<length>km.txt)
+    'line_ref',    fullfile(here_, 'stations_nomelt.txt'), ...   % centre (mean position) and elevation of this array
     ... % ---- step 1: isotropic Rayleigh inversion (D1) ----
     's1_periods',   logspace(log10(20), log10(150), 24), ...   % (s) step-1 dispersion periods (24, log-spaced, 20-150 s)
     's1_cstd',      0.0025, ...          % data uncertainty (fraction of c); also the std of the synthetic noise

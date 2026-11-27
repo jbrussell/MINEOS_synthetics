@@ -1,0 +1,15 @@
+# 201210280304A from events_nomelt_2012.cmt (Global CMT; single-event line test, A00b_make_station_line.m)
+
+ PDEW2012 10 28  3  4  8.80  52.7900 -132.1000  14.0 6.5 7.8 QUEEN CHARLOTTE ISLANDS                 
+event name:     201210280304A  
+time shift:     28.4300
+half duration:  18.7000
+latitude:       52.6100
+longitude:    -132.0600
+depth:          12.0000
+Mrr:       4.080000e+27
+Mtt:      -2.530000e+27
+Mpp:      -1.560000e+27
+Mrt:       3.260000e+27
+Mrp:      -1.780000e+27
+Mtp:       2.400000e+27

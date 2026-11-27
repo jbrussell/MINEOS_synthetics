@@ -21,7 +21,7 @@ function p = driver_prefix_()
 p = '';
 s = dbstack;
 for k = 1:numel(s)
-    t = regexp(s(k).name, '^([AD]\d+)_', 'tokens', 'once');
+    t = regexp(s(k).name, '^([AD]\d+[a-z]?)_', 'tokens', 'once');
     if ~isempty(t), p = t{1}; return; end
 end
 end

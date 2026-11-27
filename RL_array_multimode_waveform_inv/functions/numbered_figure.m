@@ -21,7 +21,7 @@ function fig = numbered_figure(n, varargin)
 %   3001       D1_step1_rayleigh_isotropic_inv, 3002 D1_step1_Bayesian_disp,
 %   3003       D1_step1_Bayesian_waveform
 %   3100       D5, 3200+k D7 (case k)
-%   4000       A00 station map
+%   4000       A00 station map, 4001 A00b station line
 % The ASWMS-Q functions (functions/aswms/) keep their own numbers (1, 3, 36,
 % 38, 39, 99, 101).
 fig = figure(n);
