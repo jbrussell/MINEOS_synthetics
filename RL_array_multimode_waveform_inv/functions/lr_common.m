@@ -4,6 +4,8 @@ function varargout = lr_common(action, varargin)
 % MINEOS dispersion).
 %
 %   m = lr_common('draw_prior', cfg, mc)            random model (start)
+%   m = lr_common('ref_model', cfg, mc)             the reference model (cfg.refp), least-squares
+%                                                   B-spline fit with mc.pt_start_k interior points
 %   [m, ok, set, mv] = lr_common('propose', m, cfg, mc, T)
 %   [S, ok] = lr_common('disp', S, m, cfg, Tdisp, fb, nm, which)
 %   v = lr_common('profiles', S, zplot, cfg)        [vsv vsh xi eta] on zplot
@@ -90,6 +92,28 @@ switch action
         if eta_on(mc)
             ke = randi([mc.kemin min(mc.kemax, kv)]);
             m.E = draw_one(cfg, ke, mc.etamin, mc.etamax, cfg.ebot);
+        end
+        varargout = {m};
+    case 'ref_model'
+        % the reference model (cfg.refp: the step-1 model, or the truth in an
+        % oracle test) as a model state: k interior control points evenly
+        % spaced in (zmin, zmax), top end and interior values fitted by least
+        % squares to its Vsv and xi on a 1 km grid (bottom tied as always);
+        % values clipped to the prior bounds
+        [cfg, mc] = varargin{:};
+        k = 8; if isfield(mc, 'pt_start_k') && ~isempty(mc.pt_start_k), k = mc.pt_start_k; end
+        k = min([k, mc.kvmax, mc.kxmax]);
+        zq = (cfg.zmin:1:cfg.zmax - 1)';
+        zc = cfg.zmin + (cfg.zmax - cfg.zmin)*(1:k)'/(k + 1);
+        vr = interp1(cfg.refp.z, cfg.refp.vsv, zq, 'linear', 'extrap');
+        xr = interp1(cfg.refp.z, (cfg.refp.vsh ./ cfg.refp.vsv).^2, zq, 'linear', 'extrap');
+        m.V = fit_one(cfg, zc, zq, vr, cfg.vbot, mc.vsmin, mc.vsmax);
+        m.X = fit_one(cfg, zc, zq, xr, cfg.xbot, mc.ximin, mc.ximax);
+        if xi_hier(mc), m.xs = draw_xs(mc); end
+        if sm_hier(mc), m.ss = draw_ss(mc); end
+        if eta_on(mc)
+            er = interp1(cfg.refp.z, cfg.refp.eta, zq, 'linear', 'extrap');
+            m.E = fit_one(cfg, zc, zq, er, cfg.ebot, mc.etamin, mc.etamax);
         end
         varargout = {m};
     case 'propose'
@@ -254,6 +278,21 @@ function P = draw_one(cfg, k, vmin, vmax, vbot)
 P.zc = cfg.zmin + (cfg.zmax - cfg.zmin)*rand(k, 1);
 P.vc = vmin + (vmax - vmin)*rand(k, 1);
 P.ev = [vmin + (vmax - vmin)*rand; vbot];          % bottom tied to reference
+end
+
+function P = fit_one(cfg, zc, zq, vr, vbot, vmin, vmax)
+% least-squares B-spline fit (top end and interior values; bottom = vbot)
+% of the profile vr at depths zq; the profile is linear in the values
+k = numel(zc); zall = [cfg.zmin; zc; cfg.zmax];
+A = zeros(numel(zq), k + 1);
+for j = 1:k + 1
+    e = zeros(k + 2, 1); e(j) = 1;              % j = 1: top end; 2..k+1: interior
+    A(:, j) = bspline_profile(zall, e, zq);
+end
+e = zeros(k + 2, 1); e(end) = vbot; b0 = bspline_profile(zall, e, zq);
+c = A \ (vr - b0);
+c = min(max(c, vmin + 1e-6), vmax - 1e-6);
+P.zc = zc; P.vc = c(2:end); P.ev = [c(1); vbot];
 end
 
 function h = xi_hier(mc)

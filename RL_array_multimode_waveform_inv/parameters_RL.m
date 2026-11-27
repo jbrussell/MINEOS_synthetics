@@ -174,6 +174,8 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   fit better but trade off with the structure: 12 gave multimodal,
     ...                                  %   unmixed posteriors)
     'spec_Kt',  3, 'tau_prior', 15, 'dtau_prior', 10, ...   % tau_n(w): Legendre terms, prior std (s)
+    'dth_prior', 5, 'dth1_prior', 5, ... % dth_n(w): prior std (deg) of the constant and the higher Legendre terms
+    ...                                  %   (tiny values, e.g. 0.01, hold the arrival angles at 0: line tests)
     ... % waveform windows: opt.windows chooses how; fund_margin and U_start only apply to some choices
     'windows',  'auto', ...              % how the time window of each record is set:
     ...                                  %   'auto' (default): picked from the data per event by ASWMS-Q
@@ -242,6 +244,10 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   event and wave type (A0; 'internal': of each record's peak)
     'nchains',  4, 'nit', 3000, 'burn', 1500, ...           % plain sampler
     'nens',     4, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750, ... % parallel tempering (4 ensembles: R-hat between them)
+    'pt_start', 'prior', ...             % start of every PT state: 'prior' (random prior draws) or 'ref' (the
+    ...                                  %   reference model: least-squares B-spline fit of its Vsv and xi with
+    ...                                  %   pt_start_k interior points each; oracle tests: start at the truth)
+    'pt_start_k', 8, ...
     'thin',     5, ...                   % save every thin-th iteration after burn-in (both samplers; T = 1 only for
     ...                                  %   parallel tempering): (pt_nit - pt_burn)/thin samples per ensemble
     ...                                  %   (150 for the defaults; 600 pooled). Fixed spacing, not set from the

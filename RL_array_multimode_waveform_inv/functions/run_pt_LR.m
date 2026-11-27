@@ -25,6 +25,8 @@ function [sv, st, info, S] = run_pt_LR(rec, cfg, mc, Tdisp, fb, nm, zplot, seed,
 %        all temperatures) up to this iteration (default pt.burn)
 % pt.ckpt, pt.ckpt_every : OPTIONAL checkpoint file and interval
 %        (iterations, default 100): see the checkpoint section below
+% mc.pt_start = 'ref': every temperature starts at the reference model
+%        (lr_common 'ref_model') instead of a prior draw
 % S0   : OPTIONAL {K} initial states (fields m, sig, rho and, optionally,
 %        lin: {nrec} linearization points), e.g. the final states S of an
 %        earlier call (continuation after a reference update); default:
@@ -51,10 +53,16 @@ for k = 1:K
         s.sig = S0{k}.sig; s.rho = S0{k}.rho;
         if isfield(S0{k}, 'lin'), s.lin = S0{k}.lin; else, s.lin = lin0; end
     else
+        if isfield(mc, 'pt_start') && strcmp(mc.pt_start, 'ref')   % the reference model (oracle: the truth)
+            m = lr_common('ref_model', cfg, mc);
+            [s, ok] = lr_common('disp', struct(), m, cfg, Tdisp, fb, nm, 'both');
+            if ~ok, error('run_pt_LR: the reference-model start has no valid dispersion'); end
+        else
         while true
             m = lr_common('draw_prior', cfg, mc);
             [s, ok] = lr_common('disp', struct(), m, cfg, Tdisp, fb, nm, 'both');
             if ok, break; end
+        end
         end
         s.sig = zeros(1, 4);
         for wv = 1:2, r1_ = find(wave == wv, 1);
