@@ -1,0 +1,37 @@
+Run _line2b: 4 chains/ensembles, 600 saved samples
+MINEOS linearization updated at the end of burn-in (RLinv_step1_lin_line2b_3, mean of 40 late burn-in samples; waveform reference unchanged)
+  update 1 (RLinv_step1_lin_line2b_1): states' dispersion change rms [0.09 0.23 0.52 0.1] %, max [0.45 1.42 3.3 0.41] %; logL change [-615 -6666 377 775]
+  update 2 (RLinv_step1_lin_line2b_2): states' dispersion change rms [0.09 0.14 0.24 0.03] %, max [0.64 0.88 1.49 0.12] %; logL change [115 -1832 269 62]
+  update 3 (RLinv_step1_lin_line2b_3): states' dispersion change rms [0.04 0.04 0.27 0.08] %, max [0.23 0.26 1.52 0.42] %; logL change [-139 -923 -6926 -679]
+vsv : R-hat median 2.31 max 11.32 | truth in 5-95%:  86% | mean|err| 0.034 | chain-mean spread 0.037 | 5-95 width 0.114
+vsh : R-hat median 1.93 max 9.46 | truth in 5-95%:  83% | mean|err| 0.040 | chain-mean spread 0.042 | 5-95 width 0.138
+xi  : R-hat median 3.15 max 4.50 | truth in 5-95%:  82% | mean|err| 0.012 | chain-mean spread 0.017 | 5-95 width 0.048
+Love phase velocity R-hat max per mode: [3.14 3.18 2.98 2.62]
+Rayleigh phase velocity R-hat max per mode: [5.29 6.23 3.93 5.38]
+posterior median logL per chain: [62150 62921 61891 61887] | true model 62953.9
+interior control points: Vsv median 7 (5-95%: 4-10); xi median 2 (5-95%: 0-7)
+priors: smoothness smooth_sig [0.0002 0.0002] (vsv_vsh, per 10 km); reference Vsv vsv_ref_sig -1 km/s (per 10 km; 0 = off)
+priors: xi uniform 0.85-1.15; xi toward 1 with xi_ref_sig 0 (per 10 km; 0 = off)
+priors: xi strength sampled (hierarchical): sigma_xi median 0.043 [5-95%: 0.032-0.056]
+single surface-wave window per wave type: noise slots (L, L, R, R) tied
+noise correlation r (L ovt, L fund, R ovt, R fund): posterior [0.84 0.84 0.91 0.91] +- [0.13 0.13 0.11 0.11] | empirical [0.66 0.66 0.66 0.66]
+noise sigma / sigma_true: [2.37 2.37 3.63 3.63]
+xi band averages (depth below seafloor): posterior mean [5-95%] | true | reference
+    7- 60 km: 1.070 [1.048-1.096] | 1.077 | 1.000
+   60-160 km: 1.047 [1.036-1.061] | 1.064 | 1.000
+  160-250 km: 1.016 [0.982-1.040] | 1.001 | 1.000
+  250-350 km: 0.993 [0.971-1.012] | 1.001 | 1.001
+final posterior (all ensembles pooled, 600 samples): figs_line2b/posterior_summary_line2b.mat
+interior control points (pooled): Vsv mean 7.0 median 7, 95% 4-10, R-hat 2.25; xi mean 2.7 median 2, 95% 0-7, R-hat 1.82
+nuisance parameters vs truth (posterior mean - true; z = that / posterior std; tau truth = projection of the MINEOS path delay;
+  tau after removing whole-cycle shifts k 2 pi/w, which leave the waveforms unchanged)
+  branch 0: records with the recovered tau shifted by whole cycles: 0 of 2 (k = []); fit at the true structure: 0
+  branch 1: records with the recovered tau shifted by whole cycles: 0 of 2 (k = []); fit at the true structure: 0
+  branch 2: records with the recovered tau shifted by whole cycles: 0 of 2 (k = []); fit at the true structure: 0
+  branch 3: records with the recovered tau shifted by whole cycles: 0 of 2 (k = []); fit at the true structure: 0
+  tau constant  (s): rms error by branch [16.41 9.75 5.71 3.75] | truth in 5-95% [0 0 0 0] % | rms z [1822429.2 14414290.6 11756718 17667511.4]
+  tau linear    (s): rms error by branch [0.95 8.95 3.94 3.57] | truth in 5-95% [0 0 0 0] % | rms z [15036.3 3255598.3 5807388.4 23325417.7]
+  tau quadratic (s): rms error by branch [1.78 4.19 2.49 1.38] | truth in 5-95% [0 0 0 0] % | rms z [112700.1 6586978.6 10395677.3 13632034.2]
+  dth constant  (deg): rms error by branch [0 0 0 0] | truth in 5-95% [50 50 0 0] % | rms z [1.3 3.4 2.7 3.1]
+  dth linear    (deg): rms error by branch [0 0 0 0] | truth in 5-95% [100 0 0 0] % | rms z [0.7 4.8 2.1 2.5]
+  B (vs fit at the true structure): rms |B| difference by branch [0.01;0.03;0.08;0.05] | rms phase difference [3;2;3;5] deg
