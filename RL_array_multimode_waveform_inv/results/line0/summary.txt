@@ -1,0 +1,24 @@
+Case lin (data: lin dispersion of the true model, branches [0 1 2 3]), sig 0.25%, 4 chains x 20000 it (2046 s); acceptance [0.23 0.2 0.22 0.22]
+   priors: xi U[0.85 1.15], xi_ref_sig 0 (hierarchical 1, range [0.005 0.2]), vsv_ref_sig -1, smooth_sig [0.0002 0.0002] (hierarchical 0)
+   sampled xi prior strength sigma_xi: median 0.040 [5-95%: 0.032-0.050]
+   final log L per chain [-8 -9 -11 -7] (0 = exact fit)
+   xi band averages: posterior mean [5-95%] | true | chain means
+     7- 60 km: 1.066 [1.056-1.082] | 1.077 | [1.064 1.073 1.064 1.065]
+    60-160 km: 1.050 [1.045-1.056] | 1.064 | [1.049 1.049 1.052 1.051]
+   160-250 km: 1.018 [1.012-1.024] | 1.001 | [1.021 1.017 1.016 1.019]
+   250-350 km: 0.999 [0.993-1.003] | 1.001 | [0.999 0.999 0.999 0.997]
+   vsv  truth in 5-95%:  44% | mean|err| 0.025
+   vsh  truth in 5-95%:  37% | mean|err| 0.031
+   xi   truth in 5-95%:  43% | mean|err| 0.011
+Case mineos (data: mineos dispersion of the true model, branches [0 1 2 3]), sig 0.25%, 4 chains x 20000 it (1882 s); acceptance [0.14 0.18 0.14 0.19]
+   priors: xi U[0.85 1.15], xi_ref_sig 0 (hierarchical 1, range [0.005 0.2]), vsv_ref_sig -1, smooth_sig [0.0002 0.0002] (hierarchical 0)
+   sampled xi prior strength sigma_xi: median 0.036 [5-95%: 0.029-0.045]
+   final log L per chain [-19 -12 -10 -14] (0 = exact fit)
+   xi band averages: posterior mean [5-95%] | true | chain means
+     7- 60 km: 1.059 [1.053-1.069] | 1.077 | [1.057 1.058 1.056 1.063]
+    60-160 km: 1.043 [1.040-1.046] | 1.064 | [1.042 1.043 1.042 1.044]
+   160-250 km: 1.025 [1.019-1.028] | 1.001 | [1.025 1.026 1.025 1.022]
+   250-350 km: 1.009 [1.003-1.011] | 1.001 | [1.01 1.009 1.009 1.006]
+   vsv  truth in 5-95%:  62% | mean|err| 0.025
+   vsh  truth in 5-95%:  16% | mean|err| 0.043
+   xi   truth in 5-95%:  13% | mean|err| 0.017
