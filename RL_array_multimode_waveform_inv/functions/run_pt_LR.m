@@ -25,8 +25,11 @@ function [sv, st, info, S] = run_pt_LR(rec, cfg, mc, Tdisp, fb, nm, zplot, seed,
 %        all temperatures) up to this iteration (default pt.burn)
 % pt.ckpt, pt.ckpt_every : OPTIONAL checkpoint file and interval
 %        (iterations, default 100): see the checkpoint section below
-% mc.pt_start = 'ref': every temperature starts at the reference model
-%        (lr_common 'ref_model') instead of a prior draw
+% mc.pt_start: 'prior' (default) random prior draws; 'ref' every temperature
+%        at the reference model (lr_common 'ref_model'); 'refT1_TNrandom' T = 1
+%        at the reference, the others prior draws; 'refT1_TNjitter' T = 1 at the
+%        reference, the others at the reference with its control-point values
+%        perturbed (N(0, mc.pt_jitter), [Vsv km/s, xi], default [0.05 0.02])
 % S0   : OPTIONAL {K} initial states (fields m, sig, rho and, optionally,
 %        lin: {nrec} linearization points), e.g. the final states S of an
 %        earlier call (continuation after a reference update); default:
@@ -53,16 +56,36 @@ for k = 1:K
         s.sig = S0{k}.sig; s.rho = S0{k}.rho;
         if isfield(S0{k}, 'lin'), s.lin = S0{k}.lin; else, s.lin = lin0; end
     else
-        if isfield(mc, 'pt_start') && strcmp(mc.pt_start, 'ref')   % the reference model (oracle: the truth)
+        % start (mc.pt_start): 'prior' random prior draws; 'ref' every temperature at the reference
+        % model (oracle: the truth); 'refT1_TNrandom' T = 1 at the reference, the hotter temperatures
+        % prior draws; 'refT1_TNjitter' T = 1 at the reference, the hotter ones at the reference with
+        % random perturbations of its control-point values (mc.pt_jitter = [Vsv km/s, xi] std)
+        ps_ = 'prior'; if isfield(mc, 'pt_start') && ~isempty(mc.pt_start), ps_ = mc.pt_start; end
+        if ~any(strcmp(ps_, {'prior', 'ref', 'refT1_TNrandom', 'refT1_TNjitter'}))
+            error('run_pt_LR: unknown pt_start ''%s''', ps_);
+        end
+        if strcmp(ps_, 'ref') || (k == 1 && ~strcmp(ps_, 'prior'))
             m = lr_common('ref_model', cfg, mc);
             [s, ok] = lr_common('disp', struct(), m, cfg, Tdisp, fb, nm, 'both');
             if ~ok, error('run_pt_LR: the reference-model start has no valid dispersion'); end
+        elseif strcmp(ps_, 'refT1_TNjitter')
+            m0 = lr_common('ref_model', cfg, mc);
+            jit = [0.05 0.02]; if isfield(mc, 'pt_jitter') && numel(mc.pt_jitter) == 2, jit = mc.pt_jitter; end
+            while true
+                m = m0;
+                m.V.vc = min(max(m.V.vc + jit(1)*randn(size(m.V.vc)), mc.vsmin + 1e-6), mc.vsmax - 1e-6);
+                m.V.ev(1) = min(max(m.V.ev(1) + jit(1)*randn, mc.vsmin + 1e-6), mc.vsmax - 1e-6);
+                m.X.vc = min(max(m.X.vc + jit(2)*randn(size(m.X.vc)), mc.ximin + 1e-6), mc.ximax - 1e-6);
+                m.X.ev(1) = min(max(m.X.ev(1) + jit(2)*randn, mc.ximin + 1e-6), mc.ximax - 1e-6);
+                [s, ok] = lr_common('disp', struct(), m, cfg, Tdisp, fb, nm, 'both');
+                if ok, break; end
+            end
         else
-        while true
-            m = lr_common('draw_prior', cfg, mc);
-            [s, ok] = lr_common('disp', struct(), m, cfg, Tdisp, fb, nm, 'both');
-            if ok, break; end
-        end
+            while true
+                m = lr_common('draw_prior', cfg, mc);
+                [s, ok] = lr_common('disp', struct(), m, cfg, Tdisp, fb, nm, 'both');
+                if ok, break; end
+            end
         end
         s.sig = zeros(1, 4);
         for wv = 1:2, r1_ = find(wave == wv, 1);

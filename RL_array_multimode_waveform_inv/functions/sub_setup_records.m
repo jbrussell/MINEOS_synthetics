@@ -102,6 +102,7 @@ mc.dthp = [mc.dth_prior, og('dth1_prior', 5)*ones(1, mc.spec_Ka - 1)];   % prior
 mc.taup = [mc.tau_prior, og('dtau_prior', 10)*ones(1, mc.spec_Kt - 1)];  % prior std (s)
 mc.pt_start = og('pt_start', 'prior');  % PT start: 'prior' draws or 'ref' (lr_common 'ref_model')
 mc.pt_start_k = og('pt_start_k', 8);
+mc.pt_jitter = og('pt_jitter', [0.05 0.02]);  % [Vsv km/s, xi] std ('refT1_TNjitter')
 mc.relin = og('relin', 1);                   % relinearize tau, dth, B every relin iterations
 mc.nuis_start = og('nuis_start', 'best');   % start of the nuisance fit: 'best' per record of 'direct', 'continuation_global',
                                              %   'continuation_banded', or one of them (spec_refine)

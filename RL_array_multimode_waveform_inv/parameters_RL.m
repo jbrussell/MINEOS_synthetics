@@ -244,10 +244,13 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   event and wave type (A0; 'internal': of each record's peak)
     'nchains',  4, 'nit', 3000, 'burn', 1500, ...           % plain sampler
     'nens',     4, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750, ... % parallel tempering (4 ensembles: R-hat between them)
-    'pt_start', 'prior', ...             % start of every PT state: 'prior' (random prior draws) or 'ref' (the
+    'pt_start', 'prior', ...             % start of the PT states: 'prior' (random prior draws); 'ref' (all at the
     ...                                  %   reference model: least-squares B-spline fit of its Vsv and xi with
-    ...                                  %   pt_start_k interior points each; oracle tests: start at the truth)
-    'pt_start_k', 8, ...
+    ...                                  %   pt_start_k interior points each; oracle tests: the truth);
+    ...                                  %   'refT1_TNrandom' (T = 1 at the reference, hotter ones prior draws);
+    ...                                  %   'refT1_TNjitter' (T = 1 at the reference, hotter ones at the reference
+    ...                                  %   with control-point values perturbed by N(0, pt_jitter))
+    'pt_start_k', 8, 'pt_jitter', [0.05 0.02], ...   % [Vsv (km/s), xi] std of the jitter
     'thin',     5, ...                   % save every thin-th iteration after burn-in (both samplers; T = 1 only for
     ...                                  %   parallel tempering): (pt_nit - pt_burn)/thin samples per ensemble
     ...                                  %   (150 for the defaults; 600 pooled). Fixed spacing, not set from the
