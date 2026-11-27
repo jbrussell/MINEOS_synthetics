@@ -1,7 +1,8 @@
 % D2_STEP2_PREP_MINEOS_IDAGRN  Step 2, part 1 (driver): MINEOS and idagrn6.
 %
 % With the step-1 model (CARDS/<opt.s1_final>.card, from D1) as the
-% reference model, runs once and caches in opt.prepfile:
+% reference model (or, opt.ref_card_id set, an existing card: e.g. the true
+% model opt.trueid for an oracle test), runs once and caches in opt.prepfile:
 %   - MINEOS mode tables of the true model (PA5, branches
 %     0..opt.nbranch_data-1) and of the reference (branches 0..opt.nm-1)
 %   - reference phase/group velocities and Vsv, Vsh, Vpv, Vph, rho kernels
@@ -25,10 +26,15 @@
 % test: A0 first). Next: D3_step2_waveform_inv.m
 
 parameters_RL;
-S1 = load(opt.s1_file, 'card_final');
 o = opt;
-o.ref_card = S1.card_final;                 % the step-1 isotropic model
-o.refid = opt.s1_final;
+if isempty(opt.ref_card_id)
+    S1 = load(opt.s1_file, 'card_final');
+    o.ref_card = S1.card_final;             % the step-1 isotropic model
+    o.refid = opt.s1_final;
+else                                        % an existing card (e.g. the true model: oracle test)
+    o.ref_card = opt.ref_card_id; o.refid = opt.ref_card_id;
+    fprintf('reference model: CARDS/%s.card (opt.ref_card_id; not the step-1 model)\n', opt.ref_card_id);
+end
 P = prep_mineos_idagrn(o);
 fprintf('cached in %s: data branches 0-%d, modeled branches 0-%d\n', opt.prepfile, opt.nbranch_data-1, opt.nm-1);
 Pp = P;                                     % record sections of the data: from the event files

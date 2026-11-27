@@ -40,7 +40,9 @@ function P = prep_mineos_idagrn(opt)
 % Needs the MINEOS and idagrn6 binaries in ../FORTRAN/bin and SAC (sacio)
 % for idagrn6; see ../FORTRAN/README. Run from this directory.
 %
-% opt fields: ref_card (required), refid ('RLinv_step1'), ref_qmod
+% opt fields: ref_card (required: a card struct, written to CARDS/<refid>.card,
+% or the id of an existing card in CARDS, used as it is: refid = that id),
+% refid ('RLinv_step1'), ref_qmod
 % (trueid); optional: prepfile, mdir (path to run_MINEOS), trueid
 % ('pa5_5km'), zmoho (12 km below sea level), maxF (70 mHz), nbranch_data
 % (8), nm (3), Tdisp, dt (4 s), len_hr (1 h), eventfile, stationfile, P_true,
@@ -90,10 +92,17 @@ P.ev = rl_read_cmtsolution(og('eventfile', fullfile(here, 'events_nomelt_2012.cm
 % 1. reference card
 rc = og('ref_card', []);
 if isempty(rc), error('prep_mineos_idagrn: opt.ref_card (the reference model, e.g. the step-1 card) is required'); end
-ws_ = warning;                                  % write_MINEOS_mod turns all warnings on
-write_MINEOS_mod(rc, fullfile(P.mdir, 'CARDS', [P.refid, '.card']));
-warning(ws_);
-copyfile(fullfile(P.mdir, 'CARDS', [P.ref_qmod, '.qmod']), fullfile(P.mdir, 'CARDS', [P.refid, '.qmod']));
+if ischar(rc)                                   % an existing card (e.g. the true model), as it is
+    P.refid = rc;
+    if exist(fullfile(P.mdir, 'CARDS', [rc, '.card']), 'file') ~= 2 || exist(fullfile(P.mdir, 'CARDS', [rc, '.qmod']), 'file') ~= 2
+        error('prep_mineos_idagrn: CARDS/%s.card or .qmod not found', rc);
+    end
+else
+    ws_ = warning;                              % write_MINEOS_mod turns all warnings on
+    write_MINEOS_mod(rc, fullfile(P.mdir, 'CARDS', [P.refid, '.card']));
+    warning(ws_);
+    copyfile(fullfile(P.mdir, 'CARDS', [P.ref_qmod, '.qmod']), fullfile(P.mdir, 'CARDS', [P.refid, '.qmod']));
+end
 P.card_ref = read_model_card(fullfile(P.mdir, 'CARDS', [P.refid, '.card']));
 if ~isempty(P.trueid)
     P.card_true = read_model_card(fullfile(P.mdir, 'CARDS', [P.trueid, '.card']));

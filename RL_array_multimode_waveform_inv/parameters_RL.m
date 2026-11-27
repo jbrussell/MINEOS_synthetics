@@ -129,6 +129,9 @@ opt = opt_defaults(opt, struct( ...
     ... % ---- step 2: MINEOS + idagrn6 (D2) ----
     'prepfile',     'prep_step2.mat', ...
     'refid',        'RLinv_step1', ...   % reference card of step 2 (= s1_final)
+    'ref_card_id',  '', ...              % '' (default): the step-1 model (s1_file) is the step-2 reference; or the
+    ...                                  %   id of an existing card in CARDS used as the reference as it is
+    ...                                  %   (oracle test: opt.trueid, e.g. 'pa5_5km'; D2)
     'ref_qmod',     '', ...              % Q (.qmod) of the step-1 and step-2 cards ('' = trueid)
     'nbranch_data', 4, ...               % branches 0..3 in the PA5 data (synthetic test)
     'nm',           4, ...               % branches 0..3 modeled
