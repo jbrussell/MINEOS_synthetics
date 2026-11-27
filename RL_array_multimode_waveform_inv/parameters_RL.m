@@ -244,6 +244,10 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   event and wave type (A0; 'internal': of each record's peak)
     'nchains',  4, 'nit', 3000, 'burn', 1500, ...           % plain sampler
     'nens',     4, 'K', 6, 'Tmax', 20, 'pt_nit', 1500, 'pt_burn', 750, ... % parallel tempering (4 ensembles: R-hat between them)
+    's2_disp', false, ...                % joint inversion: add the step-1 fundamental-mode Rayleigh phase velocities
+    ...                                  %   (opt.s1_file; those inside the step-2 periods) to the step-2 likelihood,
+    ...                                  %   with a sampled error scale (log-uniform on s2_disp_range)
+    's2_disp_weight', 1, 's2_disp_range', [0.1 10], ...   % weight (< 1: down-weight, e.g. same seismograms)
     'pt_start', 'prior', ...             % start of the PT states: 'prior' (random prior draws); 'ref' (all at the
     ...                                  %   reference model: least-squares B-spline fit of its Vsv and xi with
     ...                                  %   pt_start_k interior points each; oracle tests: the truth);

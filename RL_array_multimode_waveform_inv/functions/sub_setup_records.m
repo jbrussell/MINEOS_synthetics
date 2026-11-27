@@ -127,6 +127,19 @@ cfg.lin = mineos_lin_setup(P.card_ref, P.K_ref_T, P.K_ref_S, P.phv_ref_T, P.phv_
                            cfg.zw, cfg.zmin, cfg.zmax);
 cfg.need = isfinite(P.phv_ref_T) & isfinite(P.phv_ref_S);   % branch exists at the node
 cfg.Tdisp = Tdisp;
+% joint dispersion + waveform inversion (opt.s2_disp): the step-1 fundamental-mode
+% Rayleigh phase velocities (opt.s1_file) inside the step-2 dispersion periods as a
+% second data set (disp_loglike_s2.m; sampled error scale lam, run_pt_LR.m)
+cfg.s2d = [];
+if og('s2_disp', false)
+    D_ = load(og('s1_file', 'step1_result.mat'), 'periods', 'cobs', 'cstd');
+    in_ = D_.periods(:) >= min(Tdisp)*(1 - 1e-9) & D_.periods(:) <= max(Tdisp)*(1 + 1e-9);
+    cfg.s2d = struct('T', D_.periods(in_), 'c', D_.cobs(in_), 'sd', D_.cstd(in_), ...
+        'w', og('s2_disp_weight', 1), 'lrange', og('s2_disp_range', [0.1 10]));
+    fprintf('joint dispersion term (opt.s2_disp): %d of %d step-1 Rayleigh phase velocities (%.0f-%.0f s, inside the step-2 periods %.0f-%.0f s), weight %g, error scale sampled on %s\n', ...
+        sum(in_), numel(in_), min(cfg.s2d.T), max(cfg.s2d.T), min(Tdisp), max(Tdisp), cfg.s2d.w, mat2str(cfg.s2d.lrange));
+    clear D_ in_
+end
 % bottom end values tied to the reference model at zmax
 [~, ib_] = max(cfg.lin.z);
 cfg.vbot = cfg.lin.vsv0(ib_); cfg.xbot = (cfg.lin.vsh0(ib_)/cfg.lin.vsv0(ib_))^2;

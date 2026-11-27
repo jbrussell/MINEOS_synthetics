@@ -113,6 +113,11 @@ else
     if any(isfinite(Ctrue_f{1}(:))) && any(isfinite(Ctrue_f{2}(:)))   % (real data: no true model)
         Ltrue = fit_nuisance_LR(rec, Ctrue_f, sig_true, rho_emp, cfg, mc, nm);
         fprintf('logL of the true structure (fitted nuisance, sigma_true): %.1f\n', Ltrue);
+        if isfield(cfg, 's2d') && ~isempty(cfg.s2d)          % joint dispersion term at the truth (error scale 1)
+            Ld_ = disp_loglike_s2(CtrueR, cfg, 1);
+            Ltrue = Ltrue + Ld_;
+            fprintf('  + joint dispersion term (opt.s2_disp) at the true dispersion: %.1f -> %.1f\n', Ld_, Ltrue);
+        end
     else
         Ltrue = NaN;
     end

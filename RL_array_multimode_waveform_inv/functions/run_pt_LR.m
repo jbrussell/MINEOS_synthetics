@@ -45,6 +45,9 @@ jev = 0; if isfield(mc, 'jump_every') && ~isempty(mc.jump_every), jev = round(mc
 jlast = pt.burn; if isfield(pt, 'jump_last'), jlast = pt.jump_last; end
 info.jumps = zeros(0, 3);                         % [iteration, temperature index, accepted changes]
 lay = @(lr) spec_layout(lr, nm, Kb, Ka, mc.sb, mc.taup, mc.dthp);
+% joint dispersion term (cfg.s2d, opt.s2_disp): its log-likelihood is s.Le(nrec+1),
+% so every sum(s.Le) (acceptance, swaps, traces) includes it; s.dl = its error scale
+dj = isfield(cfg, 's2d') && ~isempty(cfg.s2d);
 
 % ---------- independent prior draws for every temperature ----------
 if nargin < 12, S0 = {}; end
@@ -55,6 +58,7 @@ for k = 1:K
         if ~ok, error('run_pt_LR: initial state %d has no valid dispersion', k); end
         s.sig = S0{k}.sig; s.rho = S0{k}.rho;
         if isfield(S0{k}, 'lin'), s.lin = S0{k}.lin; else, s.lin = lin0; end
+        if isfield(S0{k}, 'dl'), s.dl = S0{k}.dl; end
     else
         % start (mc.pt_start): 'prior' random prior draws; 'ref' every temperature at the reference
         % model (oracle: the truth); 'refT1_TNrandom' T = 1 at the reference, the hotter temperatures
@@ -99,6 +103,7 @@ for k = 1:K
     for r = 1:nrec
         [~, s.Le(r), s.G{r}, s.xh{r}] = nuis_relin(rec(r), s.Cf{wave(r)}, s.lin{r}, cfg, s.sig, s.rho, mc, nm);
     end
+    if dj, if ~isfield(s, 'dl'), s.dl = 1; end, s.Le(nrec + 1) = disp_loglike_s2(s.CR, cfg, s.dl); end
     S{k} = s;
 end
 st0 = rmfield(S{1}, {'M', 'G', 'Le', 'lin', 'xh'}); st0.prof = lr_common('profiles', S{1}, zplot, cfg);
@@ -107,6 +112,7 @@ nsave = floor((pt.nit - pt.burn)/pt.thin);
 sv.st0 = st0;
 sv.vsv = zeros(numel(zplot), nsave); sv.vsh = sv.vsv; sv.xi = sv.vsv; sv.eta = sv.vsv;
 sv.CL = zeros(numel(Tdisp), nm, nsave); sv.CR = sv.CL;
+if dj, sv.dl = NaN(nsave, 1); sv.Ld = NaN(nsave, 1); end
 sv.kv = zeros(nsave, 1); sv.kx = sv.kv; sv.sig = zeros(nsave, 4); sv.rho = sv.sig; sv.xs = NaN(nsave, 1); sv.ss = NaN(nsave, 2);
 sv.tau = zeros(nrec, nm, nsave); sv.dth = sv.tau;          % band-mean (constant) terms
 sv.tauc = zeros(nrec, nm, Kt, nsave);                      % all time-shift coefficients
@@ -133,6 +139,7 @@ if ~isempty(ckf) && exist(ckf, 'file') == 2
         for r = 1:nrec
             [~, s.Le(r), s.G{r}, s.xh{r}] = nuis_relin(rec(r), s.Cf{wave(r)}, s.lin{r}, cfg, s.sig, s.rho, mc, nm);
         end
+        if dj, if ~isfield(s, 'dl'), s.dl = 1; end, s.Le(nrec + 1) = disp_loglike_s2(s.CR, cfg, s.dl); end
         S{k} = s;
     end
     rng(C.rngst);
@@ -182,6 +189,7 @@ for it = it0:pt.nit
                 for r = rr
                     [~, Ln(r), Gn{r}, Xn{r}] = nuis_relin(rec(r), Sn.Cf{wave(r)}, s.lin{r}, cfg, s.sig, s.rho, mc, nm);
                 end
+                if dj, Ln(nrec + 1) = disp_loglike_s2(Sn.CR, cfg, s.dl); end
                 dlp = lr_common('logprior', mn, cfg, mc) - lr_common('logprior', s.m, cfg, mc);
                 if log(rand) < (sum(Ln) - sum(s.Le)) / Tk + dlp      % smoothness prior untempered
                     Sn.G = Gn; Sn.Le = Ln; Sn.xh = Xn; Sn.lin = s.lin; s = Sn;
@@ -206,6 +214,14 @@ for it = it0:pt.nit
             end
             if log(rand) < (sum(Ln) - sum(s.Le)) / Tk, s.sig = sg; s.rho = rh; s.Le = Ln; s.xh = Xn; end
         end
+        % ---------- error scale of the joint dispersion term (log-uniform hyperprior) ----------
+        if dj
+            ln_ = log(s.dl) + 0.1*randn; lr_ = log(cfg.s2d.lrange);
+            if ln_ > lr_(1) && ln_ < lr_(2)
+                Ldn = disp_loglike_s2(s.CR, cfg, exp(ln_));
+                if log(rand) < (Ldn - s.Le(nrec + 1)) / Tk, s.dl = exp(ln_); s.Le(nrec + 1) = Ldn; end
+            end
+        end
         S{k} = s; info.Ltrace(it, k) = sum(s.Le);
     end
     % ---------- swaps between neighbouring temperatures (alternating parity) ----------
@@ -225,6 +241,7 @@ for it = it0:pt.nit
         sv.kv(isv) = numel(s.m.V.zc); sv.kx(isv) = numel(s.m.X.zc); sv.sig(isv,:) = s.sig; sv.rho(isv,:) = s.rho;
         if isfield(s.m, 'xs'), sv.xs(isv) = s.m.xs; end
         if isfield(s.m, 'ss'), sv.ss(isv, :) = s.m.ss; end
+        if dj, sv.dl(isv) = s.dl; sv.Ld(isv) = s.Le(nrec + 1); end
         for r = 1:nrec
             [~, ~, itau, ith] = lay(s.lin{r});
             xh = s.xh{r};                                                   % cached posterior mean
@@ -237,6 +254,7 @@ for it = it0:pt.nit
         fprintf('PT %d  it %5d  logL(T=1) %.1f  kv=%d kx=%d  r=%s  swap%% %s  %.0f s\n', ie, it, ...
             sum(S{1}.Le), numel(S{1}.m.V.zc), numel(S{1}.m.X.zc), mat2str(round(S{1}.rho*100)/100), ...
             mat2str(round(100*info.swap(:,2)./max(info.swap(:,1),1))'), toc);
+        if dj, fprintf('PT %d  it %5d  dispersion term (T=1): logL %.1f, error scale %.2f\n', ie, it, S{1}.Le(nrec + 1), S{1}.dl); end
     end
     if ~isempty(ckf) && mod(it, ckev) == 0 && it < pt.nit
         ckpt_save(ckf, cellfun(@(x) rmfield(x, {'G', 'xh'}), S, 'uniformoutput', false), sv, info, isv, it, rng);
