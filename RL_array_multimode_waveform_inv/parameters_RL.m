@@ -160,8 +160,10 @@ opt = opt_defaults(opt, struct( ...
     'upd_frac', 0.2, ...                 % fraction of the burn-in (its end) averaged for the update
     'upd_ngn',  10, ...                  % Gauss-Newton steps per state to move tau, dth, B to the new reference
     'ref_prep', '', ...                  % optional prep file of another starting reference (D6)
-    'spec_K',  12, ...                   % B_n(w): hat functions in log w (3 leaves a modelling error in the
-    ...                                  %   Rayleigh waveforms that biases the structure; 12 fits clean synthetics)
+    'spec_K',   4, ...                   % B_n(w): hat functions in log w (3 leaves a modelling error in the
+    ...                                  %   Rayleigh waveforms that biases the structure; more B parameters
+    ...                                  %   fit better but trade off with the structure: 12 gave multimodal,
+    ...                                  %   unmixed posteriors)
     'spec_Kt',  4, 'tau_prior', 15, 'dtau_prior', 10, ...   % tau_n(w): Legendre terms, prior std (s)
     ... % waveform windows: opt.windows chooses how; fund_margin and U_start only apply to some choices
     'windows',  'auto', ...              % how the time window of each record is set:

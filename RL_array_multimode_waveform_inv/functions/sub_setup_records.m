@@ -95,7 +95,7 @@ mc.step_tau = 0.4; mc.step_dth = 0.25; mc.step_lsig = 0.05; mc.step_rho = 0.02;
 mc.rhomax = 0.98;                            % U[0, rhomax] prior on correlation
 mc.tau_prior = og('tau_prior', 15); mc.dth_prior = 5; mc.sb = og('sb', 0.4);
 % spectral nuisance model (event_G_spec)
-mc.spec_K  = og('spec_K', 12);               % hat functions for B_n(w)
+mc.spec_K  = og('spec_K', 4);                % hat functions for B_n(w)
 mc.spec_Ka = og('spec_Ka', 2);               % Legendre terms for dth_n(w)
 mc.spec_Kt = og('spec_Kt', 4);               % Legendre terms for tau_n(w)
 mc.dthp = [mc.dth_prior, og('dth1_prior', 5)*ones(1, mc.spec_Ka - 1)];   % prior std (deg)
