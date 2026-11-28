@@ -1,0 +1,34 @@
+Run _line2g: 4 chains/ensembles, 600 saved samples
+reference updated at the end of burn-in (RLinv_step1_upd_line2g, mean of 120 late burn-in samples); log L(true) 62953.9 -> 64750.4
+vsv : R-hat median 1.63 max 8.37 | truth in 5-95%:  65% | mean|err| 0.030 | chain-mean spread 0.023 | 5-95 width 0.092
+vsh : R-hat median 1.34 max 4.18 | truth in 5-95%:  53% | mean|err| 0.049 | chain-mean spread 0.026 | 5-95 width 0.101
+xi  : R-hat median 1.91 max 5.09 | truth in 5-95%:  74% | mean|err| 0.012 | chain-mean spread 0.012 | 5-95 width 0.037
+Love phase velocity R-hat max per mode: [1.34 1.88 3.75 1.7]
+Rayleigh phase velocity R-hat max per mode: [1.88 1.94 2.03 1.95]
+posterior median logL per chain: [63885 62340 64350 64146] | true model 64750.4
+interior control points: Vsv median 5 (5-95%: 4-8); xi median 4 (5-95%: 0-5)
+priors: smoothness smooth_sig [0.0002 0.0002] (vsv_vsh, per 10 km); reference Vsv vsv_ref_sig -1 km/s (per 10 km; 0 = off)
+priors: xi uniform 0.85-1.15; xi toward 1 with xi_ref_sig 0 (per 10 km; 0 = off)
+priors: xi strength sampled (hierarchical): sigma_xi median 0.046 [5-95%: 0.035-0.059]
+single surface-wave window per wave type: noise slots (L, L, R, R) tied
+noise correlation r (L ovt, L fund, R ovt, R fund): posterior [0.82 0.82 0.9 0.9] +- [0.14 0.14 0.1 0.1] | empirical [0.66 0.66 0.66 0.66]
+noise sigma / sigma_true: [2.38 2.38 2.82 2.82]
+xi band averages (depth below seafloor): posterior mean [5-95%] | true | reference
+    7- 60 km: 1.068 [1.054-1.081] | 1.077 | 1.000
+   60-160 km: 1.057 [1.047-1.068] | 1.064 | 1.000
+  160-250 km: 1.028 [1.005-1.047] | 1.001 | 1.000
+  250-350 km: 1.005 [0.993-1.024] | 1.001 | 1.001
+final posterior (all ensembles pooled, 600 samples): figs_line2g/posterior_summary_line2g.mat
+interior control points (pooled): Vsv mean 5.8 median 5, 95% 4-9, R-hat 1.77; xi mean 3.6 median 4, 95% 0-5, R-hat 1.24
+nuisance parameters vs truth (posterior mean - true; z = that / posterior std; tau truth = projection of the MINEOS path delay;
+  tau after removing whole-cycle shifts k 2 pi/w, which leave the waveforms unchanged)
+  branch 0: records with the recovered tau shifted by whole cycles: 0 of 2 (k = []); fit at the true structure: 0
+  branch 1: records with the recovered tau shifted by whole cycles: 0 of 2 (k = []); fit at the true structure: 0
+  branch 2: records with the recovered tau shifted by whole cycles: 0 of 2 (k = []); fit at the true structure: 0
+  branch 3: records with the recovered tau shifted by whole cycles: 0 of 2 (k = []); fit at the true structure: 0
+  tau constant  (s): rms error by branch [0.87 1.13 0.72 0.62] | truth in 5-95% [0 0 0 0] % | rms z [177955.5 3003228.2 2294676.3 2735555.3]
+  tau linear    (s): rms error by branch [0.89 1.11 1.44 0.47] | truth in 5-95% [0 0 0 0] % | rms z [57535.4 2298083.3 7089919.8 1782646.4]
+  tau quadratic (s): rms error by branch [1.09 2.67 0.61 0.77] | truth in 5-95% [0 0 0 0] % | rms z [37627.6 2652796.9 1736457.8 3167146.3]
+  dth constant  (deg): rms error by branch [0 0 0 0] | truth in 5-95% [50 0 50 50] % | rms z [3.1 4.9 3.4 3.2]
+  dth linear    (deg): rms error by branch [0 0 0 0] | truth in 5-95% [50 0 50 50] % | rms z [1.8 6.3 3 2.5]
+  B (vs fit at the true structure): rms |B| difference by branch [0.07;0.08;0.05;0.08] | rms phase difference [5;2;2;4] deg
