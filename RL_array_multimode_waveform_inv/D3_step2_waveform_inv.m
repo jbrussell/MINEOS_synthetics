@@ -256,6 +256,7 @@ elseif ~isempty(runs)
                 continue
             end
             [rec_u, cfg_u, Cu_f] = apply_reference(rec, cfg, Pu, Tdisp, fb);
+            if isfield(mc, 'fix_tau') && mc.fix_tau, rec_u = refix_tau(rec_u, cfg_u, Ctrue_f, Cu_f); end   % (synthetic test)
             U.lin0 = spec_refine([], rec_u, Cu_f, sig_true, rho_emp, cfg_u, mc, nm, 30);
             % safeguard: the T = 1 end-of-burn-in states of all chains must fit
             % the data at least as well with the new reference (after moving
@@ -302,7 +303,8 @@ elseif ~isempty(runs)
     if lino_                                      % linearization only
         rec_u = rec; cfg_u = apply_linearization(cfg, Pu);
     else
-        [rec_u, cfg_u] = apply_reference(rec, cfg, Pu, Tdisp, fb);
+        [rec_u, cfg_u, Cu_f] = apply_reference(rec, cfg, Pu, Tdisp, fb);
+        if isfield(mc, 'fix_tau') && mc.fix_tau, rec_u = refix_tau(rec_u, cfg_u, Ctrue_f, Cu_f); end   % true delays vs the new reference
     end
     clear Pu
     pt2 = pt; pt2.nit = pt.nit - pt.burn; pt2.burn = 0; pt2.jump_last = 0;

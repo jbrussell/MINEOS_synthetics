@@ -151,7 +151,7 @@ opt = opt_defaults(opt, struct( ...
     ...                                  %   with a tau basis over the whole band or over each stage's band)
     'fcont_stages', 4, ...               % stages of the frequency continuation
     'fix_tau', false, ...                % synthetic test only: tau_n(w) held at the true path delays, exactly at
-    ...                                  %   every frequency (apply_fixed_tau.m; update_ref 'none' or 'lin')
+    ...                                  %   every frequency (apply_fixed_tau.m; refix_tau.m after an update_ref 'burnin')
     'fix_nuisance', false, ...           % synthetic test only: B, tau, dth held at 1, 0, 0 (true values when the
     ...                                  %   reference is the true model and data = modelled branches)
     'ckpt_every', 100, ...               % checkpoint every this many iterations (resume after an interruption)

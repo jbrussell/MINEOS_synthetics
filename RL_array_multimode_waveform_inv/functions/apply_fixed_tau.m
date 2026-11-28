@@ -14,8 +14,8 @@ function [rec, mc] = apply_fixed_tau(rec, cfg, pd, mc)
 %     prior std of 1e-3 s on all its terms (mc.taup).
 % B_n(w) and the arrival angles stay free. With the true dispersion the
 % prediction then has the true phase at every station (plane-wave moveout
-% across the array). Works with opt.update_ref = 'none' or 'lin' (a full
-% reference update would replace the reference spectra).
+% across the array). With opt.update_ref = 'burnin' the new reference
+% spectra get the true delays relative to the new reference (refix_tau.m).
 w = cfg.w(:);
 for r = 1:numel(rec)
     td = pd.true_delay{r};                       % [Nf x nm] (s)

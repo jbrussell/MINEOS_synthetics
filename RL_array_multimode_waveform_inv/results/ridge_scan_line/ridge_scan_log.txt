@@ -1,0 +1,28 @@
+truth    -> 2b_E1     L(0)   62275.0  L(1)   62257.1  max   62357.4 at t= 0.48  barrier     9.5   Ld   81.2..  81.3  Lp   -61.9..  -36.6
+truth    -> 2b_E2     L(0)   62275.0  L(1)   62019.7  max   62292.4 at t= 0.20  barrier    16.7   Ld   81.2..  79.1  Lp   -61.9..  -33.2
+truth    -> 2b_E3     L(0)   62275.0  L(1)   61528.4  max   62282.7 at t=-0.12  barrier    35.8   Ld   81.2..  78.0  Lp   -61.9..  -61.7
+truth    -> 2b_E4     L(0)   62275.0  L(1)   61632.0  max   62380.8 at t= 0.28  barrier    48.3   Ld   81.2..  73.8  Lp   -61.9.. -103.3
+truth    -> 2f_E1     L(0)   62275.0  L(1)   62510.1  max   62513.6 at t= 0.90  barrier    13.4   Ld   81.2..  80.3  Lp   -61.9..  -54.5
+truth    -> 2f_E2     L(0)   62275.0  L(1)   62322.2  max   62458.3 at t= 0.53  barrier    16.8   Ld   81.2..  79.3  Lp   -61.9..  -40.2
+truth    -> 2f_E3     L(0)   62275.0  L(1)   62047.3  max   62359.5 at t= 0.35  barrier    23.1   Ld   81.2..  76.3  Lp   -61.9..  -20.8
+truth    -> 2f_E4     L(0)   62275.0  L(1)   62063.6  max   62351.7 at t= 0.33  barrier    21.0   Ld   81.2..  77.8  Lp   -61.9..  -40.9
+2b_E1    -> 2b_E2     L(0)   62257.1  L(1)   62019.7  max   62257.1 at t=-0.02  barrier    11.5   Ld   81.3..  79.1  Lp   -36.6..  -33.2
+2b_E1    -> 2b_E3     L(0)   62257.1  L(1)   61528.4  max   62290.8 at t= 0.18  barrier    47.5   Ld   81.3..  78.0  Lp   -36.6..  -61.7
+2b_E1    -> 2b_E4     L(0)   62257.1  L(1)   61632.0  max   62365.4 at t= 0.28  barrier    48.1   Ld   81.3..  73.8  Lp   -36.6.. -103.3
+2b_E2    -> 2b_E3     L(0)   62019.7  L(1)   61528.4  max   62183.6 at t= 0.35  barrier    51.6   Ld   79.1..  78.0  Lp   -33.2..  -61.7
+2b_E2    -> 2b_E4     L(0)   62019.7  L(1)   61632.0  max   62176.2 at t= 0.35  barrier    40.3   Ld   79.1..  73.8  Lp   -33.2.. -103.3
+2b_E3    -> 2b_E4     L(0)   61528.4  L(1)   61632.0  max   62294.8 at t= 0.48  barrier    81.7   Ld   78.0..  73.8  Lp   -61.7.. -103.3
+2f_mean  -> 2b_E1     L(0)   62311.4  L(1)   62257.1  max   62330.5 at t= 0.35  barrier     5.6   Ld   78.7..  81.3  Lp   -34.7..  -36.6
+2f_mean  -> 2b_E2     L(0)   62311.4  L(1)   62019.7  max   62318.3 at t=-0.17  barrier    12.6   Ld   78.7..  79.1  Lp   -34.7..  -33.2
+2f_mean  -> 2b_E3     L(0)   62311.4  L(1)   61528.4  max   62439.0 at t= 0.30  barrier    67.1   Ld   78.7..  78.0  Lp   -34.7..  -61.7
+2f_mean  -> 2b_E4     L(0)   62311.4  L(1)   61632.0  max   62360.0 at t= 0.20  barrier    44.7   Ld   78.7..  73.8  Lp   -34.7.. -103.3
+truth    xi bands [1.077 1.064 1.001 1.001]   mean-model L 62275.0 (chain mean L NaN)
+2b_E1    xi bands [1.061 1.04 1.021 1.006]   mean-model L 62257.1 (chain mean L 62363.4)
+2b_E2    xi bands [1.067 1.051 1.031 1.012]   mean-model L 62019.7 (chain mean L 63663.3)
+2b_E3    xi bands [1.094 1.039 0.984 0.974]   mean-model L 61528.4 (chain mean L 62108.5)
+2b_E4    xi bands [1.059 1.057 1.026 0.98]   mean-model L 61632.0 (chain mean L 62167.4)
+2f_E1    xi bands [1.039 1.061 1.037 1.01]   mean-model L 62510.1 (chain mean L 62667.6)
+2f_E2    xi bands [1.032 1.061 1.046 1.005]   mean-model L 62322.2 (chain mean L 63898.5)
+2f_E3    xi bands [1.019 1.062 1.054 1.006]   mean-model L 62047.3 (chain mean L 62973.8)
+2f_E4    xi bands [1.027 1.06 1.045 1.012]   mean-model L 62063.6 (chain mean L 63539.5)
+2f_mean  xi bands [1.029 1.061 1.045 1.008]   mean-model L 62311.4 (chain mean L 63269.8)
